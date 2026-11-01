@@ -55,6 +55,10 @@ Moving around:
 - **Tap a string** to cut it, or **tap a marker line** to erase it.
 - **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom out and see the whole room. **Fit** zooms to your items; tap it again for the whole board.
 
+### Flat or 3D
+
+Tap **3D** at the top of the screen (or pick it in **Case settings → View**) to switch the room into 3D. The walls, floor, shelf, filing cabinet and desk get real depth, so panning lets you look into the room, and on a computer the view shifts slightly as you move the mouse. Items lift toward you when you pick them up. Tap it again to go back to flat. It's a personal setting, so each agent can choose their own, and flat is lighter on older phones.
+
 ### On a phone
 
 - **One finger** drags items around. **Two fingers** move the board and pinch to zoom. **Fit** brings everything back into view.
