@@ -117,15 +117,38 @@ button{cursor:pointer;touch-action:manipulation}
 #room .desk-front{left:1130px;top:3030px;width:2740px;height:400px;filter:brightness(.8)}
 #room .desk-top{left:1130px;top:2430px;width:2740px;height:600px;transform-origin:50% 100%;transform:perspective(1400px) rotateX(70deg);filter:brightness(.92)}
 #room .desk-stuff{left:2180px;top:2722px;width:1390px;height:240px}
-#room .only3d{display:none}
+.only3d{display:none}
+.bedge,#bshadow{position:absolute;pointer-events:none;z-index:0}
+#bshadow{left:400px;top:250px;width:2400px;height:1500px;box-shadow:0 60px 110px 14px rgba(0,0,0,.62),0 16px 28px rgba(0,0,0,.45)}
+#bedgeT{left:400px;top:250px;width:2400px;height:var(--bt,0px)}
+#bedgeB{left:400px;top:calc(1750px - var(--bt,0px));width:2400px;height:var(--bt,0px)}
+#bedgeL{left:400px;top:250px;width:var(--bt,0px);height:1500px}
+#bedgeR{left:calc(2800px - var(--bt,0px));top:250px;width:var(--bt,0px);height:1500px}
+#world[data-board="ply"] #bedgeT,#world[data-board="ply"] #bedgeB{background:linear-gradient(0deg,#6b4e2c 0 70%,#3a2a17 70% 71%,transparent 71%),repeating-linear-gradient(0deg,#c9a36c 0 5px,#8f6a3c 5px 7px,#b88f5a 7px 11px);background-size:100% 100%,100% 100%}
+#world[data-board="ply"] #bedgeT{background:linear-gradient(180deg,transparent 0 29%,#3a2a17 29% 30%,#7a5a34 30%),repeating-linear-gradient(0deg,#c9a36c 0 5px,#8f6a3c 5px 7px,#b88f5a 7px 11px)}
+#world[data-board="ply"] #bedgeL,#world[data-board="ply"] #bedgeR{background:linear-gradient(90deg,#6b4e2c 0 70%,#3a2a17 70% 71%,transparent 71%),repeating-linear-gradient(90deg,#c9a36c 0 5px,#8f6a3c 5px 7px,#b88f5a 7px 11px)}
+#world[data-board="cork"] #bedgeT,#world[data-board="cork"] #bedgeB{background:linear-gradient(0deg,#6f6e69,#d2d1cb 45%,#9a9993 70%,#6a6964)}
+#world[data-board="cork"] #bedgeL,#world[data-board="cork"] #bedgeR{background:linear-gradient(90deg,#6f6e69,#d2d1cb 45%,#9a9993 70%,#6a6964)}
+#bedgeT{filter:brightness(1.08)}
+#bedgeB{filter:brightness(.5)}
+#bedgeL,#bedgeR{filter:brightness(.72)}
 #viewBtn[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
 /* ---------- 3D view ---------- */
-.is3d #board{perspective:var(--persp,1140px);perspective-origin:var(--po,50% 50%)}
+.is3d #board{perspective:var(--persp,1140px);perspective-origin:50% 50%}
 .is3d #world,.is3d #room{transform-style:preserve-3d}
-.is3d #room .only3d{display:block}
+.is3d #room{transform:translateZ(calc(-1 * var(--bt,0px)))}
+.is3d .only3d{display:block}
+.is3d #world[data-board="wall"] .bedge,.is3d #world[data-board="wall"] #bshadow{display:none}
+.is3d #bshadow{transform:translateZ(calc(.6px - var(--bt,0px)))}
+.is3d #bedgeT{transform-origin:50% 0;transform:translateZ(calc(-1 * var(--bt,0px))) rotateX(90deg)}
+.is3d #bedgeB{transform-origin:50% 100%;transform:translateZ(calc(-1 * var(--bt,0px))) rotateX(-90deg)}
+.is3d #bedgeL{transform-origin:0 50%;transform:translateZ(calc(-1 * var(--bt,0px))) rotateY(-90deg)}
+.is3d #bedgeR{transform-origin:100% 50%;transform:translateZ(calc(-1 * var(--bt,0px))) rotateY(90deg)}
 .is3d #room .rdark{transform:translateZ(.2px)}
 .is3d #room .wallart{transform:translateZ(.4px)}
 .is3d #boardbg{transform:translateZ(1px)}
+.is3d #boardbg.ply{box-shadow:inset 0 0 0 2px rgba(60,35,10,.35)}
+.is3d #boardbg.cork{box-shadow:inset 0 0 0 28px #a9a8a2,inset 0 0 0 31px #6f6e69,inset 0 0 50px 31px rgba(0,0,0,.35)}
 .is3d #strings{transform:translateZ(24px)}
 .is3d #boardlight{transform:translateZ(25px)}
 .is3d #room .floor{height:1400px;transform-origin:50% 0;transform:rotateX(90deg)}
@@ -379,7 +402,12 @@ button{cursor:pointer;touch-action:manipulation}
   <div id="board" aria-label="Evidence wall">
     <div id="world">
       <div id="room" class="basement" aria-hidden="true"><div class="rwall"></div></div>
+      <div id="bshadow" class="only3d" aria-hidden="true"></div>
       <div id="boardbg" class="ply" aria-hidden="true"></div>
+      <div id="bedgeT" class="bedge only3d" aria-hidden="true"></div>
+      <div id="bedgeB" class="bedge only3d" aria-hidden="true"></div>
+      <div id="bedgeL" class="bedge only3d" aria-hidden="true"></div>
+      <div id="bedgeR" class="bedge only3d" aria-hidden="true"></div>
       <div id="boardlight" aria-hidden="true"></div>
       <svg id="strings" aria-hidden="true"><g id="marks"></g></svg>
     </div>
@@ -457,7 +485,7 @@ const PIN_Y = 12;
 const MAX_S = 2.5;
 const BOARD = {x: 400, y: 250, w: 2400, h: 1500};
 const ROOM = {x: -900, y: -700, w: 5000, h: 4000};
-const CAM = 3000;
+const CAM = 2400;
 const minScale = () => Math.max(innerWidth / ROOM.w, innerHeight / ROOM.h, 0.12);
 const PIN_COLORS = [
   {id:"crimson", name:"Crimson", hex:"#c23a2e"},
@@ -782,7 +810,9 @@ const S = {
 };
 const board = $("#board"), world = $("#world"), strings = $("#strings"), marksLayer = $("#marks");
 world.style.width = WORLD_W + "px"; world.style.height = WORLD_H + "px";
-strings.setAttribute("width", WORLD_W); strings.setAttribute("height", WORLD_H);
+strings.style.left = BOARD.x + "px"; strings.style.top = BOARD.y + "px";
+strings.setAttribute("width", BOARD.w); strings.setAttribute("height", BOARD.h);
+strings.setAttribute("viewBox", `${BOARD.x} ${BOARD.y} ${BOARD.w} ${BOARD.h}`);
 
 const isHandler = () => !!(S.meta && S.me && S.meta.handlerId === S.me.id);
 const colorHex = id => (PIN_COLORS.find(c => c.id === id) || PIN_COLORS[3]).hex;
@@ -1127,7 +1157,6 @@ function setView(on, quiet) {
   $("#app").classList.toggle("is3d", S.is3d);
   $("#viewBtn").setAttribute("aria-pressed", String(S.is3d));
   $("#viewBtn").textContent = S.is3d ? "3D on" : "3D";
-  if (!S.is3d) board.style.removeProperty("--po");
   restack3d();
   if (S.code) applyView();
   if (!quiet) toast(S.is3d ? "3D view on. Pan around to look into the room." : "Flat view on.");
@@ -1143,8 +1172,11 @@ function restack3d() {
     arr.forEach((r, i) => r.el.style.setProperty("--z3", (2 + i * step).toFixed(2) + "px"));
   });
 }
+const BOARD_DEPTH = {ply: 110, cork: 90, wall: 0};
 function applyScene() {
   const sc = sceneOf(S.meta);
+  world.dataset.board = sc.board;
+  world.style.setProperty("--bt", BOARD_DEPTH[sc.board] + "px");
   $("#room").className = sc.room;
   $("#boardbg").className = sc.board;
 }
@@ -1335,8 +1367,8 @@ addEventListener("pointermove", e => {
     const rec = S.items.get(G.id);
     if (!rec) { G = null; return; }
     const w = widthOf(rec.data);
-    rec.data.x = clamp(G.ox + dx / S.view.s, BOARD.x - 30, BOARD.x + BOARD.w - w + 30);
-    rec.data.y = clamp(G.oy + dy / S.view.s, BOARD.y - 30, BOARD.y + BOARD.h - 90);
+    rec.data.x = clamp(G.ox + dx / S.view.s, BOARD.x - 8, BOARD.x + BOARD.w - w + 8);
+    rec.data.y = clamp(G.oy + dy / S.view.s, BOARD.y - 8, BOARD.y + BOARD.h - 90);
     place(rec); updateLinksFor(G.id);
     const now = performance.now();
     clearTimeout(G.timer);
@@ -1369,11 +1401,6 @@ function pointerEnd(e) {
   G = null;
 }
 addEventListener("pointerup", pointerEnd);
-board.addEventListener("pointermove", e => {
-  if (!S.is3d || e.pointerType !== "mouse" || e.buttons) return;
-  const px = 50 + (e.clientX / innerWidth - 0.5) * 8, py = 50 + (e.clientY / innerHeight - 0.5) * 8;
-  board.style.setProperty("--po", px.toFixed(2) + "% " + py.toFixed(2) + "%");
-});
 addEventListener("pointercancel", pointerEnd);
 board.addEventListener("wheel", e => {
   e.preventDefault();
@@ -1396,7 +1423,7 @@ world.addEventListener("keydown", e => {
     if (e.key === "ArrowRight") rec.data.x += step;
     if (e.key === "ArrowUp") rec.data.y -= step;
     if (e.key === "ArrowDown") rec.data.y += step;
-    rec.data.x = clamp(rec.data.x, BOARD.x - 30, BOARD.x + BOARD.w - w + 30); rec.data.y = clamp(rec.data.y, BOARD.y - 30, BOARD.y + BOARD.h - 90);
+    rec.data.x = clamp(rec.data.x, BOARD.x - 8, BOARD.x + BOARD.w - w + 8); rec.data.y = clamp(rec.data.y, BOARD.y - 8, BOARD.y + BOARD.h - 90);
     place(rec); updateLinksFor(id); itemWrite(id);
   }
 });

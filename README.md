@@ -57,7 +57,7 @@ Moving around:
 
 ### Flat or 3D
 
-Tap **3D** at the top of the screen (or pick it in **Case settings → View**) to switch the room into 3D. The walls, floor, shelf, filing cabinet and desk get real depth, so panning lets you look into the room, and on a computer the view shifts slightly as you move the mouse. Items lift toward you when you pick them up. Tap it again to go back to flat. It's a personal setting, so each agent can choose their own, and flat is lighter on older phones.
+Tap **3D** at the top of the screen (or pick it in **Case settings → View**) to switch the room into 3D. The walls, floor, shelf, filing cabinet and desk get real depth, and the board itself becomes a thick panel standing off the wall on a frame, casting a shadow behind it. Pan toward an edge and you'll see the board's sides. Items lift toward you when you pick them up. Tap it again to go back to flat. It's a personal setting, so each agent can choose their own, and flat is lighter on older phones.
 
 ### On a phone
 
