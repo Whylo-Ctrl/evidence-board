@@ -678,7 +678,7 @@ function buildContent(rec, id, d) {
       el.append(rec.imgEl, h("div", {class: "plac"}, h("div", {text: d.caption || "Unidentified"}), d.tag ? h("div", {text: d.tag}) : null));
     } else if (d.style === "cctv") {
       el.append(rec.imgEl, h("div", {class: "scan"}), h("span", {class: "ts", text: camTime(d.at)}), h("span", {class: "cam", text: "CAM " + stamp2(1 + hs % 9)}),
-        h("div", {class: "cap", text: d.caption}), d.tag ? h("div", {class: "tagb", text: d.tag}) : null);
+        h("div", {class: "cap", text: d.caption}), d.tag ? h("div", {class: "tagb", text: d.tag}) : "");
     } else {
       el.append(rec.imgEl, h("div", {class: "cap", text: d.caption}));
       if (d.tag) el.append(h("span", {class: "tag", text: d.tag}));
@@ -1236,7 +1236,7 @@ function openEditor(id, draft) {
           h("label", {class: "field"}, h("span", {text: isCase ? "Notes, one per line" : isClip ? "Article text" : "Text"}), ta),
           h("div", {class: "row", style: "margin-bottom:6px"}, redactBtn()),
           h("p", {class: "hint", style: "margin-bottom:18px", text: "Select words and tap Redact to black them out on the board. To undo, delete the [[ ]] around them."}),
-          isClip ? null : h("div", {class: "field"}, h("span", {class: "flabel", text: "Stamp"}),
+          isClip ? "" : h("div", {class: "field"}, h("span", {class: "flabel", text: "Stamp"}),
             h("div", {class: "tags", role: "group"}, STAMPS.map(([val, label]) =>
               h("button", {type: "button", class: "tagbtn", text: label, "aria-pressed": String((d.stamp || "") === val), onclick: e => {
                 d.stamp = val; e.currentTarget.parentNode.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === e.currentTarget)));
