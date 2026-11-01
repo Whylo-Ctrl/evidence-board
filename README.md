@@ -53,7 +53,14 @@ Moving around:
 - **Drag** anything to move it. Whatever you pick up comes to the front.
 - **Tap** an item for Edit, Tie string, or Remove. Double-tap to edit straight away.
 - **Tap a string** to cut it, or **tap a marker line** to erase it.
-- **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom. **Fit** brings everything back into view.
+- **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom out and see the whole room. **Fit** zooms to your items; tap it again for the whole board.
+
+### On a phone
+
+- **One finger** drags items around. **Two fingers** move the board and pinch to zoom. **Fit** brings everything back into view.
+- In Marker mode, one finger draws and two fingers still move the board.
+- **Case settings → Share invite link** opens your phone's share sheet, so you can send the case straight to a group chat.
+- **Case settings → Keep screen awake** stops your phone from dimming during the session (works in current Chrome and Safari).
 
 ### Redacting
 
@@ -63,4 +70,4 @@ Redaction is for atmosphere. The original words are still saved behind the scene
 
 ### Handler controls
 
-In **Case settings**, the Handler can switch the wall between wood panel and cork board for everyone, remove agents, and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
+In **Case settings**, the Handler sets the scene for everyone: the **room** (a cinder-block basement or a wood-paneled office, with shelves, a filing cabinet, wall lamps and a desk) and the **board** (plywood, cork, or pinning straight to the wall). The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
