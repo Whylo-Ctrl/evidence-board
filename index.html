@@ -442,7 +442,8 @@ button{cursor:pointer;touch-action:manipulation}
   <div id="zoom">
     <button class="chip" id="zoomIn" aria-label="Zoom in">+</button>
     <button class="chip" id="zoomOut" aria-label="Zoom out">&minus;</button>
-    <button class="chip" id="zoomFit" aria-label="Fit board to screen" style="font-size:13px">Fit</button>
+    <button class="chip" id="zoomBoard" aria-label="Zoom in to the board" title="Zoom in to the board" style="font-size:13px">Board</button>
+    <button class="chip" id="zoomFit" aria-label="Fit everything on screen" style="font-size:13px">Fit</button>
   </div>
 
   <div id="tip" hidden role="note">
@@ -872,16 +873,36 @@ function zoomAt(px, py, factor) {
   v.s = ns; v.x = px - wx * ns; v.y = py - wy * ns;
   applyView();
 }
-function fitBox(box, maxS = 1.15) {
+let animId = 0;
+function animateTo(t, ms = 520) {
+  const vw = innerWidth, vh = innerHeight, from = {...S.view};
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !from.s) { S.view = t; applyView(); return; }
+  const c0 = {x: (vw / 2 - from.x) / from.s, y: (vh / 2 - from.y) / from.s}, c1 = {x: (vw / 2 - t.x) / t.s, y: (vh / 2 - t.y) / t.s};
+  const id = ++animId, t0 = performance.now(), ease = k => 1 - Math.pow(1 - k, 3);
+  const step = now => {
+    if (id !== animId) return;
+    const k = Math.min(1, (now - t0) / ms), e = ease(k);
+    const s = from.s * Math.pow(t.s / from.s, e), cx = c0.x + (c1.x - c0.x) * e, cy = c0.y + (c1.y - c0.y) * e;
+    S.view = {s, x: vw / 2 - cx * s, y: vh / 2 - cy * s};
+    applyView();
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function fitBox(box, maxS = 1.15, animate = false) {
   const vw = innerWidth, vh = innerHeight, top = 72, bottom = 110;
   const aw = vw - 32, ah = vh - top - bottom;
   const s = clamp(Math.min(aw / box.w, ah / box.h), minScale(), maxS);
-  S.view = {s, x: (vw - box.w * s) / 2 - box.x * s, y: top + (ah - box.h * s) / 2 - box.y * s};
-  applyView();
+  const target = {s, x: (vw - box.w * s) / 2 - box.x * s, y: top + (ah - box.h * s) / 2 - box.y * s};
+  if (animate) animateTo(target); else { animId++; S.view = target; applyView(); }
 }
-function fitView(mode) {
+function zoomToBoard() {
+  S.fitMode = "boardClose";
+  fitBox({x: BOARD.x - 24, y: BOARD.y - 24, w: BOARD.w + 48, h: BOARD.h + 48}, MAX_S, true);
+}
+function fitView(mode, animate = false) {
   const wide = innerWidth >= 700;
-  if (mode === "board" || (!S.items.size && wide)) { S.fitMode = "board"; fitBox({x: BOARD.x - 140, y: BOARD.y - 230, w: BOARD.w + 280, h: BOARD.h + 400}); return; }
+  if (mode === "board" || (!S.items.size && wide)) { S.fitMode = "board"; fitBox({x: BOARD.x - 140, y: BOARD.y - 230, w: BOARD.w + 280, h: BOARD.h + 400}, 1.15, animate); return; }
   if (S.items.size) {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const r of S.items.values()) {
@@ -890,13 +911,14 @@ function fitView(mode) {
     }
     const m = 70;
     S.fitMode = "items";
-    fitBox({x: x0 - m, y: y0 - m, w: x1 - x0 + m * 2, h: y1 - y0 + m * 2});
+    fitBox({x: x0 - m, y: y0 - m, w: x1 - x0 + m * 2, h: y1 - y0 + m * 2}, 1.15, animate);
     return;
   }
   S.fitMode = "items";
-  fitBox({x: BOARD.x + BOARD.w / 2 - 310, y: BOARD.y + BOARD.h / 2 - 450, w: 620, h: 900});
+  fitBox({x: BOARD.x + BOARD.w / 2 - 310, y: BOARD.y + BOARD.h / 2 - 450, w: 620, h: 900}, 1.15, animate);
 }
 function zoomTo(wx, wy, s) {
+  animId++;
   S.view = {s, x: innerWidth / 2 - wx * s, y: innerHeight / 2 - wy * s};
   S.fitMode = null;
   applyView();
@@ -1298,6 +1320,7 @@ function itemWrite(id) {
   if (d) S.store.updateItem(S.code, id, {x: Math.round(d.x), y: Math.round(d.y), z: d.z}).catch(() => {});
 }
 board.addEventListener("pointerdown", e => {
+  animId++; S.viewTouched = true;
   if (e.pointerType === "mouse" && e.button !== 0) return;
   pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
   if ((S.cutLink || S.cutMark) && !e.target.closest(".hit,.mhit")) hideCut();
@@ -1403,6 +1426,7 @@ function pointerEnd(e) {
 addEventListener("pointerup", pointerEnd);
 addEventListener("pointercancel", pointerEnd);
 board.addEventListener("wheel", e => {
+  animId++; S.viewTouched = true;
   e.preventDefault();
   const mouseWheel = e.deltaMode !== 0 || (e.deltaX === 0 && Number.isInteger(e.deltaY) && Math.abs(e.deltaY) >= 40);
   if (e.ctrlKey || mouseWheel) zoomAt(e.clientX, e.clientY, Math.exp(-clamp(e.deltaY, -120, 120) * (e.ctrlKey ? 0.012 : 0.0022)));
@@ -1757,6 +1781,7 @@ function enterRoom(code, me) {
   $("#practice").hidden = S.store.online || localStorage.getItem("dgboard:practiceHidden") === "1";
   history.replaceState(null, "", "#" + code);
   S.view = {x: 0, y: 0, s: 1};
+  S.viewTouched = false;
   applyScene();
   fitView(innerWidth >= 700 ? "board" : undefined);
   S.unsub = S.store.subscribe(code, {
@@ -1771,7 +1796,7 @@ function enterRoom(code, me) {
     meta: m => { if (m) { S.meta = m; applyScene(); renderAgents(); } },
   });
   S.unpresence = S.store.presence(code, me.id);
-  setTimeout(() => fitView(innerWidth >= 700 ? "board" : undefined), 700);
+  setTimeout(() => { if (!S.viewTouched) fitView(innerWidth >= 700 ? "board" : undefined); }, 700);
   if (S.wake) keepAwake(true);
   if (TOUCH && localStorage.getItem("dgboard:tipSeen") !== "1") $("#tip").hidden = false;
 }
@@ -1805,7 +1830,9 @@ $("#cutBtn").addEventListener("click", () => {
 $("#practiceHide").addEventListener("click", () => { $("#practice").hidden = true; localStorage.setItem("dgboard:practiceHidden", "1"); });
 $("#zoomIn").addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 1.25));
 $("#zoomOut").addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 0.8));
-$("#zoomFit").addEventListener("click", () => fitView(S.fitMode === "items" ? "board" : S.fitMode === "board" && S.items.size ? "items" : undefined));
+$("#zoomFit").addEventListener("click", () => fitView(S.fitMode === "items" ? "board" : S.fitMode === "board" && S.items.size ? "items" : undefined, true));
+$("#zoomBoard").addEventListener("click", zoomToBoard);
+$("#zoom").addEventListener("click", () => { S.viewTouched = true; }, true);
 $("#selbar").addEventListener("click", e => {
   const act = e.target.closest("button")?.dataset.act, id = S.selected;
   if (!act || !id) return;

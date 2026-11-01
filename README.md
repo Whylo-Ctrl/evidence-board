@@ -53,7 +53,7 @@ Moving around:
 - **Drag** anything to move it. Whatever you pick up comes to the front.
 - **Tap** an item for Edit, Tie string, or Remove. Double-tap to edit straight away.
 - **Tap a string** to cut it, or **tap a marker line** to erase it.
-- **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom out and see the whole room. **Fit** zooms to your items; tap it again for the whole board.
+- **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom out and see the whole room. **Board** glides in until the board fills the screen. **Fit** zooms to your items; tap it again for the whole board with the room around it.
 
 ### Flat or 3D
 
