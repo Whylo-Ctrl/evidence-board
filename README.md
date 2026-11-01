@@ -40,21 +40,27 @@ The site is hosted with GitHub Pages from the `main` branch of this repo.
 
 ### On the board
 
-- **Photo, Paper, Post-it** in the bottom tray add items. New items appear near the middle of your screen.
+The tray at the bottom has five tools.
+
+- **Photo** pins a picture from your phone or computer. Pick a style: **Polaroid**, **Mugshot** (with a booking placard), or **Surveillance** (black-and-white camera still with a timestamp).
+- **Paper** pins a **document** (typed page with an optional Classified, Top secret, or Eyes only stamp), a **case card** (a question with notes, one per line), or a **newspaper clipping** (headline and article in columns).
+- **Post-it** pins a quick handwritten note in yellow, pink, blue or green.
+- **String** ties items together with red string. Tap one item, then the item to tie it to, and keep going until you tap **Done**. Pick red, black, yellow or blue string to color-code leads.
+- **Marker** lets you draw on the board: circle a suspect, draw arrows, scrawl a question mark. Choose red or black, use **Undo** for your last line, and tap **Done** to go back to moving things.
+
+Moving around:
+
 - **Drag** anything to move it. Whatever you pick up comes to the front.
 - **Tap** an item for Edit, Tie string, or Remove. Double-tap to edit straight away.
-- **Tie string:** tap an item, tap **Tie string**, then tap the item to connect it to.
-- **Cut string:** tap a string, then tap **Cut string**.
-- **Move around:** drag the empty wall to pan, and pinch (phone) or use the mouse wheel (computer) to zoom. **Fit** brings everything back into view.
+- **Tap a string** to cut it, or **tap a marker line** to erase it.
+- **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom. **Fit** brings everything back into view.
 
-### Papers
+### Redacting
 
-Papers come in two styles: a **typed document** (title and text) or a **case card** (a question or heading with notes, one per line). Either can get a Classified, Top secret, or Eyes only stamp.
-
-To redact words, select them in the text box and tap **Redact selection**. They show up as black bars on the board. To undo, delete the `[[ ]]` around them.
+To redact words on a paper or post-it, select them in the text box and tap **Redact selection**. They show up as black bars on the board. To undo, delete the `[[ ]]` around them.
 
 Redaction is for atmosphere. The original words are still saved behind the scenes, so don't use it to hide real secrets from someone who knows how to dig through a web page.
 
 ### Handler controls
 
-In **Case settings**, the Handler can switch the wall between wood panel and cork board for everyone, remove agents, and clear the whole board. Anyone can turn pin sounds on or off for themselves.
+In **Case settings**, the Handler can switch the wall between wood panel and cork board for everyone, remove agents, and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.

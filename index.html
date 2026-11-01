@@ -7,7 +7,7 @@
 <title>Evidence Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Kalam:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --void:#140d08;
@@ -22,6 +22,7 @@
   --lamp:255,204,138;
   --type:"Special Elite","Courier New",Courier,monospace;
   --hand:"Kalam","Bradley Hand","Segoe Print",cursive;
+  --news:"Old Standard TT",Georgia,"Times New Roman",serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--void);color:var(--ink);font-family:var(--type);-webkit-tap-highlight-color:transparent}
@@ -88,11 +89,19 @@ button{cursor:pointer;touch-action:manipulation}
 #world{position:absolute;left:0;top:0;transform-origin:0 0;box-shadow:inset 0 0 160px rgba(0,0,0,.55)}
 #world.wall-cork{box-shadow:inset 0 0 0 20px #a7a6a0, inset 0 0 0 23px #74736e, inset 0 0 40px 23px rgba(0,0,0,.35)}
 #strings{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:1000000}
+#strings path{fill:none;stroke-linecap:round;stroke-linejoin:round}
 #strings .hit{stroke:transparent;stroke-width:18;pointer-events:stroke;cursor:pointer}
-#strings .shadow{stroke:rgba(0,0,0,.38);stroke-width:2.4}
-#strings .cord{stroke:var(--string);stroke-width:2.2}
-#strings .knot{fill:#5e0f0f}
-#strings g.armed .cord{stroke:#e04a3a}
+#strings .shadow{stroke:rgba(0,0,0,.34);stroke-width:3}
+#strings .cord{stroke-width:2.6}
+#strings .fiber{stroke:rgba(255,255,255,.3);stroke-width:1.1;stroke-dasharray:1.6 2.8}
+#strings .pshadow{fill:rgba(0,0,0,.38)}
+#strings .phead{stroke:rgba(0,0,0,.35);stroke-width:.8}
+#strings .pshine{fill:rgba(255,255,255,.7)}
+#strings g.armed .cord{stroke-width:4}
+#strings .mk{stroke-width:4.6;opacity:.86}
+#strings .mhit{stroke:transparent;stroke-width:20;pointer-events:stroke;cursor:pointer}
+#strings g.armed .mk{opacity:.45}
+#board.drawing{cursor:crosshair}
 
 .light,.vignette{position:fixed;inset:0;pointer-events:none}
 .light{z-index:5;mix-blend-mode:screen;background:
@@ -131,6 +140,33 @@ button{cursor:pointer;touch-action:manipulation}
 .note .txt{font-family:var(--hand);font-size:21px;line-height:1.15;white-space:pre-wrap;overflow-wrap:anywhere;color:#2a2418}
 .redact{background:#121010;color:transparent;border-radius:1px;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 1px}
 
+/* ---------- realism ---------- */
+.tape{position:absolute;width:76px;height:22px;z-index:4;pointer-events:none;background:rgba(236,224,186,.74);box-shadow:0 1px 2px rgba(0,0,0,.16);
+  clip-path:polygon(0 10%,4% 0,50% 6%,96% 0,100% 12%,97% 50%,100% 90%,95% 100%,50% 94%,4% 100%,0 88%,3% 50%)}
+.tape.tl{top:-8px;left:-20px;transform:rotate(-34deg)}
+.tape.tr{top:-8px;right:-20px;transform:rotate(32deg)}
+.photo.mug{background:#f4f1ea;padding:10px 10px 12px}
+.photo.mug .img{filter:grayscale(.6) contrast(1.12) sepia(.1)}
+.photo.mug .plac{position:absolute;left:26px;right:26px;top:140px;background:#151311;color:#efe9dc;font-size:10.5px;line-height:1.4;letter-spacing:1px;padding:5px 8px;text-transform:uppercase;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.45);overflow-wrap:anywhere}
+.photo.cctv{background:#f1eee6;padding:9px 9px 0}
+.photo.cctv .img{width:182px;height:150px;filter:grayscale(1) contrast(1.35) brightness(.92)}
+.photo.cctv .scan{position:absolute;left:9px;top:9px;width:182px;height:150px;pointer-events:none;background:repeating-linear-gradient(0deg, rgba(0,0,0,.2) 0 1px, transparent 1px 3px)}
+.photo.cctv .ts,.photo.cctv .cam{position:absolute;top:16px;font-family:"Courier New",monospace;font-size:10px;color:#fff;text-shadow:0 0 2px #000,0 0 1px #000}
+.photo.cctv .ts{left:15px}
+.photo.cctv .cam{right:15px}
+.photo.cctv .cap{font-size:12px;min-height:34px;padding:7px 2px 4px}
+.photo .tagb{font-size:10px;color:var(--ink-soft);text-align:center;padding-bottom:9px}
+.doc::before{content:"";position:absolute;left:0;right:0;top:47%;height:16px;pointer-events:none;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.07) 45%,rgba(255,255,255,.4) 55%,rgba(255,255,255,0))}
+.doc.stain::after{content:"";position:absolute;width:88px;height:88px;left:var(--sx,55%);top:var(--sy,60%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle, transparent 53%, rgba(122,74,30,.22) 56%, rgba(122,74,30,.08) 61%, transparent 66%)}
+.item.clip{width:240px;box-shadow:none;filter:drop-shadow(0 7px 9px rgba(0,0,0,.42))}
+.item.clip.dragging{box-shadow:none;filter:drop-shadow(0 18px 18px rgba(0,0,0,.5))}
+.clip .in{background:#e6e0cd var(--paper-tex);padding:22px 16px 22px;color:#1f1c18;
+  clip-path:polygon(0 1%,4% 0,9% 1.2%,15% .2%,22% 1%,30% 0,37% 1.1%,45% .3%,52% 1%,60% 0,68% 1.2%,75% .2%,83% 1%,90% 0,96% 1%,100% .4%,99.2% 8%,100% 16%,99.4% 25%,100% 34%,99.1% 44%,100% 53%,99.3% 62%,100% 72%,99.2% 81%,100% 90%,99.5% 99%,94% 100%,87% 99%,79% 100%,71% 99.2%,63% 100%,55% 99%,47% 100%,39% 99.3%,31% 100%,23% 99%,15% 100%,8% 99.2%,1% 100%,.5% 91%,0 82%,.8% 72%,0 62%,.6% 52%,0 42%,.9% 32%,0 22%,.6% 12%)}
+.clip .rule{border-top:3px double #2a2620;margin:0 0 8px}
+.clip .head{font-family:var(--news);font-weight:700;font-size:22px;line-height:1.06;margin:0 0 8px;overflow-wrap:anywhere}
+.clip .cols{font-family:var(--news);font-size:11.5px;line-height:1.38;column-count:2;column-gap:12px;text-align:justify;hyphens:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#2b2722}
+
 /* ---------- chrome ---------- */
 .chip{display:inline-flex;align-items:center;gap:8px;background:var(--manila-lt);color:var(--ink);border:0;border-radius:3px;padding:8px 12px;font-size:14px;min-height:40px;box-shadow:0 3px 8px rgba(0,0,0,.45);white-space:nowrap}
 .chip:hover{background:#f3e7c8}
@@ -153,11 +189,18 @@ button{cursor:pointer;touch-action:manipulation}
 .ico-photo::after{content:"";position:absolute;left:6px;top:4px;width:15px;height:13px;background:#3c3833;transform:rotate(-6deg)}
 .ico-paper::before{content:"";position:absolute;inset:0 5px;background:#f3ecdb repeating-linear-gradient(transparent 0 5px, #8d8371 5px 6px) 4px 6px/12px 16px no-repeat;box-shadow:0 1px 2px rgba(0,0,0,.4);transform:rotate(3deg)}
 .ico-note::before{content:"";position:absolute;inset:2px 3px;background:#efd35a;box-shadow:0 2px 2px rgba(0,0,0,.35);transform:rotate(-4deg)}
+.ico-string::before{content:"";position:absolute;left:3px;right:3px;top:12px;height:2px;background:#a11d1d;transform:rotate(-28deg);box-shadow:0 1px 1px rgba(0,0,0,.3)}
+.ico-string::after{content:"";position:absolute;left:3px;top:16px;width:7px;height:7px;border-radius:50%;background:#c23a2e;box-shadow:16px -11px 0 #2f5fa8}
+.ico-marker::before{content:"";position:absolute;inset:4px 2px;border:2.5px solid #c0261b;border-left-color:transparent;border-radius:50%;transform:rotate(-14deg)}
+#tray button[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
+.bchips{display:flex;gap:6px;margin:0 6px}
+#banner .bchip{width:28px;height:28px;min-height:28px;padding:0;border-radius:50%;border:2px solid rgba(239,227,198,.3);background:var(--c)}
+#banner .bchip[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.5)}
 #zoom{position:fixed;right:calc(env(safe-area-inset-right) + 12px);bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:20;display:flex;flex-direction:column;gap:6px}
 #zoom .chip{justify-content:center;min-width:44px;min-height:40px;padding:6px 10px;font-size:16px}
 #selbar,#banner{position:fixed;left:50%;transform:translateX(-50%);z-index:21;display:flex;align-items:center;gap:4px;background:rgba(20,13,8,.92);color:#efe3c6;border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);border:1px solid rgba(239,227,198,.15)}
 #selbar{bottom:calc(env(safe-area-inset-bottom) + 96px)}
-#banner{top:calc(env(safe-area-inset-top) + 66px);padding:6px 6px 6px 14px;font-size:14px;max-width:calc(100vw - 24px)}
+#banner{top:calc(env(safe-area-inset-top) + 66px);padding:6px 6px 6px 14px;font-size:14px;max-width:calc(100vw - 24px);flex-wrap:wrap;justify-content:center;row-gap:2px}
 #selbar button,#banner button{background:transparent;border:0;color:inherit;padding:10px 14px;border-radius:6px;font-size:14px;min-height:42px;white-space:nowrap}
 #selbar button:hover,#banner button:hover{background:rgba(239,227,198,.1)}
 #selbar .warn{color:#ff9d8f}
@@ -196,7 +239,8 @@ button{cursor:pointer;touch-action:manipulation}
   .agent{padding:6px}
   .chip .long{display:none}
   .chip .short{display:inline}
-  #tray button{min-width:66px;padding:8px 10px}
+  #tray button{min-width:56px;padding:8px 5px;font-size:13px}
+  #tray{padding-left:6px;padding-right:6px;gap:2px}
   #zoom{bottom:calc(env(safe-area-inset-bottom) + 96px)}
   .overlay{align-items:flex-end;padding:0}
   .sheet{border-radius:10px 10px 0 0;max-height:92dvh;padding-bottom:calc(env(safe-area-inset-bottom) + 20px)}
@@ -239,7 +283,7 @@ button{cursor:pointer;touch-action:manipulation}
 <section id="app" hidden>
   <div id="board" aria-label="Evidence wall">
     <div id="world" class="wall-wood">
-      <svg id="strings" aria-hidden="true"></svg>
+      <svg id="strings" aria-hidden="true"><g id="marks"></g></svg>
     </div>
   </div>
   <div class="light"></div><div class="vignette"></div>
@@ -250,7 +294,7 @@ button{cursor:pointer;touch-action:manipulation}
     <button id="menuBtn" class="chip"><span class="long">Case settings</span><span class="short">Settings</span></button>
   </header>
 
-  <div id="banner" hidden><span id="bannerTxt"></span><button id="bannerCancel">Cancel</button></div>
+  <div id="banner" hidden></div>
 
   <div id="selbar" hidden>
     <button data-act="edit">Edit</button>
@@ -264,6 +308,8 @@ button{cursor:pointer;touch-action:manipulation}
     <button data-add="photo"><span class="ico ico-photo" aria-hidden="true"></span>Photo</button>
     <button data-add="paper"><span class="ico ico-paper" aria-hidden="true"></span>Paper</button>
     <button data-add="note"><span class="ico ico-note" aria-hidden="true"></span>Post-it</button>
+    <button data-mode="string" aria-pressed="false"><span class="ico ico-string" aria-hidden="true"></span>String</button>
+    <button data-mode="marker" aria-pressed="false"><span class="ico ico-marker" aria-hidden="true"></span>Marker</button>
   </nav>
 
   <div id="zoom">
@@ -315,6 +361,10 @@ const PIN_COLORS = [
 const NOTE_COLORS = {yellow:"#efd35a", pink:"#f1a8b5", blue:"#a5c9e1", green:"#bdd88f"};
 const STAMPS = [["", "None"], ["CLASSIFIED","Classified"], ["TOP SECRET","Top secret"], ["EYES ONLY","Eyes only"]];
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const STRING_COLORS = {red: "#a11d1d", black: "#24201c", yellow: "#d2a312", blue: "#2c5a9e"};
+const MARK_COLORS = {red: "#c0261b", black: "#1a1714"};
+const PHOTO_STYLES = ["polaroid", "mug", "cctv"];
+const hashStr = s => { let x = 7; for (let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) >>> 0; return x; };
 
 const $ = s => document.querySelector(s);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -355,7 +405,7 @@ function makeLocalStore() {
   function emit(prev, next) {
     if (!hd) return;
     const p = prev || {}, n = next || {};
-    for (const [coll, add, chg, rem] of [["items", hd.itemAdded, hd.itemChanged, hd.itemRemoved], ["links", hd.linkAdded, hd.linkAdded, hd.linkRemoved]]) {
+    for (const [coll, add, chg, rem] of [["items", hd.itemAdded, hd.itemChanged, hd.itemRemoved], ["links", hd.linkAdded, hd.linkAdded, hd.linkRemoved], ["marks", hd.markAdded, hd.markAdded, hd.markRemoved]]) {
       const a = p[coll] || {}, b = n[coll] || {};
       for (const k in b) { if (!(k in a)) add(k, b[k]); else if (!same(a[k], b[k])) chg(k, b[k]); }
       for (const k in a) if (!(k in b)) rem(k);
@@ -376,7 +426,7 @@ function makeLocalStore() {
     online: false,
     async getMeta(c) { return read(c)?.meta || null; },
     async getPlayers(c) { return read(c)?.players || {}; },
-    async createRoom(c, meta, player) { mutate(c, st => { st.meta = meta; st.players = {[player.id]: player}; st.items = {}; st.links = {}; }); },
+    async createRoom(c, meta, player) { mutate(c, st => { st.meta = meta; st.players = {[player.id]: player}; st.items = {}; st.links = {}; st.marks = {}; }); },
     async claimSlot(c, player) {
       let ok = false;
       mutate(c, st => {
@@ -395,8 +445,10 @@ function makeLocalStore() {
     async removeItem(c, id, linkIds) { mutate(c, st => { delete st.items?.[id]; linkIds.forEach(l => delete st.links?.[l]); }); localStorage.removeItem(KI(c, id)); },
     async setLink(c, id, d) { mutate(c, st => { (st.links ||= {})[id] = d; }); },
     async removeLink(c, id) { mutate(c, st => { delete st.links?.[id]; }); },
+    async setMark(c, id, d) { mutate(c, st => { (st.marks ||= {})[id] = d; }); },
+    async removeMark(c, id) { mutate(c, st => { delete st.marks?.[id]; }); },
     async updateMeta(c, patch) { mutate(c, st => { st.meta = {...st.meta, ...patch}; }); },
-    async clearBoard(c) { Object.keys(read(c)?.items || {}).forEach(id => localStorage.removeItem(KI(c, id))); mutate(c, st => { st.items = {}; st.links = {}; }); },
+    async clearBoard(c) { Object.keys(read(c)?.items || {}).forEach(id => localStorage.removeItem(KI(c, id))); mutate(c, st => { st.items = {}; st.links = {}; st.marks = {}; }); },
     async removePlayer(c, pid) { mutate(c, st => { delete st.players?.[pid]; }); },
     presence() { return () => {}; },
   };
@@ -434,6 +486,7 @@ async function makeFirebaseStore() {
       };
       watch("items", hd.itemAdded, hd.itemChanged, hd.itemRemoved);
       watch("links", hd.linkAdded, hd.linkAdded, hd.linkRemoved);
+      watch("marks", hd.markAdded, hd.markAdded, hd.markRemoved);
       offs.push(F.onValue(R(c, "players"), s => hd.players(s.val() || {})));
       offs.push(F.onValue(R(c, "meta"), s => hd.meta(s.val())));
       return () => offs.forEach(off => off());
@@ -449,8 +502,10 @@ async function makeFirebaseStore() {
     },
     setLink: (c, id, d) => F.set(R(c, "links/" + id), d),
     removeLink: (c, id) => F.remove(R(c, "links/" + id)),
+    setMark: (c, id, d) => F.set(R(c, "marks/" + id), d),
+    removeMark: (c, id) => F.remove(R(c, "marks/" + id)),
     updateMeta: (c, patch) => F.update(R(c, "meta"), patch),
-    clearBoard: c => F.update(R(c), {items: null, links: null, images: null}),
+    clearBoard: c => F.update(R(c), {items: null, links: null, images: null, marks: null}),
     removePlayer: (c, pid) => F.remove(R(c, "players/" + pid)),
     presence(c, pid) {
       const onRef = R(c, "players/" + pid + "/online");
@@ -471,10 +526,13 @@ const S = {
   items: new Map(), links: new Map(),
   view: {x: 0, y: 0, s: 1},
   selected: null, connectFrom: null, unsub: null, unpresence: null,
-  editing: null, lastTap: null, justAdded: null, pickedColor: null, cutLink: null,
+  editing: null, lastTap: null, justAdded: null, pickedColor: null, cutLink: null, cutMark: null,
+  mode: null, once: false, marks: new Map(), myMarks: [],
+  stringColor: STRING_COLORS[localStorage.getItem("dgboard:string")] ? localStorage.getItem("dgboard:string") : "red",
+  markColor: MARK_COLORS[localStorage.getItem("dgboard:marker")] ? localStorage.getItem("dgboard:marker") : "red",
   muted: localStorage.getItem("dgboard:muted") === "1",
 };
-const board = $("#board"), world = $("#world"), strings = $("#strings");
+const board = $("#board"), world = $("#world"), strings = $("#strings"), marksLayer = $("#marks");
 world.style.width = WORLD_W + "px"; world.style.height = WORLD_H + "px";
 strings.setAttribute("width", WORLD_W); strings.setAttribute("height", WORLD_H);
 
@@ -484,7 +542,7 @@ const realPlayers = () => Object.entries(S.players || {})
   .filter(([, p]) => p && p.codename)
   .map(([id, p]) => ({id, ...p}))
   .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
-const widthOf = d => d.type === "photo" ? 200 : d.type === "note" ? 160 : d.variant === "case" ? 230 : 250;
+const widthOf = d => d.type === "photo" ? 200 : d.type === "note" ? 160 : d.variant === "case" ? 230 : d.variant === "clip" ? 240 : 250;
 const kindName = d => d.type === "photo" ? "photo" : d.type === "note" ? "post-it" : "paper";
 
 /* ---------------- toast & sound ---------------- */
@@ -545,7 +603,8 @@ function fitView() {
   S.view = {s, x: (vw - box.w * s) / 2 - box.x * s, y: top + (ah - box.h * s) / 2 - box.y * s};
   applyView();
 }
-const EST_H = {photo: 250, note: 160, doc: 300, case: 200};
+const EST_H = {photo: 250, note: 160, doc: 300, case: 200, clip: 260};
+const toWorld = (px, py) => ({x: (px - S.view.x) / S.view.s, y: (py - S.view.y) / S.view.s});
 function freeSpot(w, hgt) {
   const c = viewCenterWorld();
   const rects = [...S.items.values()].map(r => ({x: r.data.x, y: r.data.y, w: widthOf(r.data), h: r.el.offsetHeight || 220}));
@@ -589,36 +648,54 @@ function redacted(text) {
 function sanitize(d) {
   if (!d || typeof d !== "object" || !["photo", "paper", "note"].includes(d.type)) return null;
   const str = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
-  const out = {type: d.type, x: +d.x || 0, y: +d.y || 0, z: +d.z || 1, rot: clamp(+d.rot || 0, -10, 10), by: str(d.by, 40)};
-  if (d.type === "photo") Object.assign(out, {caption: str(d.caption, 80), tag: str(d.tag, 14), imgRev: +d.imgRev || 0});
+  const out = {type: d.type, x: +d.x || 0, y: +d.y || 0, z: +d.z || 1, rot: clamp(+d.rot || 0, -10, 10), by: str(d.by, 40), at: +d.at || 0};
+  if (d.type === "photo") Object.assign(out, {caption: str(d.caption, 80), tag: str(d.tag, 14), imgRev: +d.imgRev || 0, style: PHOTO_STYLES.includes(d.style) ? d.style : "polaroid"});
   if (d.type === "note") Object.assign(out, {text: str(d.text, 140), color: NOTE_COLORS[d.color] ? d.color : "yellow"});
-  if (d.type === "paper") Object.assign(out, {variant: d.variant === "case" ? "case" : "doc", title: str(d.title, 70), body: str(d.body, 1500), stamp: STAMPS.some(s => s[0] === d.stamp) ? d.stamp : ""});
+  if (d.type === "paper") Object.assign(out, {variant: ["case", "clip"].includes(d.variant) ? d.variant : "doc", title: str(d.title, 70), body: str(d.body, 1500), stamp: STAMPS.some(s => s[0] === d.stamp) ? d.stamp : ""});
   return out;
 }
 function describe(d) {
   if (d.type === "photo") return "Photo" + (d.caption ? ": " + d.caption : "");
   if (d.type === "note") return "Post-it: " + d.text.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
-  return (d.variant === "case" ? "Case card: " : "Paper: ") + d.title.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
+  return (d.variant === "case" ? "Case card: " : d.variant === "clip" ? "Clipping: " : "Paper: ") + d.title.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
+}
+function stamp2(n) { return String(n).padStart(2, "0"); }
+function camTime(at) {
+  const t = new Date(at || Date.now());
+  return `${stamp2(t.getMonth() + 1)}/${stamp2(t.getDate())}/${t.getFullYear()} ${stamp2(t.getHours())}:${stamp2(t.getMinutes())}:${stamp2(t.getSeconds())}`;
 }
 function buildContent(rec, id, d) {
-  const el = rec.el;
-  el.className = "item " + (d.type === "paper" ? (d.variant === "case" ? "case" : "doc") : d.type) + (S.selected === id ? " selected" : "");
+  const el = rec.el, hs = hashStr(id);
+  const kind = d.type === "paper" ? d.variant : d.type === "photo" ? "photo" + (d.style !== "polaroid" ? " " + d.style : "") : d.type;
+  const stained = d.type === "paper" && d.variant === "doc" && hs % 4 === 0;
+  el.className = "item " + kind + (stained ? " stain" : "") + (S.selected === id ? " selected" : "");
+  if (stained) { el.style.setProperty("--sx", (12 + hs % 50) + "%"); el.style.setProperty("--sy", (30 + (hs >> 4) % 45) + "%"); }
   el.replaceChildren(h("span", {class: "pin", "aria-hidden": "true"}));
   if (d.type === "photo") {
     rec.imgEl = h("div", {class: "img"});
     if (rec.imgUrl) rec.imgEl.style.backgroundImage = `url("${rec.imgUrl}")`;
-    el.append(rec.imgEl, h("div", {class: "cap", text: d.caption}));
-    if (d.tag) el.append(h("span", {class: "tag", text: d.tag}));
+    if (d.style === "mug") {
+      el.append(rec.imgEl, h("div", {class: "plac"}, h("div", {text: d.caption || "Unidentified"}), d.tag ? h("div", {text: d.tag}) : null));
+    } else if (d.style === "cctv") {
+      el.append(rec.imgEl, h("div", {class: "scan"}), h("span", {class: "ts", text: camTime(d.at)}), h("span", {class: "cam", text: "CAM " + stamp2(1 + hs % 9)}),
+        h("div", {class: "cap", text: d.caption}), d.tag ? h("div", {class: "tagb", text: d.tag}) : null);
+    } else {
+      el.append(rec.imgEl, h("div", {class: "cap", text: d.caption}));
+      if (d.tag) el.append(h("span", {class: "tag", text: d.tag}));
+    }
   } else if (d.type === "note") {
     el.style.setProperty("--note", NOTE_COLORS[d.color]);
     el.append(h("div", {class: "txt"}, redacted(d.text)));
   } else if (d.variant === "case") {
     const lines = d.body.split("\n").map(s => s.replace(/^\s*[-•*]\s*/, "").trim()).filter(Boolean);
     el.append(h("div", {class: "band"}, redacted(d.title)), h("ul", {class: "lines"}, lines.map(s => h("li", {}, redacted(s)))));
+  } else if (d.variant === "clip") {
+    el.append(h("div", {class: "in"}, h("div", {class: "rule"}), h("div", {class: "head"}, redacted(d.title)), h("div", {class: "cols"}, redacted(d.body))));
   } else {
     el.append(h("div", {class: "title"}, redacted(d.title)), h("div", {class: "body"}, redacted(d.body)));
   }
-  if (d.type === "paper" && d.stamp) el.append(h("span", {class: "stamp", text: d.stamp}));
+  if (d.type === "paper" && d.variant !== "clip" && d.stamp) el.append(h("span", {class: "stamp", text: d.stamp}));
+  if ((d.type === "photo" || d.variant === "clip") && hs % 3 !== 2) el.append(h("span", {class: "tape " + (hs % 3 ? "tr" : "tl"), "aria-hidden": "true"}));
   el.setAttribute("aria-label", describe(d));
 }
 function place(rec) {
@@ -663,7 +740,7 @@ function removeItemEl(id) {
   if (!rec) return;
   rec.el.remove(); S.items.delete(id);
   if (S.selected === id) deselect();
-  if (S.connectFrom === id) exitConnect();
+  if (S.connectFrom === id) { clearFrom(); if (S.mode === "string") S.once ? setMode(null) : stringBanner(); }
   if (S.editing === id) { closeModal(); toast("Someone removed the item you were editing."); }
   updateLinksFor(id);
 }
@@ -674,18 +751,27 @@ function renderLink(id, raw) {
   let rec = S.links.get(id);
   if (!rec) {
     const g = sv("g", {"data-link": id});
-    const parts = {shadow: sv("line", {class: "shadow"}), cord: sv("line", {class: "cord"}), hit: sv("line", {class: "hit"}), k1: sv("circle", {class: "knot", r: 3}), k2: sv("circle", {class: "knot", r: 3})};
-    g.append(parts.shadow, parts.cord, parts.k1, parts.k2, parts.hit);
+    const head = () => { const hg = sv("g", {}); hg.append(sv("circle", {class: "pshadow", r: 6.5}), sv("circle", {class: "phead", r: 6.5}), sv("circle", {class: "pshine", r: 2.2})); return hg; };
+    const parts = {shadow: sv("path", {class: "shadow"}), cord: sv("path", {class: "cord"}), fiber: sv("path", {class: "fiber"}), hit: sv("path", {class: "hit"}), h1: head(), h2: head()};
+    g.append(parts.shadow, parts.cord, parts.fiber, parts.h1, parts.h2, parts.hit);
     strings.append(g);
-    rec = {g, parts, data: null};
+    rec = {g, parts, data: null, sag: 0.03 + (hashStr(id) % 35) / 1000};
     S.links.set(id, rec);
   }
-  rec.data = {a: raw.a, b: raw.b, by: raw.by};
+  rec.data = {a: raw.a, b: raw.b, by: raw.by, color: STRING_COLORS[raw.color] ? raw.color : "red"};
+  rec.parts.cord.setAttribute("stroke", STRING_COLORS[rec.data.color]);
   updateLink(id);
 }
 function pinPoint(id) {
   const r = S.items.get(id);
   return r ? {x: r.data.x + widthOf(r.data) / 2, y: r.data.y + PIN_Y} : null;
+}
+const itemPinHex = itemId => colorHex(S.players[S.items.get(itemId)?.data.by]?.color);
+function placeHead(hg, p, hex) {
+  const [sh, hd, shine] = hg.children;
+  sh.setAttribute("cx", p.x + 2); sh.setAttribute("cy", p.y + 3.5);
+  hd.setAttribute("cx", p.x); hd.setAttribute("cy", p.y); hd.setAttribute("fill", hex);
+  shine.setAttribute("cx", p.x - 2); shine.setAttribute("cy", p.y - 2.2);
 }
 function updateLink(id) {
   const rec = S.links.get(id);
@@ -693,10 +779,13 @@ function updateLink(id) {
   const a = pinPoint(rec.data.a), b = pinPoint(rec.data.b);
   rec.g.style.display = a && b ? "" : "none";
   if (!a || !b) return;
-  const {shadow, cord, hit, k1, k2} = rec.parts;
-  for (const ln of [cord, hit]) { ln.setAttribute("x1", a.x); ln.setAttribute("y1", a.y); ln.setAttribute("x2", b.x); ln.setAttribute("y2", b.y); }
-  shadow.setAttribute("x1", a.x + 3); shadow.setAttribute("y1", a.y + 5); shadow.setAttribute("x2", b.x + 3); shadow.setAttribute("y2", b.y + 5);
-  k1.setAttribute("cx", a.x); k1.setAttribute("cy", a.y); k2.setAttribute("cx", b.x); k2.setAttribute("cy", b.y);
+  const sag = Math.min(70, Math.hypot(b.x - a.x, b.y - a.y) * rec.sag);
+  const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2 + sag * 2;
+  const d = `M${a.x} ${a.y}Q${cx} ${cy} ${b.x} ${b.y}`;
+  const {shadow, cord, fiber, hit, h1, h2} = rec.parts;
+  cord.setAttribute("d", d); fiber.setAttribute("d", d); hit.setAttribute("d", d);
+  shadow.setAttribute("d", `M${a.x + 3} ${a.y + 5}Q${cx + 3} ${cy + 8} ${b.x + 3} ${b.y + 5}`);
+  placeHead(h1, a, itemPinHex(rec.data.a)); placeHead(h2, b, itemPinHex(rec.data.b));
 }
 function updateLinksFor(itemId) {
   for (const [lid, rec] of S.links) if (rec.data.a === itemId || rec.data.b === itemId) updateLink(lid);
@@ -707,9 +796,62 @@ function removeLinkEl(id) {
   rec.g.remove(); S.links.delete(id);
   if (S.cutLink === id) hideCut();
 }
+function markPath(p) {
+  let d = `M${p[0].x} ${p[0].y}`;
+  if (p.length < 3) return d + p.slice(1).map(q => `L${q.x} ${q.y}`).join("");
+  for (let i = 1; i < p.length - 1; i++) d += `Q${p[i].x} ${p[i].y} ${(p[i].x + p[i + 1].x) / 2} ${(p[i].y + p[i + 1].y) / 2}`;
+  const l = p[p.length - 1];
+  return d + `L${l.x} ${l.y}`;
+}
+function simplify(pts, tol) {
+  if (pts.length < 3) return pts.slice();
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+  const stack = [[0, pts.length - 1]];
+  while (stack.length) {
+    const [s0, s1] = stack.pop();
+    const ax = pts[s0].x, ay = pts[s0].y, bx = pts[s1].x, bY = pts[s1].y, L = Math.hypot(bx - ax, bY - ay) || 1;
+    let md = 0, mi = -1;
+    for (let i = s0 + 1; i < s1; i++) { const dd = Math.abs((bx - ax) * (ay - pts[i].y) - (ax - pts[i].x) * (bY - ay)) / L; if (dd > md) { md = dd; mi = i; } }
+    if (md > tol && mi > 0) { keep[mi] = 1; stack.push([s0, mi], [mi, s1]); }
+  }
+  return pts.filter((_, i) => keep[i]);
+}
+function renderMark(id, raw) {
+  if (!raw || raw.type !== "mark" || typeof raw.pts !== "string" || raw.pts.length > 9000) return;
+  const pts = raw.pts.split(" ").map(t => { const [x, y] = t.split(",").map(Number); return {x, y}; }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+  if (pts.length < 2) return;
+  let rec = S.marks.get(id);
+  if (!rec) {
+    const g = sv("g", {"data-mark": id}), mk = sv("path", {class: "mk"}), hit = sv("path", {class: "mhit"});
+    g.append(mk, hit); marksLayer.append(g);
+    rec = {g, mk, hit};
+    S.marks.set(id, rec);
+  }
+  const d = markPath(pts);
+  rec.mk.setAttribute("d", d); rec.hit.setAttribute("d", d);
+  rec.mk.setAttribute("stroke", MARK_COLORS[raw.color] || MARK_COLORS.red);
+}
+function removeMarkEl(id) {
+  const rec = S.marks.get(id);
+  if (!rec) return;
+  rec.g.remove(); S.marks.delete(id);
+  if (S.cutMark === id) hideCut();
+}
+function finishStroke(g) {
+  g.path.remove();
+  let pts = simplify(g.pts, 1.3 / Math.max(S.view.s, 0.3));
+  if (pts.length === 1) pts = [pts[0], {x: pts[0].x + 0.6, y: pts[0].y + 0.6}];
+  const id = uid();
+  S.myMarks.push(id);
+  S.store.setMark(S.code, id, {type: "mark", color: S.markColor, pts: pts.map(p => Math.round(p.x) + "," + Math.round(p.y)).join(" "), by: S.me.id, at: Date.now()}).catch(saveFailed);
+}
+function undoMark() {
+  while (S.myMarks.length) { const id = S.myMarks.pop(); if (S.marks.has(id)) { S.store.removeMark(S.code, id).catch(saveFailed); return; } }
+  toast("Nothing of yours to undo.");
+}
 function linksOf(itemId) { return [...S.links].filter(([, r]) => r.data.a === itemId || r.data.b === itemId).map(([id]) => id); }
 function nextZ() { let m = 0; for (const r of S.items.values()) m = Math.max(m, r.data.z || 0); return m + 1; }
-function refreshPins() { for (const r of S.items.values()) r.el.style.setProperty("--pin", colorHex(S.players[r.data.by]?.color)); }
+function refreshPins() { for (const r of S.items.values()) r.el.style.setProperty("--pin", colorHex(S.players[r.data.by]?.color)); for (const lid of S.links.keys()) updateLink(lid); }
 function applyBackground() {
   const bg = S.meta?.background === "cork" ? "wall-cork" : "wall-wood";
   world.classList.remove("wall-cork", "wall-wood"); world.classList.add(bg);
@@ -738,41 +880,77 @@ function deselect() {
   S.selected = null;
   $("#selbar").hidden = true;
 }
-function enterConnect(id) {
-  S.connectFrom = id;
-  deselect();
-  S.items.get(id)?.el.classList.add("selected");
-  $("#bannerTxt").textContent = "Tap another item to tie the string.";
-  $("#banner").hidden = false;
+function setBanner(text, opts = {}) {
+  const b = $("#banner");
+  b.replaceChildren(h("span", {text}));
+  if (opts.colors) {
+    const wrap = h("div", {class: "bchips", role: "group", "aria-label": opts.colorLabel});
+    for (const [k, hex] of Object.entries(opts.colors)) wrap.append(h("button", {type: "button", class: "bchip", style: `--c:${hex}`, "aria-label": k + " " + opts.colorLabel.toLowerCase(), "aria-pressed": String(opts.current === k), onclick: e => {
+      opts.onColor(k); wrap.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === e.currentTarget)));
+    }}));
+    b.append(wrap);
+  }
+  for (const btn of opts.buttons || []) b.append(h("button", {type: "button", text: btn.label, onclick: btn.onClick}));
+  b.hidden = false;
 }
-function exitConnect() {
+function stringBanner() {
+  setBanner(S.connectFrom ? "Now tap the item to tie it to." : "Tap the first item.", {
+    colors: STRING_COLORS, current: S.stringColor, colorLabel: "String color",
+    onColor: k => { S.stringColor = k; localStorage.setItem("dgboard:string", k); },
+    buttons: [{label: "Done", onClick: () => setMode(null)}]});
+}
+function markerBanner() {
+  setBanner("Draw on the board.", {
+    colors: MARK_COLORS, current: S.markColor, colorLabel: "Marker color",
+    onColor: k => { S.markColor = k; localStorage.setItem("dgboard:marker", k); },
+    buttons: [{label: "Undo", onClick: undoMark}, {label: "Done", onClick: () => setMode(null)}]});
+}
+function clearFrom() {
   if (S.connectFrom) S.items.get(S.connectFrom)?.el.classList.remove("selected");
   S.connectFrom = null;
-  $("#banner").hidden = true;
 }
+function setMode(mode, opts = {}) {
+  clearFrom();
+  S.once = false;
+  S.mode = mode;
+  board.classList.toggle("drawing", mode === "marker");
+  document.querySelectorAll("#tray [data-mode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  if (!mode) { $("#banner").hidden = true; return; }
+  deselect(); hideCut();
+  if (mode === "string") {
+    if (opts.from && S.items.has(opts.from)) { S.connectFrom = opts.from; S.once = true; S.items.get(opts.from).el.classList.add("selected"); }
+    stringBanner();
+  } else markerBanner();
+}
+function enterConnect(id) { setMode("string", {from: id}); }
 function tieString(a, b) {
   for (const r of S.links.values()) if ((r.data.a === a && r.data.b === b) || (r.data.a === b && r.data.b === a)) { toast("Those two are already tied together."); return; }
-  S.store.setLink(S.code, uid(), {a, b, by: S.me.id}).catch(saveFailed);
+  S.store.setLink(S.code, uid(), {a, b, by: S.me.id, color: S.stringColor}).catch(saveFailed);
   thunk(0.7);
 }
-function showCut(linkId, x, y) {
+function showCut(kind, id, x, y) {
   hideCut();
-  S.cutLink = linkId;
-  S.links.get(linkId)?.g.classList.add("armed");
+  if (kind === "link") { S.cutLink = id; S.links.get(id)?.g.classList.add("armed"); $("#cutBtn").textContent = "Cut string"; }
+  else { S.cutMark = id; S.marks.get(id)?.g.classList.add("armed"); $("#cutBtn").textContent = "Erase mark"; }
   const pop = $("#cutpop");
   pop.style.left = clamp(x, 70, innerWidth - 70) + "px"; pop.style.top = clamp(y, 120, innerHeight) + "px";
   pop.hidden = false;
 }
 function hideCut() {
   if (S.cutLink) S.links.get(S.cutLink)?.g.classList.remove("armed");
-  S.cutLink = null; $("#cutpop").hidden = true;
+  if (S.cutMark) S.marks.get(S.cutMark)?.g.classList.remove("armed");
+  S.cutLink = null; S.cutMark = null; $("#cutpop").hidden = true;
 }
 function handleItemTap(id) {
-  if (S.connectFrom) {
-    if (id !== S.connectFrom) tieString(S.connectFrom, id);
-    exitConnect();
+  if (S.mode === "string") {
+    if (!S.connectFrom) { S.connectFrom = id; S.items.get(id)?.el.classList.add("selected"); stringBanner(); return; }
+    if (id === S.connectFrom) { clearFrom(); stringBanner(); return; }
+    tieString(S.connectFrom, id);
+    if (S.once) { setMode(null); return; }
+    clearFrom(); stringBanner();
     return;
   }
+  if (S.mode === "marker") return;
   const now = performance.now();
   if (S.lastTap && S.lastTap.id === id && now - S.lastTap.t < 380) { S.lastTap = null; openEditor(id); return; }
   S.lastTap = {id, t: now};
@@ -798,16 +976,26 @@ function itemWrite(id) {
 board.addEventListener("pointerdown", e => {
   if (e.pointerType === "mouse" && e.button !== 0) return;
   pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
-  if (S.cutLink && !e.target.closest(".hit")) hideCut();
+  if ((S.cutLink || S.cutMark) && !e.target.closest(".hit,.mhit")) hideCut();
   if (pointers.size === 2) {
     if (G?.type === "item" && G.moved) endItemDrag();
+    if (G?.type === "draw") G.path.remove();
     const [p1, p2] = [...pointers.values()];
     G = {type: "pinch", d0: Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1, m0: {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2}, v0: {...S.view}};
     return;
   }
   if (pointers.size > 2) return;
-  const itemEl = e.target.closest(".item"), hit = e.target.closest(".hit");
-  if (itemEl) {
+  if (S.mode === "marker") {
+    e.preventDefault();
+    const path = sv("path", {class: "mk", stroke: MARK_COLORS[S.markColor]});
+    marksLayer.append(path);
+    G = {type: "draw", pts: [toWorld(e.clientX, e.clientY)], path};
+    return;
+  }
+  const itemEl = e.target.closest(".item"), hit = e.target.closest(".hit"), mhit = e.target.closest(".mhit");
+  if (mhit) {
+    G = {type: "markhit", mark: mhit.parentNode.dataset.mark, sx: e.clientX, sy: e.clientY, ox: S.view.x, oy: S.view.y, moved: false};
+  } else if (itemEl) {
     e.preventDefault();
     const id = itemEl.dataset.id, d = S.items.get(id).data;
     G = {type: "item", id, sx: e.clientX, sy: e.clientY, ox: d.x, oy: d.y, moved: false, last: 0, timer: null};
@@ -828,11 +1016,16 @@ addEventListener("pointermove", e => {
     applyView();
     return;
   }
+  if (G.type === "draw") {
+    const wp = toWorld(e.clientX, e.clientY), last = G.pts[G.pts.length - 1];
+    if (Math.hypot(wp.x - last.x, wp.y - last.y) * S.view.s >= 2.5 && G.pts.length < 700) { G.pts.push(wp); G.path.setAttribute("d", markPath(G.pts)); }
+    return;
+  }
   const dx = e.clientX - G.sx, dy = e.clientY - G.sy;
   if (!G.moved) {
     if (Math.hypot(dx, dy) < 6) return;
     G.moved = true;
-    if (G.type === "string") G.type = "pan";
+    if (G.type === "string" || G.type === "markhit") G.type = "pan";
     if (G.type === "pan") board.classList.add("panning");
     if (G.type === "item") {
       const rec = S.items.get(G.id);
@@ -873,10 +1066,12 @@ function pointerEnd(e) {
     else if (!pointers.size) G = null;
     return;
   }
-  if (e.type === "pointercancel") { if (G.type === "item" && G.moved) endItemDrag(); G = null; return; }
+  if (e.type === "pointercancel") { if (G.type === "item" && G.moved) endItemDrag(); if (G.type === "draw") G.path.remove(); G = null; return; }
+  if (G.type === "draw") { finishStroke(G); G = null; return; }
   if (G.type === "item") { if (G.moved) endItemDrag(); else handleItemTap(G.id); }
-  else if (G.type === "string" && !G.moved) showCut(G.link, e.clientX, e.clientY);
-  else if (G.type === "pan" && !G.moved) { deselect(); if (S.connectFrom) exitConnect(); }
+  else if (G.type === "string" && !G.moved) showCut("link", G.link, e.clientX, e.clientY);
+  else if (G.type === "markhit" && !G.moved) showCut("mark", G.mark, e.clientX, e.clientY);
+  else if (G.type === "pan" && !G.moved) { deselect(); if (S.connectFrom) { clearFrom(); S.once ? setMode(null) : stringBanner(); } }
   G = null;
 }
 addEventListener("pointerup", pointerEnd);
@@ -887,13 +1082,13 @@ board.addEventListener("wheel", e => {
   if (e.ctrlKey || mouseWheel) zoomAt(e.clientX, e.clientY, Math.exp(-clamp(e.deltaY, -120, 120) * (e.ctrlKey ? 0.012 : 0.0022)));
   else { S.view.x -= e.deltaX; S.view.y -= e.deltaY; applyView(); }
 }, {passive: false});
-world.addEventListener("focusin", e => { const el = e.target.closest(".item"); if (el && !S.connectFrom && e.target.matches(":focus-visible")) select(el.dataset.id); });
+world.addEventListener("focusin", e => { const el = e.target.closest(".item"); if (el && !S.mode && e.target.matches(":focus-visible")) select(el.dataset.id); });
 world.addEventListener("keydown", e => {
   const el = e.target.closest(".item");
   if (!el) return;
   const id = el.dataset.id, rec = S.items.get(id);
   if (!rec) return;
-  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); S.connectFrom ? handleItemTap(id) : openEditor(id); }
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); S.mode === "string" ? handleItemTap(id) : openEditor(id); }
   else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); askRemove(id); }
   else if (e.key.startsWith("Arrow")) {
     e.preventDefault();
@@ -983,7 +1178,7 @@ function openEditor(id, draft) {
   const isNew = !id;
   let imgUrl = draft?._img || existing?.imgUrl || null, newImg = false, lastText = null;
   S.editing = id || "__new";
-  deselect(); exitConnect();
+  deselect(); setMode(null);
 
   openModal(sheet => {
     sheet.setAttribute("aria-label", (isNew ? "New " : "Edit ") + kindName(d));
@@ -1008,14 +1203,16 @@ function openEditor(id, draft) {
       if (d.type === "photo") {
         const prevImg = h("div");
         if (imgUrl) prevImg.style.backgroundImage = `url("${imgUrl}")`;
+        const st = d.style || "polaroid";
         body.append(h("div", {class: "prev"}, prevImg),
+          h("div", {class: "field", style: "display:flex;justify-content:center"}, segmented([["polaroid", "Polaroid"], ["mug", "Mugshot"], ["cctv", "Surveillance"]], st, v => { d.style = v; draw(); })),
           h("div", {class: "row", style: "justify-content:center;margin-bottom:18px"},
             h("button", {type: "button", class: "btn", text: "Replace photo", onclick: async () => {
               const u = await pickPhoto(); if (u) { imgUrl = u; newImg = true; prevImg.style.backgroundImage = `url("${u}")`; }
             }})),
-          h("label", {class: "field"}, h("span", {text: "Caption"}),
+          h("label", {class: "field"}, h("span", {text: st === "mug" ? "Name on the placard" : "Caption"}),
             h("input", {class: "line-in", maxlength: 80, value: d.caption || "", "data-autofocus": true, oninput: e => d.caption = e.target.value})),
-          h("label", {class: "field"}, h("span", {text: "Evidence number"}),
+          h("label", {class: "field"}, h("span", {text: st === "mug" ? "Booking number" : "Evidence number"}),
             h("input", {class: "line-in", maxlength: 14, value: d.tag || "", oninput: e => d.tag = e.target.value})));
       } else if (d.type === "note") {
         const ta = trackText(h("textarea", {class: "line-in", maxlength: 140, rows: 3, "data-autofocus": true, oninput: e => d.text = e.target.value}));
@@ -1029,17 +1226,17 @@ function openEditor(id, draft) {
           h("div", {class: "row"}, redactBtn()),
           h("p", {class: "hint", text: "Select words and tap Redact to black them out on the board."}));
       } else {
-        const isCase = d.variant === "case";
+        const isCase = d.variant === "case", isClip = d.variant === "clip";
         const title = trackText(h("input", {class: "line-in", maxlength: 70, value: d.title || "", "data-autofocus": true, oninput: e => d.title = e.target.value}));
         const ta = trackText(h("textarea", {class: "line-in", maxlength: 1500, rows: 6, oninput: e => d.body = e.target.value}));
         ta.value = d.body || "";
         body.append(
-          h("div", {class: "field"}, segmented([["doc", "Typed document"], ["case", "Case card"]], d.variant, v => { d.variant = v; draw(); })),
-          h("label", {class: "field"}, h("span", {text: isCase ? "Question or heading" : "Title"}), title),
-          h("label", {class: "field"}, h("span", {text: isCase ? "Notes, one per line" : "Text"}), ta),
+          h("div", {class: "field"}, segmented([["doc", "Document"], ["case", "Case card"], ["clip", "Clipping"]], d.variant, v => { d.variant = v; draw(); })),
+          h("label", {class: "field"}, h("span", {text: isCase ? "Question or heading" : isClip ? "Headline" : "Title"}), title),
+          h("label", {class: "field"}, h("span", {text: isCase ? "Notes, one per line" : isClip ? "Article text" : "Text"}), ta),
           h("div", {class: "row", style: "margin-bottom:6px"}, redactBtn()),
           h("p", {class: "hint", style: "margin-bottom:18px", text: "Select words and tap Redact to black them out on the board. To undo, delete the [[ ]] around them."}),
-          h("div", {class: "field"}, h("span", {class: "flabel", text: "Stamp"}),
+          isClip ? null : h("div", {class: "field"}, h("span", {class: "flabel", text: "Stamp"}),
             h("div", {class: "tags", role: "group"}, STAMPS.map(([val, label]) =>
               h("button", {type: "button", class: "tagbtn", text: label, "aria-pressed": String((d.stamp || "") === val), onclick: e => {
                 d.stamp = val; e.currentTarget.parentNode.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === e.currentTarget)));
@@ -1053,9 +1250,9 @@ function openEditor(id, draft) {
       h("button", {type: "button", class: "btn primary", text: isNew ? "Pin to board" : "Save", onclick: save})));
 
     function fields() {
-      if (d.type === "photo") return {type: "photo", caption: (d.caption || "").trim(), tag: (d.tag || "").trim()};
+      if (d.type === "photo") return {type: "photo", style: d.style || "polaroid", caption: (d.caption || "").trim(), tag: (d.tag || "").trim()};
       if (d.type === "note") return {type: "note", text: (d.text || "").trim(), color: d.color || "yellow"};
-      return {type: "paper", variant: d.variant, title: (d.title || "").trim(), body: (d.body || "").replace(/\s+$/, ""), stamp: d.stamp || ""};
+      return {type: "paper", variant: d.variant, title: (d.title || "").trim(), body: (d.body || "").replace(/\s+$/, ""), stamp: d.variant === "clip" ? "" : d.stamp || ""};
     }
     function save() {
       const f = fields();
@@ -1122,7 +1319,7 @@ function openSettings() {
     sheet.append(h("div", {class: "section"}, h("span", {class: "flabel", text: `Agents (${realPlayers().length} of ${MAX_AGENTS})`}), list));
     const foot = h("div", {class: "foot", style: "justify-content:space-between"});
     if (handler) foot.append(h("button", {class: "btn danger", text: "Clear the board", onclick: async () => {
-      if (await confirmBox("Clear every item and string off the board for everyone? This can't be undone.", "Clear the board")) {
+      if (await confirmBox("Clear every item, string and marker line off the board for everyone? This can't be undone.", "Clear the board")) {
         S.store.clearBoard(S.code).catch(saveFailed); closeModal(); toast("Board cleared.");
       }
     }}));
@@ -1192,11 +1389,14 @@ async function joinRoom() {
   } finally { lobbyBusy(false); }
 }
 function resetBoard() {
+  setMode(null);
+  for (const r of S.marks.values()) r.g.remove();
+  S.marks.clear(); S.myMarks = [];
   for (const r of S.items.values()) r.el.remove();
   for (const r of S.links.values()) r.g.remove();
   S.items.clear(); S.links.clear();
   S.selected = null; S.connectFrom = null; S.players = {}; S.meta = null;
-  $("#selbar").hidden = true; $("#banner").hidden = true; hideCut();
+  $("#selbar").hidden = true; hideCut();
 }
 function enterRoom(code, me) {
   resetBoard();
@@ -1210,6 +1410,7 @@ function enterRoom(code, me) {
   S.unsub = S.store.subscribe(code, {
     itemAdded: renderItem, itemChanged: renderItem, itemRemoved: removeItemEl,
     linkAdded: renderLink, linkRemoved: removeLinkEl,
+    markAdded: renderMark, markRemoved: removeMarkEl,
     players: p => {
       S.players = p || {};
       renderAgents(); refreshPins();
@@ -1239,8 +1440,11 @@ $("#joinCode").addEventListener("keydown", e => { if (e.key === "Enter") joinRoo
 $("#codename").addEventListener("keydown", e => { if (e.key === "Enter") ($("#joinCode").value.trim() ? joinRoom : createRoom)(); });
 $("#caseBtn").addEventListener("click", copyInvite);
 $("#menuBtn").addEventListener("click", openSettings);
-$("#bannerCancel").addEventListener("click", exitConnect);
-$("#cutBtn").addEventListener("click", () => { if (S.cutLink) S.store.removeLink(S.code, S.cutLink).catch(saveFailed); hideCut(); });
+$("#cutBtn").addEventListener("click", () => {
+  if (S.cutLink) S.store.removeLink(S.code, S.cutLink).catch(saveFailed);
+  else if (S.cutMark) S.store.removeMark(S.code, S.cutMark).catch(saveFailed);
+  hideCut();
+});
 $("#practiceHide").addEventListener("click", () => { $("#practice").hidden = true; localStorage.setItem("dgboard:practiceHidden", "1"); });
 $("#zoomIn").addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 1.25));
 $("#zoomOut").addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 0.8));
@@ -1253,9 +1457,11 @@ $("#selbar").addEventListener("click", e => {
   if (act === "delete") askRemove(id);
 });
 $("#tray").addEventListener("click", async e => {
-  const kind = e.target.closest("button")?.dataset.add;
+  const btn = e.target.closest("button");
+  if (btn?.dataset.mode) { setMode(S.mode === btn.dataset.mode ? null : btn.dataset.mode); return; }
+  const kind = btn?.dataset.add;
   if (!kind) return;
-  exitConnect(); deselect();
+  setMode(null); deselect();
   if (kind === "photo") {
     const img = await pickPhoto();
     if (img) openEditor(null, {type: "photo", caption: "", tag: "EV-" + Math.floor(1000 + Math.random() * 9000), _img: img});
@@ -1267,8 +1473,8 @@ addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   if (!$("#confirm").hidden) S.confirmDone?.(false);
   else if (!$("#modal").hidden) closeModal();
-  else if (S.cutLink) hideCut();
-  else if (S.connectFrom) exitConnect();
+  else if (S.cutLink || S.cutMark) hideCut();
+  else if (S.mode) setMode(null);
   else deselect();
 });
 addEventListener("resize", () => { if (S.code) applyView(); });
