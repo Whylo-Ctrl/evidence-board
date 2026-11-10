@@ -7,7 +7,7 @@
 <title>Evidence Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Kalam:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Kalam:wght@400;700&family=Old+Standard+TT:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
 :root{
   --void:#140d08;
@@ -210,9 +210,15 @@ button{cursor:pointer;touch-action:manipulation}
 #strings .phead{stroke:rgba(0,0,0,.35);stroke-width:.8}
 #strings .pshine{fill:rgba(255,255,255,.7)}
 #strings g.armed .cord{stroke-width:4}
-#strings .mk{stroke-width:4.6;opacity:.86}
+#strings .mk{stroke-width:10;opacity:.9}
+#strings .mkb{stroke-width:17;opacity:.13}
+#strings .mks{stroke:rgba(255,255,255,.18);stroke-width:2.2}
+#strings .mkdraft{stroke-width:5;opacity:.6;stroke-dasharray:1 10}
+#strings .mk,#strings .mkb,#strings .mks,#strings .mkdraft{fill:none;stroke-linecap:round;stroke-linejoin:round}
+#strings .mtxt{font-family:"Permanent Marker",var(--hand);stroke-width:2.6;stroke-opacity:.45;paint-order:stroke;fill-opacity:.92;stroke-linejoin:round}
+#strings .mhitr{fill:transparent;pointer-events:fill;cursor:pointer}
 #strings .mhit{stroke:transparent;stroke-width:var(--hitw,24px);pointer-events:stroke;cursor:pointer}
-#strings g.armed .mk{opacity:.45}
+#strings g.armed .mk,#strings g.armed .mtxt{opacity:.45}
 #board.drawing{cursor:crosshair}
 
 .light,.vignette{position:fixed;inset:0;pointer-events:none}
@@ -784,6 +790,7 @@ const S = {
   mode: null, once: false, marks: new Map(), myMarks: [],
   stringColor: STRING_COLORS[localStorage.getItem("dgboard:string")] ? localStorage.getItem("dgboard:string") : "red",
   markColor: MARK_COLORS[localStorage.getItem("dgboard:marker")] ? localStorage.getItem("dgboard:marker") : "red",
+  markKind: localStorage.getItem("dgboard:markkind") === "text" ? "text" : "draw",
   muted: localStorage.getItem("dgboard:muted") === "1",
   wake: localStorage.getItem("dgboard:wake") === "1",
 };
@@ -1135,20 +1142,34 @@ function simplify(pts, tol) {
   }
   return pts.filter((_, i) => keep[i]);
 }
+function markRec(id) {
+  let rec = S.marks.get(id);
+  if (!rec) { rec = {g: sv("g", {"data-mark": id})}; marksLayer.append(rec.g); S.marks.set(id, rec); }
+  rec.g.replaceChildren();
+  return rec;
+}
+function renderMarkText(id, raw) {
+  const text = String(raw.text || "").slice(0, 80).trim();
+  if (!text || !Number.isFinite(+raw.x) || !Number.isFinite(+raw.y)) return;
+  const x = +raw.x, y = +raw.y, size = clamp(+raw.size || 95, 20, 180), rot = clamp(+raw.rot || 0, -10, 10), color = MARK_COLORS[raw.color] || MARK_COLORS.red;
+  const rec = markRec(id);
+  const t = sv("text", {class: "mtxt", x, y, "font-size": size, fill: color, stroke: color, transform: `rotate(${rot} ${x} ${y})`});
+  text.split("\n").slice(0, 3).forEach((line, i) => { const ts = sv("tspan", {x, dy: i ? size * 1.08 : 0}); ts.textContent = line; t.append(ts); });
+  rec.g.append(t);
+  const b = t.getBBox();
+  const hit = sv("rect", {class: "mhitr", x: b.x - 8, y: b.y - 6, width: b.width + 16, height: b.height + 12, transform: `rotate(${rot} ${x} ${y})`});
+  rec.g.append(hit);
+  rec.mk = t; rec.hit = hit;
+}
 function renderMark(id, raw) {
+  if (raw && raw.type === "mark" && raw.kind === "text") return renderMarkText(id, raw);
   if (!raw || raw.type !== "mark" || typeof raw.pts !== "string" || raw.pts.length > 9000) return;
   const pts = raw.pts.split(" ").map(t => { const [x, y] = t.split(",").map(Number); return {x, y}; }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
   if (pts.length < 2) return;
-  let rec = S.marks.get(id);
-  if (!rec) {
-    const g = sv("g", {"data-mark": id}), mk = sv("path", {class: "mk"}), hit = sv("path", {class: "mhit"});
-    g.append(mk, hit); marksLayer.append(g);
-    rec = {g, mk, hit};
-    S.marks.set(id, rec);
-  }
-  const d = markPath(pts);
-  rec.mk.setAttribute("d", d); rec.hit.setAttribute("d", d);
-  rec.mk.setAttribute("stroke", MARK_COLORS[raw.color] || MARK_COLORS.red);
+  const rec = markRec(id), d = markPath(pts), color = MARK_COLORS[raw.color] || MARK_COLORS.red;
+  const bleed = sv("path", {class: "mkb", d, stroke: color}), mk = sv("path", {class: "mk", d, stroke: color}), sheen = sv("path", {class: "mks", d}), hit = sv("path", {class: "mhit", d});
+  rec.g.append(bleed, mk, sheen, hit);
+  rec.mk = mk; rec.hit = hit;
 }
 function removeMarkEl(id) {
   const rec = S.marks.get(id);
@@ -1163,6 +1184,31 @@ function finishStroke(g) {
   const id = uid();
   S.myMarks.push(id);
   S.store.setMark(S.code, id, {type: "mark", color: S.markColor, pts: pts.map(p => Math.round(p.x) + "," + Math.round(p.y)).join(" "), by: S.me.id, at: Date.now()}).catch(saveFailed);
+}
+function writeWithMarker(p) {
+  openModal(sheet => {
+    sheet.setAttribute("aria-label", "Write with the marker");
+    let size = 95;
+    const ta = h("textarea", {class: "line-in", maxlength: 80, rows: 2, "data-autofocus": true, placeholder: "e.g. WHO IS SHE?"});
+    const preview = h("div", {style: `font-family:"Permanent Marker",var(--hand);font-size:30px;line-height:1.1;min-height:40px;color:${MARK_COLORS[S.markColor]};white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0 12px`});
+    ta.addEventListener("input", () => { preview.textContent = ta.value; });
+    const write = () => {
+      const text = ta.value.trim();
+      if (!text) { closeModal(); return; }
+      const id = uid();
+      S.myMarks.push(id);
+      S.store.setMark(S.code, id, {type: "mark", kind: "text", text: text.slice(0, 80), x: Math.round(p.x), y: Math.round(p.y), size, rot: +rand(-4, 4).toFixed(1), color: S.markColor, by: S.me.id, at: Date.now()}).catch(saveFailed);
+      closeModal();
+    };
+    ta.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); write(); } });
+    sheet.append(h("h2", {text: "Write with the marker"}),
+      h("label", {class: "field"}, h("span", {text: "What to write"}), ta),
+      preview,
+      h("div", {class: "field"}, h("span", {class: "flabel", text: "Size"}), segmented([["60", "Small"], ["95", "Medium"], ["150", "Big"]], "95", v => { size = +v; })),
+      h("div", {class: "foot"},
+        h("button", {type: "button", class: "btn", text: "Cancel", onclick: closeModal}),
+        h("button", {type: "button", class: "btn primary", text: "Write it", onclick: write})));
+  });
 }
 function undoMark() {
   while (S.myMarks.length) { const id = S.myMarks.pop(); if (S.marks.has(id)) { S.store.removeMark(S.code, id).catch(saveFailed); return; } }
@@ -1249,10 +1295,12 @@ function stringBanner() {
     buttons: [{label: "Done", onClick: () => setMode(null)}]});
 }
 function markerBanner() {
-  setBanner(TOUCH ? "Draw with one finger." : "Draw on the board.", {
+  const typing = S.markKind === "text";
+  setBanner(typing ? (TOUCH ? "Tap where to write." : "Click where to write.") : (TOUCH ? "Draw with one finger." : "Draw on the board."), {
     colors: MARK_COLORS, current: S.markColor, colorLabel: "Marker color",
     onColor: k => { S.markColor = k; localStorage.setItem("dgboard:marker", k); },
-    buttons: [{label: "Undo", onClick: undoMark}, {label: "Done", onClick: () => setMode(null)}]});
+    buttons: [{label: typing ? "Draw" : "Type", onClick: () => { S.markKind = typing ? "draw" : "text"; localStorage.setItem("dgboard:markkind", S.markKind); markerBanner(); }},
+      {label: "Undo", onClick: undoMark}, {label: "Done", onClick: () => setMode(null)}]});
 }
 function clearFrom() {
   if (S.connectFrom) S.items.get(S.connectFrom)?.el.classList.remove("selected");
@@ -1326,7 +1374,7 @@ board.addEventListener("pointerdown", e => {
   animId++; S.viewTouched = true;
   if (e.pointerType === "mouse" && e.button !== 0) return;
   pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
-  if ((S.cutLink || S.cutMark) && !e.target.closest(".hit,.mhit")) hideCut();
+  if ((S.cutLink || S.cutMark) && !e.target.closest(".hit,.mhit,.mhitr")) hideCut();
   if (pointers.size === 2) {
     if (G?.type === "item" && G.moved) endItemDrag();
     if (G?.type === "draw") G.path.remove();
@@ -1337,12 +1385,13 @@ board.addEventListener("pointerdown", e => {
   if (pointers.size > 2) return;
   if (S.mode === "marker") {
     e.preventDefault();
-    const path = sv("path", {class: "mk", stroke: MARK_COLORS[S.markColor]});
+    if (S.markKind === "text") { const p = toWorld(e.clientX, e.clientY); G = {type: "marktext", p, sx: e.clientX, sy: e.clientY}; return; }
+    const path = sv("path", {class: "mkdraft", stroke: MARK_COLORS[S.markColor]});
     marksLayer.append(path);
     G = {type: "draw", pts: [toWorld(e.clientX, e.clientY)], path};
     return;
   }
-  const itemEl = e.target.closest(".item"), hit = e.target.closest(".hit"), mhit = e.target.closest(".mhit");
+  const itemEl = e.target.closest(".item"), hit = e.target.closest(".hit"), mhit = e.target.closest(".mhit,.mhitr");
   if (mhit) {
     G = {type: "markhit", mark: mhit.parentNode.dataset.mark, sx: e.clientX, sy: e.clientY, ox: S.view.x, oy: S.view.y, moved: false};
   } else if (itemEl) {
@@ -1420,6 +1469,7 @@ function pointerEnd(e) {
   }
   if (e.type === "pointercancel") { if (G.type === "item" && G.moved) endItemDrag(); if (G.type === "draw") G.path.remove(); G = null; return; }
   if (G.type === "draw") { finishStroke(G); G = null; return; }
+  if (G.type === "marktext") { const p = G.p, moved = Math.hypot(e.clientX - G.sx, e.clientY - G.sy) > 12; G = null; if (!moved && e.type !== "pointercancel") writeWithMarker(p); return; }
   if (G.type === "item") { if (G.moved) endItemDrag(); else handleItemTap(G.id); }
   else if (G.type === "string" && !G.moved) showCut("link", G.link, e.clientX, e.clientY);
   else if (G.type === "markhit" && !G.moved) showCut("mark", G.mark, e.clientX, e.clientY);

@@ -46,13 +46,13 @@ The tray at the bottom has five tools.
 - **Paper** pins **note paper** (a torn, crumpled or hole-punched notebook page with an optional Classified, Top secret, or Eyes only stamp), **cardboard** (a torn piece of box with marker writing), a **map** (a folded street map with a place name and notes in the corner), a **case card** (a question with notes, one per line), or a **newspaper clipping** (headline and article in columns).
 - **Post-it** pins a quick handwritten note in yellow, pink, blue, green, purple, cream or white. Yellow ones sometimes come with a paperclip, tape or a pushpin.
 - **String** ties items together with red string. Tap one item, then the item to tie it to, and keep going until you tap **Done**. Pick red, black, yellow or blue string to color-code leads.
-- **Marker** lets you draw on the board: circle a suspect, draw arrows, scrawl a question mark. Choose red or black, use **Undo** for your last line, and tap **Done** to go back to moving things.
+- **Marker** lets you draw on the board with your finger or mouse (circle a suspect, draw arrows), or tap **Type** to write words instead: tap where they go, type, pick a size, and they appear in thick marker lettering. Finished lines get a felt-tip look. Choose red or black, use **Undo** for your last mark, and tap **Done** to go back to moving things.
 
 Moving around:
 
 - **Drag** anything to move it. Whatever you pick up comes to the front. Things can hang partly off the edge of the board, like a real one.
 - **Tap** an item for Edit, Tie string, or Remove. Double-tap to edit straight away.
-- **Tap a string** to cut it, or **tap a marker line** to erase it.
+- **Tap a string** to cut it, or **tap a marker line or marker words** to erase them.
 - **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom out and see the whole room. **Board** glides in until the board fills the screen. **Fit** zooms to your items; tap it again for the whole board with the room around it.
 
 ### Flat or 3D
