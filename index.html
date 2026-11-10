@@ -166,7 +166,7 @@ button{cursor:pointer;touch-action:manipulation}
 .is3d .item.dragging{transform:translateZ(60px) rotate(var(--rot,0deg)) scale(1.02)}
 .mount{position:absolute;pointer-events:none;z-index:0;display:none}
 #world[data-mount="stand"]:not([data-board="wall"]) .mount.stand,#world[data-mount="wall"]:not([data-board="wall"]) .mount.wall{display:block}
-#world{--floor:2800px;will-change:transform}
+#world{--floor:2800px}
 #world[data-room="cabin"]{--floor:2830px}
 #world[data-room="cozy"]{--floor:3230px}
 #world[data-room="workshop"]{--floor:2620px}
@@ -550,6 +550,8 @@ const WORLD_W = 3200, WORLD_H = 2000;
 const PIN_Y = 12;
 const OVERHANG = 0.4; // how far (share of its width) an item may hang off the board edge
 const COARSE = matchMedia("(pointer: coarse)").matches;
+// 3D needs the whole room held as graphics layers, more memory than phones and tablets allow (iOS kills the tab)
+const NO3D = matchMedia("(hover: none) and (pointer: coarse)").matches;
 const maxZoom = () => S.is3d && COARSE ? 1.6 : 2.5; // phones run out of graphics memory deep-zoomed in 3D
 const BOARD = {x: 400, y: 250, w: 2400, h: 1500};
 const ROOM = {x: -900, y: -700, w: 5000, h: 4000};
@@ -1170,6 +1172,7 @@ function linksOf(itemId) { return [...S.links].filter(([, r]) => r.data.a === it
 function nextZ() { let m = 0; for (const r of S.items.values()) m = Math.max(m, r.data.z || 0); return m + 1; }
 function refreshPins() { for (const r of S.items.values()) r.el.style.setProperty("--pin", colorHex(S.players[r.data.by]?.color)); for (const lid of S.links.keys()) updateLink(lid); }
 function setView(on, quiet) {
+  if (on && NO3D) { on = false; if (!quiet) toast("3D view needs a computer. Phones and tablets run out of memory with it."); }
   S.is3d = !!on;
   localStorage.setItem("dgboard:view3d", S.is3d ? "1" : "0");
   $("#app").classList.toggle("is3d", S.is3d);
@@ -1682,7 +1685,7 @@ function openSettings() {
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Pin sounds"}),
       segmented([["on", "On"], ["off", "Off"]], S.muted ? "off" : "on", v => { S.muted = v === "off"; localStorage.setItem("dgboard:muted", S.muted ? "1" : "0"); })));
-    sheet.append(h("div", {class: "section"},
+    if (!NO3D) sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "View"}),
       segmented([["flat", "Flat"], ["3d", "3D"]], S.is3d ? "3d" : "flat", v => setView(v === "3d", true)),
       h("p", {class: "hint", text: "Just for you. Everyone can pick their own view."})));
@@ -1890,6 +1893,7 @@ document.addEventListener("gesturestart", e => { if (!$("#app").hidden) e.preven
 async function init() {
   setTextures();
   buildRoom();
+  if (NO3D) $("#viewBtn").hidden = true;
   setView(localStorage.getItem("dgboard:view3d") === "1", true);
   const savedColor = localStorage.getItem("dgboard:color");
   S.pickedColor = PIN_COLORS.some(c => c.id === savedColor) ? savedColor : PIN_COLORS[0].id;

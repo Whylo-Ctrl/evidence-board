@@ -61,7 +61,7 @@ Tap **3D** at the top of the screen (or pick it in **Case settings → View**) t
 
 ### On a phone
 
-The board is built to stay light on phones, especially iPhones: items aren't given their own graphics layers, shadows are baked into the images, and in 3D the zoom limit is lower on touch screens.
+The board is built to stay light on phones, especially iPhones: items aren't given their own graphics layers, shadows are baked into the images, and the board is drawn straight to the screen at whatever zoom you're at. 3D view is only offered on computers, because it needs more graphics memory than phones and tablets allow.
 
 
 - **One finger** drags items around. **Two fingers** move the board and pinch to zoom. **Fit** brings everything back into view.
