@@ -34,17 +34,9 @@ button{cursor:pointer;touch-action:manipulation}
 
 /* ---------- walls ---------- */
 .wall-wood{
-  background-color:#3b2417;
-  background-image:
-    var(--grain-wood),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.62) 0 2px, rgba(255,226,180,.06) 2px 4px, transparent 4px 170px),
-    repeating-linear-gradient(90deg, #3f2719 0 170px, #4a2e1d 170px 340px, #352014 340px 510px, #45291a 510px 680px, #3a2316 680px 850px);
-  background-size:340px 700px, auto, auto;
-}
-.wall-cork{
-  background-color:#b0825a;
-  background-image:var(--cork-dark), var(--cork-light);
-  background-size:240px 240px, 170px 170px;
+  background-color:#20170f;
+  background-image:linear-gradient(rgba(12,8,4,.28),rgba(12,8,4,.5)),url(assets/room-cabin.webp);
+  background-size:cover;background-position:center;
 }
 
 /* ---------- lobby ---------- */
@@ -90,33 +82,21 @@ button{cursor:pointer;touch-action:manipulation}
 #board.panning{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #room{position:absolute;left:-900px;top:-700px;width:5000px;height:4000px;z-index:0;pointer-events:none}
-#room .rwall{position:absolute;inset:0}
-#room.basement .rwall{background:#8e887a var(--cinder);background-size:800px 400px}
-#room.office .rwall{background-color:#3b2417;background-image:var(--grain-wood),repeating-linear-gradient(90deg, rgba(0,0,0,.62) 0 3px, rgba(255,226,180,.06) 3px 6px, transparent 6px 220px),repeating-linear-gradient(90deg, #3f2719 0 220px, #4a2e1d 220px 440px, #352014 440px 660px, #45291a 660px 880px, #3a2316 880px 1100px);background-size:340px 700px,auto,auto}
-#room .rwall{height:3250px;bottom:auto}
+#room .rwall{position:absolute;inset:0;background-color:#17110c;background-image:var(--room-img);background-size:cover;background-position:center}
+#room.cabin{--room-img:url(assets/room-cabin.webp)}
+#room.cozy{--room-img:url(assets/room-cozy.webp)}
+#room.workshop{--room-img:url(assets/room-workshop.webp)}
+#room.industrial{--room-img:url(assets/room-industrial.webp)}
+#room.brick{--room-img:url(assets/room-brick.webp)}
+#room.garage{--room-img:url(assets/room-garage.webp)}
 #room .rp{position:absolute;pointer-events:none}
-#room .rp svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
-#room .rdark,#room .wallart{left:0;top:0;width:5000px;height:3250px}
-#room .rdark{background:radial-gradient(60% 62% at 50% 52%, transparent 30%, rgba(0,0,0,.45) 70%, rgba(0,0,0,.82) 100%)}
-#room .floor{left:0;top:3250px;width:5000px;height:750px}
-#room.basement .floor{background:linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.72)),#3d3a35 var(--paper-tex);background-size:auto,300px 300px}
-#room.office .floor{background:linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.72)),repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 4px,transparent 4px 180px),linear-gradient(#4a3020,#2a1a10)}
-#room .ceil{left:0;top:-1400px;width:5000px;height:1400px;background:linear-gradient(to top,#15110d,#070605)}
+#room .rdark{left:0;top:0;width:5000px;height:4000px;background:radial-gradient(60% 62% at 50% 45%, transparent 35%, rgba(0,0,0,.35) 72%, rgba(0,0,0,.75) 100%)}
+#room .floor,#room .ceil,#room .side{background-color:#17110c;background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.8)),var(--room-img);background-size:cover;background-position:center bottom}
+#room .floor{display:none;left:0;top:3250px;width:5000px;height:750px}
+#room .ceil{left:0;top:-1400px;width:5000px;height:1400px;background-position:center top}
 #room .side{top:0;width:1400px;height:3250px}
-#room .side-l{left:0}
-#room .side-r{left:3600px}
-#room.basement .side{background:linear-gradient(to right,rgba(0,0,0,.45),rgba(0,0,0,.88)),#8e887a var(--cinder);background-size:auto,800px 400px}
-#room.office .side{background:linear-gradient(to right,rgba(0,0,0,.45),rgba(0,0,0,.88)),var(--grain-wood),repeating-linear-gradient(90deg,#3f2719 0 220px,#4a2e1d 220px 440px,#352014 440px 660px);background-size:auto,340px 700px,auto}
-#room .deskshadow{left:1000px;top:3260px;width:3000px;height:140px;background:radial-gradient(closest-side,rgba(0,0,0,.5),transparent)}
-#room .shelf{left:120px;top:920px;width:844px;height:2336px;filter:brightness(.55)}
-#room .shelf-side{left:704px;top:920px;width:260px;height:2336px;filter:brightness(.42)}
-#room .cab{left:3970px;top:1910px;width:560px;height:1350px;filter:brightness(.72)}
-#room .cab-side{left:3980px;top:2006px;width:300px;height:1244px;background:linear-gradient(to right,#3a3f37,#4c5248);filter:brightness(.6)}
-#room .tubes{left:4460px;top:2280px;width:340px;height:1000px;filter:brightness(.62)}
-#room .lamp{left:4720px;top:1480px;width:260px;height:1800px}
-#room .desk-front{left:1130px;top:3030px;width:2740px;height:400px;filter:brightness(.8)}
-#room .desk-top{left:1130px;top:2430px;width:2740px;height:600px;transform-origin:50% 100%;transform:perspective(1400px) rotateX(70deg);filter:brightness(.92)}
-#room .desk-stuff{left:2180px;top:2722px;width:1390px;height:240px}
+#room .side-l{left:0;background-position:left center}
+#room .side-r{left:3600px;background-position:right center}
 .only3d{display:none}
 .bedge,#bshadow{position:absolute;pointer-events:none;z-index:0}
 #bshadow{left:400px;top:250px;width:2400px;height:1500px;box-shadow:0 60px 110px 14px rgba(0,0,0,.62),0 16px 28px rgba(0,0,0,.45)}
@@ -124,11 +104,12 @@ button{cursor:pointer;touch-action:manipulation}
 #bedgeB{left:400px;top:calc(1750px - var(--bt,0px));width:2400px;height:var(--bt,0px)}
 #bedgeL{left:400px;top:250px;width:var(--bt,0px);height:1500px}
 #bedgeR{left:calc(2800px - var(--bt,0px));top:250px;width:var(--bt,0px);height:1500px}
-#world[data-board="ply"] #bedgeT,#world[data-board="ply"] #bedgeB{background:linear-gradient(0deg,#6b4e2c 0 70%,#3a2a17 70% 71%,transparent 71%),repeating-linear-gradient(0deg,#c9a36c 0 5px,#8f6a3c 5px 7px,#b88f5a 7px 11px);background-size:100% 100%,100% 100%}
-#world[data-board="ply"] #bedgeT{background:linear-gradient(180deg,transparent 0 29%,#3a2a17 29% 30%,#7a5a34 30%),repeating-linear-gradient(0deg,#c9a36c 0 5px,#8f6a3c 5px 7px,#b88f5a 7px 11px)}
-#world[data-board="ply"] #bedgeL,#world[data-board="ply"] #bedgeR{background:linear-gradient(90deg,#6b4e2c 0 70%,#3a2a17 70% 71%,transparent 71%),repeating-linear-gradient(90deg,#c9a36c 0 5px,#8f6a3c 5px 7px,#b88f5a 7px 11px)}
-#world[data-board="cork"] #bedgeT,#world[data-board="cork"] #bedgeB{background:linear-gradient(0deg,#6f6e69,#d2d1cb 45%,#9a9993 70%,#6a6964)}
-#world[data-board="cork"] #bedgeL,#world[data-board="cork"] #bedgeR{background:linear-gradient(90deg,#6f6e69,#d2d1cb 45%,#9a9993 70%,#6a6964)}
+#world[data-board="ply"] #bedgeT,#world[data-board="ply"] #bedgeB{background:linear-gradient(0deg,#2e1210,#5b2620 45%,#47201b 70%,#2a110e)}
+#world[data-board="ply"] #bedgeL,#world[data-board="ply"] #bedgeR{background:linear-gradient(90deg,#2e1210,#5b2620 45%,#47201b 70%,#2a110e)}
+#world[data-board="cork"] #bedgeT,#world[data-board="cork"] #bedgeB,#world[data-board="white"] #bedgeT,#world[data-board="white"] #bedgeB{background:linear-gradient(0deg,#6f6e69,#d2d1cb 45%,#9a9993 70%,#6a6964)}
+#world[data-board="corkwood"] #bedgeT,#world[data-board="corkwood"] #bedgeB{background:linear-gradient(0deg,#b8925e,#ecd3a6 45%,#d2b07c 70%,#a8804e)}
+#world[data-board="corkwood"] #bedgeL,#world[data-board="corkwood"] #bedgeR{background:linear-gradient(90deg,#b8925e,#ecd3a6 45%,#d2b07c 70%,#a8804e)}
+#world[data-board="cork"] #bedgeL,#world[data-board="cork"] #bedgeR,#world[data-board="white"] #bedgeL,#world[data-board="white"] #bedgeR{background:linear-gradient(90deg,#6f6e69,#d2d1cb 45%,#9a9993 70%,#6a6964)}
 #bedgeT{filter:brightness(1.08)}
 #bedgeB{filter:brightness(.5)}
 #bedgeL,#bedgeR{filter:brightness(.72)}
@@ -144,39 +125,28 @@ button{cursor:pointer;touch-action:manipulation}
 .is3d #bedgeB{transform-origin:50% 100%;transform:translateZ(calc(-1 * var(--bt,0px))) rotateX(-90deg)}
 .is3d #bedgeL{transform-origin:0 50%;transform:translateZ(calc(-1 * var(--bt,0px))) rotateY(-90deg)}
 .is3d #bedgeR{transform-origin:100% 50%;transform:translateZ(calc(-1 * var(--bt,0px))) rotateY(90deg)}
-.is3d #room .rdark{transform:translateZ(.2px)}
-.is3d #room .wallart{transform:translateZ(.4px)}
+.is3d #room .rwall{height:3250px;bottom:auto}
+.is3d #room .rdark{height:3250px;transform:translateZ(.2px)}
 .is3d #boardbg{transform:translateZ(1px)}
-.is3d #boardbg.ply{box-shadow:inset 0 0 0 2px rgba(60,35,10,.35)}
-.is3d #boardbg.cork{box-shadow:inset 0 0 0 28px #a9a8a2,inset 0 0 0 31px #6f6e69,inset 0 0 50px 31px rgba(0,0,0,.35)}
+.is3d #boardbg:not(.wall){box-shadow:none}
 .is3d #strings{transform:translateZ(24px)}
 .is3d #boardlight{transform:translateZ(25px)}
-.is3d #room .floor{height:1400px;transform-origin:50% 0;transform:rotateX(90deg)}
+.is3d #room .floor{display:block;height:1400px;transform-origin:50% 0;transform:rotateX(90deg)}
 .is3d #room .ceil{transform-origin:50% 100%;transform:rotateX(-90deg)}
 .is3d #room .side-l{transform-origin:0 50%;transform:rotateY(-90deg)}
 .is3d #room .side-r{transform-origin:100% 50%;transform:rotateY(90deg)}
-.is3d #room .deskshadow{top:3248px;height:700px;transform-origin:50% 0;transform:translateZ(380px) rotateX(90deg)}
-.is3d #room .shelf{transform:translateZ(260px)}
-.is3d #room .shelf-side{transform-origin:100% 50%;transform:rotateY(90deg)}
-.is3d #room .cab{transform:translateZ(300px)}
-.is3d #room .cab-side{transform-origin:0 50%;transform:rotateY(-90deg)}
-.is3d #room .tubes{transform:translateZ(330px)}
-.is3d #room .lamp{transform:translateZ(520px)}
-.is3d #room .desk-front{top:2850px;transform:translateZ(1000px)}
-.is3d #room .desk-top{top:2850px;transform-origin:50% 0;transform:translateZ(400px) rotateX(90deg)}
-.is3d #room .desk-stuff{top:2610px;transform:translateZ(700px)}
 .is3d .item.dragging{transform:translateZ(60px) rotate(var(--rot,0deg)) scale(1.02)}
 #boardbg{position:absolute;left:400px;top:250px;width:2400px;height:1500px;z-index:0;pointer-events:none}
-#boardbg.ply{background:#c49a62 var(--osb);background-size:600px 600px;box-shadow:0 46px 80px rgba(0,0,0,.55),0 8px 16px rgba(0,0,0,.45),inset 0 0 0 2px rgba(60,35,10,.35)}
-#boardbg.ply::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:rgba(40,22,6,.45);box-shadow:1px 0 0 rgba(255,235,200,.25)}
-#boardbg.ply::after{content:"";position:absolute;left:30px;top:30px;width:12px;height:12px;border-radius:50%;background:#8a8478;
-  box-shadow:1150px 0 0 #8a8478,1190px 0 0 #8a8478,2328px 0 0 #8a8478,0 714px 0 #8a8478,1150px 714px 0 #8a8478,1190px 714px 0 #8a8478,2328px 714px 0 #8a8478,0 1428px 0 #8a8478,1150px 1428px 0 #8a8478,1190px 1428px 0 #8a8478,2328px 1428px 0 #8a8478}
-#boardbg.cork{background-color:#b0825a;background-image:var(--cork-dark),var(--cork-light);background-size:240px 240px,170px 170px;
-  box-shadow:inset 0 0 0 28px #a9a8a2,inset 0 0 0 31px #6f6e69,inset 0 0 50px 31px rgba(0,0,0,.35),0 46px 80px rgba(0,0,0,.55),0 8px 16px rgba(0,0,0,.45)}
+#boardbg.ply,#boardbg.cork,#boardbg.corkwood,#boardbg.white{background-color:#8a6a45;background-size:100% 100%;background-repeat:no-repeat;box-shadow:0 46px 80px rgba(0,0,0,.55),0 8px 16px rgba(0,0,0,.45)}
+#boardbg.ply{background-image:url(assets/board-osb.webp)}
+#boardbg.cork{background-image:url(assets/board-cork-silver.webp)}
+#boardbg.corkwood{background-image:url(assets/board-cork-wood.webp)}
+#boardbg.white{background-color:#f4f4f2;background-image:url(assets/board-whiteboard.webp)}
 #boardbg.wall{background:none;box-shadow:none}
 #boardlight{position:absolute;left:400px;top:250px;width:2400px;height:1500px;z-index:999990;pointer-events:none;
   background:radial-gradient(42% 60% at 21% -4%, rgba(255,208,140,.18), transparent 70%),radial-gradient(42% 60% at 79% -4%, rgba(255,208,140,.18), transparent 70%),radial-gradient(75% 75% at 50% 42%, transparent 55%, rgba(10,5,0,.3) 100%)}
 #boardbg.wall~#boardlight{display:none}
+#boardbg.white~#boardlight{opacity:.55}
 #app .light{display:none}
 #app .vignette{background:radial-gradient(140% 110% at 50% 40%, transparent 55%, rgba(0,0,0,.45) 100%)}
 #strings{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:1000000}
@@ -213,21 +183,21 @@ button{cursor:pointer;touch-action:manipulation}
   background:radial-gradient(circle at 35% 32%, rgba(255,255,255,.75), var(--pin,#d4a12a) 42%, color-mix(in srgb, var(--pin,#d4a12a) 55%, #000) 100%);
   box-shadow:2px 4px 3px rgba(0,0,0,.45)}
 
-.photo{width:200px;background:var(--polaroid) var(--paper-tex);padding:14px 12px 0}
+.photo{width:200px;background:var(--polaroid) url(assets/photo-polaroid.webp) 0 0/100% 100% no-repeat;padding:14px 12px 0}
 .photo .img{width:176px;height:176px;background:#2a2622 center/cover no-repeat;filter:contrast(1.05) saturate(.82) sepia(.14);box-shadow:inset 0 0 18px rgba(0,0,0,.35)}
 .photo .cap{font-size:14px;line-height:1.3;text-align:center;padding:9px 2px 14px;min-height:50px;overflow-wrap:anywhere}
-.photo .tag{position:absolute;top:20px;right:18px;background:var(--polaroid);font-size:11px;padding:2px 6px;color:var(--ink-soft)}
+.photo .tag{position:absolute;top:20px;right:18px;background:#f4f3f0;font-size:11px;padding:2px 6px;color:var(--ink-soft)}
 
-.doc{width:250px;min-height:290px;background:var(--paper) var(--paper-tex);padding:32px 22px 24px}
+.doc{width:250px;min-height:290px;background:#f1f0ec url(assets/paper-plain.webp) center/cover;padding:32px 22px 24px}
 .doc .title{font-size:17px;line-height:1.3;margin-bottom:12px;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
 .doc .body{font-size:13.5px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
-.case{width:230px;background:var(--paper) var(--paper-tex)}
+.case{width:230px;background:#f1f0ec url(assets/paper-plain.webp) center/cover}
 .case .band{background:#c3cfb6;padding:24px 16px 12px;font-family:var(--hand);font-weight:700;font-size:21px;line-height:1.12;overflow-wrap:anywhere}
 .case .lines{margin:0;padding:12px 16px 18px 34px;font-family:var(--hand);font-size:16px;line-height:26px;min-height:96px;
   background-image:repeating-linear-gradient(transparent 0 25px, rgba(60,90,140,.22) 25px 26px);background-position:0 12px}
 .case .lines li{overflow-wrap:anywhere}
 .stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);border:3px solid var(--stamp);color:var(--stamp);font-size:24px;letter-spacing:2px;padding:4px 12px;opacity:.78;border-radius:4px;white-space:nowrap;mix-blend-mode:multiply;pointer-events:none}
-.note{width:160px;min-height:150px;background:var(--note,#efd35a);padding:28px 14px 16px;box-shadow:0 12px 12px -8px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.4)}
+.note{width:160px;min-height:150px;background:var(--note,#efd35a) var(--note-img,none) center/cover;background-blend-mode:var(--note-blend,normal);padding:28px 14px 16px;box-shadow:0 12px 12px -8px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.4)}
 .note .txt{font-family:var(--hand);font-size:21px;line-height:1.15;white-space:pre-wrap;overflow-wrap:anywhere;color:#2a2418}
 .redact{background:#121010;color:transparent;border-radius:1px;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 1px}
 
@@ -250,9 +220,10 @@ button{cursor:pointer;touch-action:manipulation}
 .doc::before{content:"";position:absolute;left:0;right:0;top:47%;height:16px;pointer-events:none;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.07) 45%,rgba(255,255,255,.4) 55%,rgba(255,255,255,0))}
 .doc.stain::after{content:"";position:absolute;width:88px;height:88px;left:var(--sx,55%);top:var(--sy,60%);border-radius:50%;pointer-events:none;
   background:radial-gradient(circle, transparent 53%, rgba(122,74,30,.22) 56%, rgba(122,74,30,.08) 61%, transparent 66%)}
+.doc.stain{background-image:url(assets/paper-grunge.webp)}
 .item.clip{width:240px;box-shadow:none;filter:drop-shadow(0 7px 9px rgba(0,0,0,.42))}
 .item.clip.dragging{box-shadow:none;filter:drop-shadow(0 18px 18px rgba(0,0,0,.5))}
-.clip .in{background:#e6e0cd var(--paper-tex);padding:22px 16px 22px;color:#1f1c18;
+.clip .in{background:#eeede9 url(assets/paper-crumpled.webp) center/cover;padding:22px 16px 22px;color:#1f1c18;
   clip-path:polygon(0 1%,4% 0,9% 1.2%,15% .2%,22% 1%,30% 0,37% 1.1%,45% .3%,52% 1%,60% 0,68% 1.2%,75% .2%,83% 1%,90% 0,96% 1%,100% .4%,99.2% 8%,100% 16%,99.4% 25%,100% 34%,99.1% 44%,100% 53%,99.3% 62%,100% 72%,99.2% 81%,100% 90%,99.5% 99%,94% 100%,87% 99%,79% 100%,71% 99.2%,63% 100%,55% 99%,47% 100%,39% 99.3%,31% 100%,23% 99%,15% 100%,8% 99.2%,1% 100%,.5% 91%,0 82%,.8% 72%,0 62%,.6% 52%,0 42%,.9% 32%,0 22%,.6% 12%)}
 .clip .rule{border-top:3px double #2a2620;margin:0 0 8px}
 .clip .head{font-family:var(--news);font-weight:700;font-size:22px;line-height:1.06;margin:0 0 8px;overflow-wrap:anywhere}
@@ -272,7 +243,7 @@ button{cursor:pointer;touch-action:manipulation}
 .dot{width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1.5px rgba(0,0,0,.35);flex:none}
 .agent small{color:#d9b46a;font-size:12px}
 #tray{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:20;display:flex;gap:4px;
-  background:var(--manila) var(--paper-tex);padding:8px 10px calc(env(safe-area-inset-bottom) + 8px);border-radius:8px 8px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.55)}
+  background:#c99c66 url(assets/card-strip.webp) center/cover;padding:8px 10px calc(env(safe-area-inset-bottom) + 8px);border-radius:8px 8px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.55)}
 #tray button{display:flex;flex-direction:column;align-items:center;gap:5px;background:transparent;border:0;border-radius:6px;padding:8px 16px;font-size:14px;min-width:78px;white-space:nowrap}
 #tray button:hover{background:rgba(0,0,0,.07)}
 .ico{display:block;width:28px;height:26px;position:relative}
@@ -312,10 +283,14 @@ button{cursor:pointer;touch-action:manipulation}
 .seg button+button{border-left:1.5px solid var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
 .seg button:disabled{cursor:default}
+.seg.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;background:var(--ink)}
+.seg.grid button,.seg.grid button+button{border:0;background:var(--manila-lt);padding:9px 8px}
+.seg.grid button[aria-pressed="true"]{background:var(--ink)}
+.seg.grid.odd::after{content:"";background:var(--manila-lt)}
 .tags{display:flex;gap:8px;flex-wrap:wrap}
 .tagbtn{border:1.5px solid var(--ink);background:transparent;border-radius:20px;padding:7px 13px;font-size:13px;min-height:36px}
 .tagbtn[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
-.swatch{width:36px;height:36px;border-radius:4px;border:0;background:var(--c);box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.swatch{width:36px;height:36px;border-radius:4px;border:0;background:var(--c) var(--img,none) center/cover;background-blend-mode:var(--blend,normal);box-shadow:0 2px 3px rgba(0,0,0,.35)}
 .swatch[aria-pressed="true"]{box-shadow:0 0 0 3px var(--manila-lt), 0 0 0 5px var(--ink)}
 .prev{width:180px;margin:0 auto 14px;background:var(--polaroid);padding:10px 10px 30px;box-shadow:0 6px 14px rgba(0,0,0,.35);transform:rotate(-2deg)}
 .prev div{aspect-ratio:1;background:#2a2622 center/cover no-repeat}
@@ -401,7 +376,7 @@ button{cursor:pointer;touch-action:manipulation}
 <section id="app" hidden>
   <div id="board" aria-label="Evidence wall">
     <div id="world">
-      <div id="room" class="basement" aria-hidden="true"><div class="rwall"></div></div>
+      <div id="room" class="cabin" aria-hidden="true"><div class="rwall"></div></div>
       <div id="bshadow" class="only3d" aria-hidden="true"></div>
       <div id="boardbg" class="ply" aria-hidden="true"></div>
       <div id="bedgeT" class="bedge only3d" aria-hidden="true"></div>
@@ -496,7 +471,10 @@ const PIN_COLORS = [
   {id:"violet",  name:"Violet",  hex:"#7a4fa0"},
   {id:"bone",    name:"Bone",    hex:"#e6ddc6"},
 ];
-const NOTE_COLORS = {yellow:"#efd35a", pink:"#f1a8b5", blue:"#a5c9e1", green:"#bdd88f"};
+const NOTE_COLORS = {yellow:"#efd35a", pink:"#f1a8b5", blue:"#a5c9e1", green:"#3fc7ad", purple:"#b3a6d8", cream:"#e6ebc6", white:"#efeeea"};
+// photo texture for each post-it color; blue tints the white paper
+const NOTE_IMG = {yellow:"note-yellow", pink:"note-pink", blue:"note-white", green:"note-green", purple:"note-purple", cream:"note-cream", white:"note-white"};
+const noteStyle = c => `url(assets/${NOTE_IMG[c]}.webp)`;
 const STAMPS = [["", "None"], ["CLASSIFIED","Classified"], ["TOP SECRET","Top secret"], ["EYES ONLY","Eyes only"]];
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const STRING_COLORS = {red: "#a11d1d", black: "#24201c", yellow: "#d2a312", blue: "#2c5a9e"};
@@ -528,147 +506,22 @@ function h(tag, props = {}, ...kids) {
 function svgUrl(svg) { return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`; }
 function setTextures() {
   const r = document.documentElement.style;
-  r.setProperty("--grain-wood", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='340' height='700'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.55 0.010' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 0.07  0 0 0 0 0.035  0 0 0 0 0.015  1.3 0 0 0 -0.5'/></filter><rect width='100%' height='100%' filter='url(#g)'/></svg>`));
-  r.setProperty("--cork-dark", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.28  0 0 0 0 0.16  0 0 0 0 0.08  2.6 0 0 0 -1.35'/></filter><rect width='100%' height='100%' filter='url(#c)'/></svg>`));
-  r.setProperty("--cork-light", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='l'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' seed='11'/><feColorMatrix values='0 0 0 0 0.93  0 0 0 0 0.78  0 0 0 0 0.58  0 2.4 0 0 -1.45'/></filter><rect width='100%' height='100%' filter='url(#l)'/></svg>`));
-  r.setProperty("--cinder", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.28  0 0 0 0 0.26  0 0 0 0 0.23  0 0 0 0.45 0'/></filter><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='3' seed='9'/><feColorMatrix values='0 0 0 0 0.2  0 0 0 0 0.18  0 0 0 0 0.15  0 0 0 0.3 0'/></filter><rect width='800' height='400' fill='#68635a'/><rect x='6' y='6' width='388' height='188' rx='3' fill='#958f80'/><rect x='406' y='6' width='388' height='188' rx='3' fill='#8e887a'/><rect x='-194' y='206' width='388' height='188' rx='3' fill='#99928a'/><rect x='206' y='206' width='388' height='188' rx='3' fill='#918b7d'/><rect x='606' y='206' width='388' height='188' rx='3' fill='#99928a'/><rect width='800' height='400' filter='url(#m)'/><rect width='800' height='400' filter='url(#n)'/></svg>`));
-  r.setProperty("--osb", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='o'><feTurbulence type='fractalNoise' baseFrequency='0.022 0.03' numOctaves='3' seed='12'/><feColorMatrix values='0 0 0 0 0.40  0 0 0 0 0.25  0 0 0 0 0.10  0 0 0 2.2 -0.85'/></filter><filter id='f'><feTurbulence type='turbulence' baseFrequency='0.04 0.022' numOctaves='3' seed='3'/><feColorMatrix values='0 0 0 0 0.94  0 0 0 0 0.81  0 0 0 0 0.56  0 0 0 1.9 -0.95'/></filter><filter id='d'><feTurbulence type='turbulence' baseFrequency='0.05 0.03' numOctaves='2' seed='21'/><feColorMatrix values='0 0 0 0 0.3  0 0 0 0 0.18  0 0 0 0 0.07  0 0 0 2 -1.15'/></filter><rect width='600' height='600' fill='#c49a62'/><rect width='600' height='600' filter='url(#o)'/><rect width='600' height='600' filter='url(#f)'/><rect width='600' height='600' filter='url(#d)'/></svg>`));
   r.setProperty("--paper-tex", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(#p)'/></svg>`));
 }
 
 /* ---------------- the room around the board ---------------- */
 function buildRoom() {
-  const mk = () => {
-    const o = [];
-    return {o,
-      R: (x, y, w, hh, fill, extra = "") => o.push(`<rect x="${x}" y="${y}" width="${w}" height="${hh}" fill="${fill}" ${extra}/>`),
-      P: (d, fill, extra = "") => o.push(`<path d="${d}" fill="${fill}" ${extra}/>`),
-      E: (cx, cy, rx, ry, fill, extra = "") => o.push(`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" ${extra}/>`)};
-  };
-  const piece = (cls, vb, g, aspect = "") => `<div class="rp ${cls}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"${aspect}>${g.o.join("")}</svg></div>`;
-  const div = cls => `<div class="rp ${cls}"></div>`;
-  let seed = 11;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const cols = ["#5a3b24", "#2e3a48", "#6e5d40", "#3b3a34", "#7d2b22", "#4a4f3a", "#8a7652", "#2f2a26"];
-  const pick = () => cols[Math.floor(rnd() * cols.length)];
-
-  // wall: switch, outlet, lamp glow, sconces
-  const wall = mk();
-  wall.R(2930, 1180, 64, 104, "#d9d3c5", 'rx="6"'); wall.R(2954, 1210, 16, 42, "#bdb6a6", 'rx="4"');
-  wall.R(2380, 2440, 56, 80, "#d9d3c5", 'rx="6"');
-  wall.R(-900, 2516, 5000, 34, "#211d19");
-  for (const cx of [900, 2300]) wall.E(cx, -20, 640, 540, "url(#gGlow)");
-  wall.E(3950, 1000, 560, 700, "url(#gGlow)", 'opacity=".6"');
-  for (const cx of [900, 2300]) {
-    wall.R(cx - 22, 60, 44, 110, "url(#gBrass)", 'rx="10"'); wall.R(cx - 10, 44, 20, 26, "url(#gBrass)");
-    wall.P(`M${cx - 80} -40 Q${cx - 68} 48 ${cx - 22} 62 L${cx + 22} 62 Q${cx + 68} 48 ${cx + 80} -40 Q${cx} -14 ${cx - 80} -40 Z`, "url(#gShade)");
-    wall.E(cx, -40, 80, 20, "#fff3d6");
-  }
-
-  // metal shelving with binders and boxes
-  const sh = mk(), shelves = [380, 800, 1220, 1640, 2060, 2480];
-  sh.R(-760, 380, 24, 2176, "url(#gMetal)"); sh.R(24, 380, 24, 2176, "url(#gMetal)");
-  for (let i = 1; i < shelves.length; i++) {
-    const base = shelves[i], maxH = base - shelves[i - 1] - 40;
-    let x = -728;
-    while (x < -20) {
-      const r = rnd();
-      if (r < 0.6) {
-        const w = 44 + rnd() * 30, hh = maxH * (0.7 + rnd() * 0.25);
-        if (x + w > 14) break;
-        sh.R(x, base - hh, w, hh, pick()); sh.R(x + w * 0.2, base - hh * 0.32, w * 0.6, hh * 0.12, "rgba(230,220,195,.5)");
-        x += w + 3;
-      } else if (r < 0.84) {
-        const w = 230, hh = 170;
-        if (x + w > 14) { x += 24; continue; }
-        sh.R(x, base - hh, w, hh, "#b39e76"); sh.R(x, base - hh, w, 26, "#a28d65"); sh.R(x + 70, base - hh + 60, 90, 44, "#e2d8c0"); sh.E(x + w / 2, base - hh + 136, 26, 10, "rgba(0,0,0,.35)");
-        x += w + 6;
-      } else {
-        const w = 150 + rnd() * 60;
-        if (x + w > 14) { x += 24; continue; }
-        let yy = base;
-        for (let k = 0, n = 3 + Math.floor(rnd() * 3); k < n; k++) { const hh = 26 + rnd() * 14, ww = w - rnd() * 30; sh.R(x + (w - ww) / 2, yy - hh, ww, hh, pick()); yy -= hh; }
-        x += w + 8;
-      }
-    }
-  }
-  for (const y of shelves) { sh.R(-772, y, 832, 22, "#5d605b"); sh.R(-772, y + 22, 832, 6, "rgba(0,0,0,.35)"); }
-  sh.R(-700, 250, 230, 130, "#2b2723", 'rx="12"'); sh.E(-520, 315, 30, 30, "#b9a77e");
-  for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) sh.E(-670 + i * 30, 285 + j * 30, 8, 8, "#141210");
-  sh.R(-420, 230, 260, 150, "#b39e76"); sh.R(-420, 230, 260, 24, "#a28d65");
-  const shs = mk();
-  shs.R(0, 0, 20, 2336, "url(#gMetal)"); shs.R(240, 0, 20, 2336, "url(#gMetal)");
-  for (const y of shelves) shs.R(0, y - 220, 260, 22, "#4d504b");
-
-  // filing cabinet with folders on top
-  const cb = mk();
-  cb.R(3080, 1320, 520, 1230, "url(#gCab)", 'rx="6"'); cb.R(3070, 1306, 540, 22, "#5a6056", 'rx="4"');
-  for (let i = 0; i < 4; i++) { const y = 1345 + i * 300; cb.R(3105, y, 470, 280, "rgba(255,255,255,.04)", 'stroke="rgba(0,0,0,.45)" stroke-width="5" rx="4"'); cb.R(3280, y + 40, 120, 40, "#d6cfbc", 'stroke="#4a4a44" stroke-width="4"'); cb.R(3270, y + 110, 140, 24, "#a9aaa2", 'rx="10"'); }
-  for (let k = 0; k < 4; k++) cb.R(3130 + (k % 2) * 14, 1284 - k * 22, 400, 22, k % 2 ? "#cdb07a" : "#bfa068");
-  const tb = mk();
-  tb.o.push('<g transform="rotate(-9 3700 2550)">'); tb.R(3650, 1650, 70, 900, "#d8caa6", 'rx="30"'); tb.R(3730, 1720, 64, 830, "#cbbb93", 'rx="30"'); tb.E(3685, 1652, 35, 12, "#efe6cf"); tb.E(3762, 1722, 32, 11, "#e6dcc2"); tb.o.push("</g>");
-
-  // floor lamp
-  const lp = mk();
-  lp.E(3950, 2552, 120, 22, "#151310"); lp.R(3942, 980, 16, 1572, "#3a3c38");
-  lp.P("M3830 980 L4070 980 L4010 800 L3890 800 Z", "#e9dcbc", 'opacity=".95"');
-
-  // desk: front, top surface (local coordinates), things standing on it
-  const df = mk();
-  df.R(20, 100, 90, 300, "#1a100a"); df.R(2630, 100, 90, 300, "#1a100a");
-  df.R(0, 0, 2740, 100, "url(#gDeskFront)"); df.R(0, 0, 2740, 5, "rgba(255,220,170,.14)");
-  df.R(770, 20, 600, 60, "none", 'stroke="rgba(0,0,0,.45)" stroke-width="4"'); df.E(1070, 50, 14, 9, "#8a6a3a");
-  const dt = mk();
-  dt.R(0, 0, 2740, 600, "url(#gDeskTop)");
-  for (const y of [90, 210, 330, 450]) dt.R(0, y, 2740, 3, "rgba(0,0,0,.18)");
-  dt.R(0, 590, 2740, 10, "rgba(255,220,170,.14)");
-  dt.E(2250, 300, 430, 250, "url(#gPool)");
-  for (let k = 0; k < 4; k++) { dt.R(330 + k * 9, 250 - k * 12, 420, 210, k % 2 ? "#cfb27c" : "#bf9f68", 'rx="4"'); dt.R(336 + k * 9, 254 - k * 12, 408, 6, "#efe8d8"); }
-  dt.o.push('<g transform="rotate(-8 1800 330)">'); dt.R(1730, 250, 140, 165, "#ece6da"); dt.R(1742, 262, 116, 116, "#2b2b28"); dt.o.push("</g>");
-  dt.o.push('<g transform="rotate(11 1960 360)">'); dt.R(1890, 285, 140, 165, "#ece6da"); dt.R(1902, 297, 116, 116, "#3a3530"); dt.o.push("</g>");
-  dt.E(1102, 320, 70, 30, "rgba(0,0,0,.35)"); dt.E(1460, 320, 180, 40, "rgba(0,0,0,.35)");
-  const ds = mk();
-  ds.R(1290, 2204, 84, 96, "#e2dccf", 'rx="12"'); ds.P("M1372 2222 q46 6 40 40 q-6 30 -42 26", "none", 'stroke="#e2dccf" stroke-width="13"'); ds.E(1332, 2206, 42, 11, "#2b1a0e", 'stroke="#e2dccf" stroke-width="6"');
-  ds.R(1540, 2208, 300, 92, "#2a2a2a", 'rx="10"'); ds.R(1580, 2226, 170, 46, "#4a4a48", 'rx="6"'); ds.E(1625, 2249, 16, 16, "#d8d8d8"); ds.E(1705, 2249, 16, 16, "#d8d8d8");
-  for (let i = 0; i < 5; i++) ds.R(1580 + i * 34, 2196, 26, 14, "#9a9a96", 'rx="3"');
-  for (let i = 0; i < 5; i++) ds.R(1772, 2224 + i * 10, 50, 4, "#555");
-  ds.E(2480, 2290, 120, 12, "url(#gBrass)"); ds.R(2472, 2158, 16, 132, "url(#gBrass)");
-  ds.P("M2330 2158 Q2480 2096 2630 2158 L2618 2186 Q2480 2148 2342 2186 Z", "url(#gLampGreen)");
-  ds.P("M2342 2186 Q2480 2148 2618 2186 L2610 2194 Q2480 2160 2350 2194 Z", "#ffe7b0", 'opacity=".85"');
-
-  const defs = `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<radialGradient id="gGlow"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".62"/><stop offset=".35" stop-color="#ffc47a" stop-opacity=".24"/><stop offset="1" stop-color="#ffb860" stop-opacity="0"/></radialGradient>
-<linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#e6c992"/></linearGradient>
-<linearGradient id="gBrass" x1="0" x2="1"><stop offset="0" stop-color="#5c431c"/><stop offset=".5" stop-color="#c39645"/><stop offset="1" stop-color="#4e3816"/></linearGradient>
-<linearGradient id="gMetal" x1="0" x2="1"><stop offset="0" stop-color="#3f423e"/><stop offset=".5" stop-color="#777b75"/><stop offset="1" stop-color="#363935"/></linearGradient>
-<linearGradient id="gCab" x1="0" x2="1"><stop offset="0" stop-color="#4b5148"/><stop offset=".55" stop-color="#6c7468"/><stop offset="1" stop-color="#424840"/></linearGradient>
-<linearGradient id="gDeskTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f1d11"/><stop offset="1" stop-color="#5b3b23"/></linearGradient>
-<linearGradient id="gDeskFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a190e"/><stop offset="1" stop-color="#160d07"/></linearGradient>
-<radialGradient id="gPool"><stop offset="0" stop-color="#ffe2a8" stop-opacity=".45"/><stop offset="1" stop-color="#ffcf80" stop-opacity="0"/></radialGradient>
-<linearGradient id="gLampGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f7a52"/><stop offset="1" stop-color="#123a26"/></linearGradient>
-</defs></svg>`;
-  const none = ' preserveAspectRatio="none"';
-  $("#room").insertAdjacentHTML("beforeend", defs + [
-    div("rdark"),
-    piece("wallart", "-900 -700 5000 3250", wall),
-    div("floor"), div("ceil only3d"), div("side side-l only3d"), div("side side-r only3d"),
-    div("deskshadow"),
-    piece("shelf-side only3d", "0 0 260 2336", shs, none),
-    piece("shelf", "-780 220 844 2336", sh),
-    div("cab-side only3d"),
-    piece("cab", "3070 1210 560 1350", cb),
-    piece("tubes", "3560 1580 340 1000", tb),
-    piece("lamp", "3820 780 260 1800", lp),
-    piece("desk-front", "0 0 2740 400", df, none),
-    piece("desk-top", "0 0 2740 600", dt, none),
-    piece("desk-stuff", "1280 2060 1390 240", ds),
-  ].join(""));
+  // the room photo is the wall; these add the vignette and, in 3D, a floor, ceiling and side walls
+  $("#room").insertAdjacentHTML("beforeend", ["rdark", "floor", "ceil only3d", "side side-l only3d", "side side-r only3d"]
+    .map(c => `<div class="rp ${c}"></div>`).join(""));
 }
+const ROOMS = [["cabin", "Cabin"], ["cozy", "Study"], ["workshop", "Workshop"], ["industrial", "Factory"], ["brick", "White brick"], ["garage", "Garage"]];
+const BOARDS = [["ply", "Plywood"], ["corkwood", "Cork, pine"], ["cork", "Cork, metal"], ["white", "Whiteboard"], ["wall", "Pin to wall"]];
 function sceneOf(m) {
   const legacyCork = m?.background === "cork";
   return {
-    room: ["basement", "office"].includes(m?.room) ? m.room : legacyCork ? "basement" : "office",
-    board: ["ply", "cork", "wall"].includes(m?.board) ? m.board : legacyCork ? "cork" : "wall",
+    room: ROOMS.some(r => r[0] === m?.room) ? m.room : m?.room === "basement" || legacyCork ? "workshop" : "cabin",
+    board: BOARDS.some(b => b[0] === m?.board) ? m.board : legacyCork ? "cork" : "wall",
   };
 }
 
@@ -1005,6 +858,8 @@ function buildContent(rec, id, d) {
     }
   } else if (d.type === "note") {
     el.style.setProperty("--note", NOTE_COLORS[d.color]);
+    el.style.setProperty("--note-img", noteStyle(d.color));
+    el.style.setProperty("--note-blend", d.color === "blue" ? "multiply" : "normal");
     el.append(h("div", {class: "txt"}, redacted(d.text)));
   } else if (d.variant === "case") {
     const lines = d.body.split("\n").map(s => s.replace(/^\s*[-•*]\s*/, "").trim()).filter(Boolean);
@@ -1194,7 +1049,7 @@ function restack3d() {
     arr.forEach((r, i) => r.el.style.setProperty("--z3", (2 + i * step).toFixed(2) + "px"));
   });
 }
-const BOARD_DEPTH = {ply: 110, cork: 90, wall: 0};
+const BOARD_DEPTH = {ply: 110, cork: 90, corkwood: 90, white: 70, wall: 0};
 function applyScene() {
   const sc = sceneOf(S.meta);
   world.dataset.board = sc.board;
@@ -1494,6 +1349,7 @@ function segmented(options, current, onPick, disabled = false) {
   }
   return wrap;
 }
+function grid(seg, odd = false) { seg.classList.add("grid"); if (odd) seg.classList.add("odd"); return seg; }
 
 /* ---------------- image upload ---------------- */
 async function compressImage(file) {
@@ -1570,7 +1426,7 @@ function openEditor(id, draft) {
         body.append(h("label", {class: "field"}, h("span", {text: "Note"}), ta),
           h("div", {class: "field"}, h("span", {class: "flabel", text: "Color"}),
             h("div", {class: "tags", role: "group"}, Object.entries(NOTE_COLORS).map(([k, hex]) =>
-              h("button", {type: "button", class: "swatch", style: `--c:${hex}`, "aria-label": k, "aria-pressed": String(d.color === k), onclick: e => {
+              h("button", {type: "button", class: "swatch", style: `--c:${hex};--img:${noteStyle(k)};--blend:${k === "blue" ? "multiply" : "normal"}`, "aria-label": k, "aria-pressed": String(d.color === k), onclick: e => {
                 d.color = k; e.currentTarget.parentNode.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === e.currentTarget)));
               }})))),
           h("div", {class: "row"}, redactBtn()),
@@ -1663,10 +1519,10 @@ function openSettings() {
     const sc = sceneOf(S.meta);
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Room"}),
-      segmented([["basement", "Basement"], ["office", "Wood office"]], sc.room, v => S.store.updateMeta(S.code, {room: v}).catch(saveFailed), !handler)));
+      grid(segmented(ROOMS, sc.room, v => S.store.updateMeta(S.code, {room: v}).catch(saveFailed), !handler))));
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Board"}),
-      segmented([["ply", "Plywood"], ["cork", "Cork"], ["wall", "Pin to the wall"]], sc.board, v => S.store.updateMeta(S.code, {board: v}).catch(saveFailed), !handler),
+      grid(segmented(BOARDS, sc.board, v => S.store.updateMeta(S.code, {board: v}).catch(saveFailed), !handler), BOARDS.length % 3 !== 0),
       handler ? null : h("p", {class: "hint", text: "Only the Handler can change the room and board."})));
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Pin sounds"}),
@@ -1723,7 +1579,7 @@ async function createRoom() {
     let code = genCode();
     for (let i = 0; i < 8 && await S.store.getMeta(code); i++) code = genCode();
     const me = {id: uid(), codename, color: S.pickedColor, joinedAt: Date.now()};
-    await S.store.createRoom(code, {handlerId: me.id, createdAt: Date.now(), room: "basement", board: "ply"}, me);
+    await S.store.createRoom(code, {handlerId: me.id, createdAt: Date.now(), room: "cabin", board: "ply"}, me);
     localStorage.setItem("dgboard:pid:" + code, me.id);
     enterRoom(code, me);
   } catch (err) {

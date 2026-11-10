@@ -2,7 +2,7 @@
 
 A shared evidence wall for your Delta Green table. Up to 4 people per case (Handler included) can pin photos, papers and post-its, tie them together with red string, and see each other's changes live from their own phone or laptop.
 
-The whole app is one file: `index.html`.
+The app is one file, `index.html`, plus the photo textures in the `assets` folder (rooms, boards, post-its, paper, the polaroid frame and the cardboard tray). Keep the `assets` folder next to `index.html` when you copy or host it.
 
 ## Shared rooms
 
@@ -57,7 +57,7 @@ Moving around:
 
 ### Flat or 3D
 
-Tap **3D** at the top of the screen (or pick it in **Case settings → View**) to switch the room into 3D. The walls, floor, shelf, filing cabinet and desk get real depth, and the board itself becomes a thick panel standing off the wall on a frame, casting a shadow behind it. Pan toward an edge and you'll see the board's sides. Items lift toward you when you pick them up. Tap it again to go back to flat. It's a personal setting, so each agent can choose their own, and flat is lighter on older phones.
+Tap **3D** at the top of the screen (or pick it in **Case settings → View**) to switch the room into 3D. The room photo becomes the back wall with a floor, ceiling and side walls around it, and the board itself becomes a thick panel standing off the wall on a frame, casting a shadow behind it. Pan toward an edge and you'll see the board's sides. Items lift toward you when you pick them up. Tap it again to go back to flat. It's a personal setting, so each agent can choose their own, and flat is lighter on older phones.
 
 ### On a phone
 
@@ -74,4 +74,4 @@ Redaction is for atmosphere. The original words are still saved behind the scene
 
 ### Handler controls
 
-In **Case settings**, the Handler sets the scene for everyone: the **room** (a cinder-block basement or a wood-paneled office, with shelves, a filing cabinet, wall lamps and a desk) and the **board** (plywood, cork, or pinning straight to the wall). The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
+In **Case settings**, the Handler sets the scene for everyone: the **room** (cabin, study, workshop, factory, white brick or garage, each a real photo) and the **board** (plywood in a dark wooden frame, cork in a pine frame, cork in a metal frame, a whiteboard, or pinning straight to the wall). New cases start in the cabin with the plywood board. The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
