@@ -100,6 +100,15 @@ button{cursor:pointer;touch-action:manipulation}
     linear-gradient(transparent 150px,rgba(255,222,175,.32) 150px,rgba(255,222,175,.32) 157px,rgba(0,0,0,.45) 157px,rgba(0,0,0,.82) 100%),
     var(--desk) 0 0/1400px 320px,#4a2e1a}
 .is3d #room.office .desk{transform:translateZ(520px)}
+/* props on the office desk */
+#room .prop{display:none;z-index:0;background:0 0/100% 100% no-repeat}
+#room.office .prop{display:block}
+#room .prop::after{content:"";position:absolute;left:6%;right:6%;bottom:-16px;height:40px;z-index:-1;background:radial-gradient(closest-side,rgba(0,0,0,.62),transparent)}
+#room .prop-lamp{left:150px;top:1890px;width:1100px;height:900px;background-image:url(assets/prop-lamp.webp)}
+#room .prop-lamp::after{left:40%;right:18%}
+#room .prop-phone{left:1560px;top:2462px;width:520px;height:330px;background-image:url(assets/prop-phone.webp)}
+#room .prop-typewriter{left:3230px;top:2352px;width:680px;height:445px;background-image:url(assets/prop-typewriter.webp)}
+.is3d #room.office .prop{transform:translateZ(560px)}
 /* desk-lamp lighting */
 #world[data-light="lamp"] #room .rdark{background:radial-gradient(26% 30% at 24% 64%, rgba(255,186,105,.26), transparent 72%),radial-gradient(58% 56% at 38% 52%, rgba(0,0,0,.12), rgba(0,0,0,.62) 60%, rgba(0,0,0,.92) 100%)}
 #world[data-light="lamp"] #boardlight{background:radial-gradient(60% 80% at 2% 88%, rgba(255,190,110,.30), transparent 72%),radial-gradient(110% 105% at 12% 80%, transparent 26%, rgba(6,3,0,.45) 62%, rgba(4,2,0,.72) 100%)}
@@ -624,7 +633,7 @@ function setTextures() {
 /* ---------------- the room around the board ---------------- */
 function buildRoom() {
   // the room photo is the wall; these add the vignette and, in 3D, a floor, ceiling and side walls
-  $("#room").insertAdjacentHTML("beforeend", ["desk", "rdark", "floor", "ceil only3d", "side side-l only3d", "side side-r only3d"]
+  $("#room").insertAdjacentHTML("beforeend", ["desk", "prop prop-lamp", "prop prop-phone", "prop prop-typewriter", "rdark", "floor", "ceil only3d", "side side-l only3d", "side side-r only3d"]
     .map(c => `<div class="rp ${c}"></div>`).join(""));
 }
 const ROOMS = [["office", "Dark office"], ["cabin", "Cabin"], ["cozy", "Study"], ["workshop", "Workshop"], ["industrial", "Factory"], ["brick", "White brick"], ["garage", "Garage"]];

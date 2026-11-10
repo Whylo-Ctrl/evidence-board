@@ -61,6 +61,9 @@ Tap **3D** at the top of the screen (or pick it in **Case settings → View**) t
 
 ### On a phone
 
+The board is built to stay light on phones, especially iPhones: items aren't given their own graphics layers, shadows are baked into the images, and in 3D the zoom limit is lower on touch screens.
+
+
 - **One finger** drags items around. **Two fingers** move the board and pinch to zoom. **Fit** brings everything back into view.
 - In Marker mode, one finger draws and two fingers still move the board.
 - **Case settings → Share invite link** opens your phone's share sheet, so you can send the case straight to a group chat.
@@ -74,4 +77,4 @@ Redaction is for atmosphere. The original words are still saved behind the scene
 
 ### Handler controls
 
-In **Case settings**, the Handler sets the scene for everyone: the **room** (a dark office with a desk under the board, or a cabin, study, workshop, factory, white brick room or garage, each a real photo) and the **board** (plywood in a dark wooden frame, cork in a pine frame, cork in a metal frame, a whiteboard, or pinning straight to the wall). The Handler also picks whether the board stands on a wooden **easel** or is **hung on the wall** from a wire and nail. In the dark office the board always hangs on the wall above the desk. **Lighting** can be a moody **desk lamp** (warm light from the lower left, dark corners) or **lights on**. New cases start in the cabin with the plywood board on an easel, lit by the desk lamp. The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
+In **Case settings**, the Handler sets the scene for everyone: the **room** (a dark office with a desk lamp, rotary phone and typewriter on the desk under the board, or a cabin, study, workshop, factory, white brick room or garage, each a real photo) and the **board** (plywood in a dark wooden frame, cork in a pine frame, cork in a metal frame, a whiteboard, or pinning straight to the wall). The Handler also picks whether the board stands on a wooden **easel** or is **hung on the wall** from a wire and nail. In the dark office the board always hangs on the wall above the desk. **Lighting** can be a moody **desk lamp** (warm light from the lower left, dark corners) or **lights on**. New cases start in the cabin with the plywood board on an easel, lit by the desk lamp. The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
