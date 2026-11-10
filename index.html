@@ -11,6 +11,8 @@
 <style>
 :root{
   --void:#140d08;
+  --plaster:url(assets/wall-plaster.webp);
+  --desk:url(assets/desk-wood.webp);
   --manila:#d6bb86;
   --manila-lt:#e9dab5;
   --paper:#ebe2cc;
@@ -101,7 +103,8 @@ button{cursor:pointer;touch-action:manipulation}
 /* desk-lamp lighting */
 #world[data-light="lamp"] #room .rdark{background:radial-gradient(26% 30% at 24% 64%, rgba(255,186,105,.26), transparent 72%),radial-gradient(58% 56% at 38% 52%, rgba(0,0,0,.12), rgba(0,0,0,.62) 60%, rgba(0,0,0,.92) 100%)}
 #world[data-light="lamp"] #boardlight{background:radial-gradient(60% 80% at 2% 88%, rgba(255,190,110,.30), transparent 72%),radial-gradient(110% 105% at 12% 80%, transparent 26%, rgba(6,3,0,.45) 62%, rgba(4,2,0,.72) 100%)}
-#world[data-light="lamp"] .mount{filter:brightness(.62)}
+#world[data-light="lamp"] #stand-mast::before,#world[data-light="lamp"] #stand-ledge::before,#world[data-light="lamp"] #stand-clamp::before{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(0,0,0,.4)}
+#world[data-light="lamp"] #stand-legs svg{opacity:.62}
 #app.lamp .vignette{background:radial-gradient(125% 105% at 38% 42%, transparent 42%, rgba(0,0,0,.62) 100%)}
 #room .rp{position:absolute;pointer-events:none}
 #room .rdark{left:0;top:0;width:5000px;height:4000px;background:radial-gradient(60% 62% at 50% 45%, transparent 35%, rgba(0,0,0,.35) 72%, rgba(0,0,0,.75) 100%)}
@@ -124,9 +127,10 @@ button{cursor:pointer;touch-action:manipulation}
 #world[data-board="corkwood"] #bedgeT,#world[data-board="corkwood"] #bedgeB{background:linear-gradient(0deg,#b8925e,#ecd3a6 45%,#d2b07c 70%,#a8804e)}
 #world[data-board="corkwood"] #bedgeL,#world[data-board="corkwood"] #bedgeR{background:linear-gradient(90deg,#b8925e,#ecd3a6 45%,#d2b07c 70%,#a8804e)}
 #world[data-board="cork"] #bedgeL,#world[data-board="cork"] #bedgeR,#world[data-board="white"] #bedgeL,#world[data-board="white"] #bedgeR{background:linear-gradient(90deg,#6f6e69,#d2d1cb 45%,#9a9993 70%,#6a6964)}
-#bedgeT{filter:brightness(1.08)}
-#bedgeB{filter:brightness(.5)}
-#bedgeL,#bedgeR{filter:brightness(.72)}
+.bedge::after{content:"";position:absolute;inset:0}
+#bedgeT::after{background:rgba(255,240,220,.06)}
+#bedgeB::after{background:rgba(0,0,0,.5)}
+#bedgeL::after,#bedgeR::after{background:rgba(0,0,0,.28)}
 #viewBtn[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
 /* ---------- 3D view ---------- */
 .is3d #board{perspective:var(--persp,1140px);perspective-origin:50% 50%}
@@ -148,11 +152,12 @@ button{cursor:pointer;touch-action:manipulation}
 .is3d #room .floor{display:block;height:1400px;transform-origin:50% 0;transform:rotateX(90deg)}
 .is3d #room .ceil{transform-origin:50% 100%;transform:rotateX(-90deg)}
 .is3d #room .side-l{transform-origin:0 50%;transform:rotateY(-90deg)}
+@media (pointer:coarse){.is3d #room .ceil,.is3d #room .side{display:none}}
 .is3d #room .side-r{transform-origin:100% 50%;transform:rotateY(90deg)}
 .is3d .item.dragging{transform:translateZ(60px) rotate(var(--rot,0deg)) scale(1.02)}
 .mount{position:absolute;pointer-events:none;z-index:0;display:none}
 #world[data-mount="stand"]:not([data-board="wall"]) .mount.stand,#world[data-mount="wall"]:not([data-board="wall"]) .mount.wall{display:block}
-#world{--floor:2800px}
+#world{--floor:2800px;will-change:transform}
 #world[data-room="cabin"]{--floor:2830px}
 #world[data-room="cozy"]{--floor:3230px}
 #world[data-room="workshop"]{--floor:2620px}
@@ -208,20 +213,21 @@ button{cursor:pointer;touch-action:manipulation}
 .vignette{z-index:6;background:radial-gradient(135% 105% at 50% 38%, transparent 46%, rgba(0,0,0,.6) 100%)}
 
 /* ---------- items ---------- */
-.item{position:absolute;transform-origin:50% 12px;transform:translateZ(var(--z3,0px)) rotate(var(--rot,0deg)) scale(var(--lift,1));touch-action:none;cursor:grab;
+.item{position:absolute;transform-origin:50% 12px;transform:rotate(var(--rot,0deg)) scale(var(--lift,1));touch-action:none;cursor:grab;
   box-shadow:0 7px 14px rgba(0,0,0,.42), 0 1px 2px rgba(0,0,0,.5);transition:box-shadow .15s}
 .item.dragging{--lift:1.04;cursor:grabbing;box-shadow:0 20px 30px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.4);transition:none}
 .item.selected{outline:2px dashed rgba(255,214,150,.95);outline-offset:7px}
 .item:focus{outline:none}
 .item:focus-visible{outline:2px solid #ffd58a;outline-offset:7px}
 .item.dropped{animation:drop .32s ease-out}
-@keyframes drop{from{transform:translateZ(var(--z3,0px)) rotate(var(--rot,0deg)) scale(1.12);opacity:.3}to{transform:translateZ(var(--z3,0px)) rotate(var(--rot,0deg)) scale(1);opacity:1}}
+@keyframes drop{from{transform:rotate(var(--rot,0deg)) scale(1.12);opacity:.3}to{transform:rotate(var(--rot,0deg)) scale(1);opacity:1}}
+.is3d .item{transform:translateZ(var(--z3,0px)) rotate(var(--rot,0deg)) scale(var(--lift,1))}
 .pin{position:absolute;top:4px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;z-index:3;
   background:radial-gradient(circle at 35% 32%, rgba(255,255,255,.75), var(--pin,#d4a12a) 42%, color-mix(in srgb, var(--pin,#d4a12a) 55%, #000) 100%);
   box-shadow:2px 4px 3px rgba(0,0,0,.45)}
 
 .photo{width:200px;background:var(--polaroid) url(assets/photo-polaroid.webp) 0 0/100% 100% no-repeat;padding:14px 12px 0}
-.photo .img{width:176px;height:176px;background:#2a2622 center/cover no-repeat;filter:contrast(1.05) saturate(.82) sepia(.14);box-shadow:inset 0 0 18px rgba(0,0,0,.35)}
+.photo .img{width:176px;height:176px;background:#efe0c4 center/cover no-repeat;background-blend-mode:multiply;box-shadow:inset 0 0 18px rgba(0,0,0,.35)}
 .photo .cap{font-size:14px;line-height:1.3;text-align:center;padding:9px 2px 14px;min-height:50px;overflow-wrap:anywhere}
 .photo .tag{position:absolute;top:20px;right:18px;background:#f4f3f0;font-size:11px;padding:2px 6px;color:var(--ink-soft)}
 
@@ -233,22 +239,20 @@ button{cursor:pointer;touch-action:manipulation}
 .case .lines{margin:0;padding:12px 16px 18px 34px;font-family:var(--hand);font-size:16px;line-height:26px;min-height:96px;
   background-image:repeating-linear-gradient(transparent 0 25px, rgba(60,90,140,.22) 25px 26px);background-position:0 12px}
 .case .lines li{overflow-wrap:anywhere}
-.stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);border:3px solid var(--stamp);color:var(--stamp);font-size:24px;letter-spacing:2px;padding:4px 12px;opacity:.78;border-radius:4px;white-space:nowrap;mix-blend-mode:multiply;pointer-events:none}
+.stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);border:3px solid var(--stamp);color:var(--stamp);font-size:24px;letter-spacing:2px;padding:4px 12px;opacity:.78;border-radius:4px;white-space:nowrap;pointer-events:none}
 .note{width:160px;min-height:var(--mh,160px);padding:var(--pad,30px 18px 18px 16px)}
-.note::before,.doc::before,.card::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
-.note::before{background:var(--note-img) 0 0/100% 100% no-repeat;filter:var(--note-tint,none)}
+.note::before,.doc::before,.card::before{content:"";position:absolute;inset:calc(var(--sp,0px) * -1);z-index:-1;pointer-events:none}
+.note::before{background:var(--note-img) 0 0/100% 100% no-repeat}
 .doc{background:none}.doc::before{background:var(--paper-img) 0 0/100% 100% no-repeat}
 .card{width:var(--w,280px);min-height:var(--mh,170px);padding:var(--pad,26px 26px 22px);color:#17130e}
 .card::before{background:var(--card-img) 0 0/100% 100% no-repeat}
 .card .title{font-family:var(--hand);font-weight:700;font-size:27px;line-height:1.02;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;overflow-wrap:anywhere;opacity:.9}
 .card .body{font-family:var(--hand);font-size:17px;line-height:1.25;white-space:pre-wrap;overflow-wrap:anywhere;opacity:.88}
 .item.cut,.item.cut.dragging{box-shadow:none}
-.item.cut{filter:drop-shadow(0 6px 5px rgba(0,0,0,.4)) drop-shadow(0 1px 1px rgba(0,0,0,.3))}
-.item.cut.dragging{filter:drop-shadow(0 18px 16px rgba(0,0,0,.5)) drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 .item.fastened .pin{display:none}
 .map{width:760px;background:#e3d6b6 var(--paper-tex);padding:10px}
 .map .mapwrap{position:relative;height:500px;overflow:hidden;box-shadow:inset 0 0 0 1.5px rgba(80,60,30,.55)}
-.map .mapsvg{display:block;width:100%;height:100%;filter:sepia(.3) saturate(.85) contrast(.95)}
+.map .mapsvg{display:block;width:100%;height:100%}
 .map::after{content:"";position:absolute;inset:0;pointer-events:none;background:
   linear-gradient(90deg,transparent 32.6%,rgba(60,40,10,.18) 33.2%,rgba(255,250,235,.45) 33.6%,transparent 34.4%),
   linear-gradient(90deg,transparent 65.9%,rgba(60,40,10,.18) 66.5%,rgba(255,250,235,.45) 66.9%,transparent 67.7%),
@@ -266,10 +270,10 @@ button{cursor:pointer;touch-action:manipulation}
 .tape.tl{top:-8px;left:-20px;transform:rotate(-34deg)}
 .tape.tr{top:-8px;right:-20px;transform:rotate(32deg)}
 .photo.mug{background:#f4f1ea;padding:10px 10px 12px}
-.photo.mug .img{filter:grayscale(.6) contrast(1.12) sepia(.1)}
+.photo.mug .img{background-color:#9a948a;background-blend-mode:luminosity}
 .photo.mug .plac{position:absolute;left:26px;right:26px;top:140px;background:#151311;color:#efe9dc;font-size:10.5px;line-height:1.4;letter-spacing:1px;padding:5px 8px;text-transform:uppercase;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.45);overflow-wrap:anywhere}
 .photo.cctv{background:#f1eee6;padding:9px 9px 0}
-.photo.cctv .img{width:182px;height:150px;filter:grayscale(1) contrast(1.35) brightness(.92)}
+.photo.cctv .img{width:182px;height:150px;background-color:#7d7d7d;background-blend-mode:luminosity}
 .photo.cctv .scan{position:absolute;left:9px;top:9px;width:182px;height:150px;pointer-events:none;background:repeating-linear-gradient(0deg, rgba(0,0,0,.2) 0 1px, transparent 1px 3px)}
 .photo.cctv .ts,.photo.cctv .cam{position:absolute;top:16px;font-family:"Courier New",monospace;font-size:10px;color:#fff;text-shadow:0 0 2px #000,0 0 1px #000}
 .photo.cctv .ts{left:15px}
@@ -280,10 +284,12 @@ button{cursor:pointer;touch-action:manipulation}
 .doc.stain::after{content:"";position:absolute;width:88px;height:88px;left:var(--sx,55%);top:var(--sy,60%);border-radius:50%;pointer-events:none;
   background:radial-gradient(circle, transparent 53%, rgba(122,74,30,.22) 56%, rgba(122,74,30,.08) 61%, transparent 66%)}
 
-.item.clip{width:240px;box-shadow:none;filter:drop-shadow(0 7px 9px rgba(0,0,0,.42))}
-.item.clip.dragging{box-shadow:none;filter:drop-shadow(0 18px 18px rgba(0,0,0,.5))}
+.item.clip{width:240px;box-shadow:none;--torn:polygon(0 1%,4% 0,9% 1.2%,15% .2%,22% 1%,30% 0,37% 1.1%,45% .3%,52% 1%,60% 0,68% 1.2%,75% .2%,83% 1%,90% 0,96% 1%,100% .4%,99.2% 8%,100% 16%,99.4% 25%,100% 34%,99.1% 44%,100% 53%,99.3% 62%,100% 72%,99.2% 81%,100% 90%,99.5% 99%,94% 100%,87% 99%,79% 100%,71% 99.2%,63% 100%,55% 99%,47% 100%,39% 99.3%,31% 100%,23% 99%,15% 100%,8% 99.2%,1% 100%,.5% 91%,0 82%,.8% 72%,0 62%,.6% 52%,0 42%,.9% 32%,0 22%,.6% 12%)}
+.item.clip::before{content:"";position:absolute;inset:0;z-index:-1;transform:translate(2px,7px);background:rgba(0,0,0,.32);clip-path:var(--torn);pointer-events:none}
+.item.clip.dragging{box-shadow:none}
+.item.clip.dragging::before{transform:translate(4px,16px);background:rgba(0,0,0,.36)}
 .clip .in{background:#eeede9 url(assets/paper-crumpled.webp) center/cover;padding:22px 16px 22px;color:#1f1c18;
-  clip-path:polygon(0 1%,4% 0,9% 1.2%,15% .2%,22% 1%,30% 0,37% 1.1%,45% .3%,52% 1%,60% 0,68% 1.2%,75% .2%,83% 1%,90% 0,96% 1%,100% .4%,99.2% 8%,100% 16%,99.4% 25%,100% 34%,99.1% 44%,100% 53%,99.3% 62%,100% 72%,99.2% 81%,100% 90%,99.5% 99%,94% 100%,87% 99%,79% 100%,71% 99.2%,63% 100%,55% 99%,47% 100%,39% 99.3%,31% 100%,23% 99%,15% 100%,8% 99.2%,1% 100%,.5% 91%,0 82%,.8% 72%,0 62%,.6% 52%,0 42%,.9% 32%,0 22%,.6% 12%)}
+  clip-path:var(--torn)}
 .clip .rule{border-top:3px double #2a2620;margin:0 0 8px}
 .clip .head{font-family:var(--news);font-weight:700;font-size:22px;line-height:1.06;margin:0 0 8px;overflow-wrap:anywhere}
 .clip .cols{font-family:var(--news);font-size:11.5px;line-height:1.38;column-count:2;column-gap:12px;text-align:justify;hyphens:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#2b2722}
@@ -331,7 +337,7 @@ button{cursor:pointer;touch-action:manipulation}
 #cutpop .chip{color:var(--stamp)}
 
 /* ---------- modal ---------- */
-.overlay{position:fixed;left:0;right:0;top:var(--vvt,0px);height:var(--vvh,100%);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,6,3,.62);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.overlay{position:fixed;left:0;right:0;top:var(--vvt,0px);height:var(--vvh,100%);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,6,3,.62);-webkit-}
 .sheet{width:min(460px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--manila-lt) var(--paper-tex);border-radius:6px;padding:24px 22px 20px;box-shadow:0 30px 60px rgba(0,0,0,.6)}
 .sheet h2{font-weight:400;font-size:24px;margin:0 0 18px}
 .sheet .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -349,7 +355,7 @@ button{cursor:pointer;touch-action:manipulation}
 .tags{display:flex;gap:8px;flex-wrap:wrap}
 .tagbtn{border:1.5px solid var(--ink);background:transparent;border-radius:20px;padding:7px 13px;font-size:13px;min-height:36px}
 .tagbtn[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
-.swatch{width:36px;height:36px;border-radius:4px;border:0;background:var(--c) var(--img,none) center/cover;background-blend-mode:var(--blend,normal);box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.swatch{width:36px;height:36px;border-radius:4px;border:0;background:var(--c) var(--img,none) center/cover;box-shadow:0 2px 3px rgba(0,0,0,.35)}
 .swatch[aria-pressed="true"]{box-shadow:0 0 0 3px var(--manila-lt), 0 0 0 5px var(--ink)}
 .prev{width:180px;margin:0 auto 14px;background:var(--polaroid);padding:10px 10px 30px;box-shadow:0 6px 14px rgba(0,0,0,.35);transform:rotate(-2deg)}
 .prev div{aspect-ratio:1;background:#2a2622 center/cover no-repeat}
@@ -534,7 +540,8 @@ const MAX_AGENTS = 4;
 const WORLD_W = 3200, WORLD_H = 2000;
 const PIN_Y = 12;
 const OVERHANG = 0.4; // how far (share of its width) an item may hang off the board edge
-const MAX_S = 2.5;
+const COARSE = matchMedia("(pointer: coarse)").matches;
+const maxZoom = () => S.is3d && COARSE ? 1.6 : 2.5; // phones run out of graphics memory deep-zoomed in 3D
 const BOARD = {x: 400, y: 250, w: 2400, h: 1500};
 const ROOM = {x: -900, y: -700, w: 5000, h: 4000};
 const CAM = 2400;
@@ -548,10 +555,10 @@ const PIN_COLORS = [
   {id:"bone",    name:"Bone",    hex:"#e6ddc6"},
 ];
 const NOTE_COLORS = {yellow:"#efd35a", pink:"#f1a8b5", blue:"#a5c9e1", green:"#3fc7ad", purple:"#b3a6d8", cream:"#e6ebc6", white:"#efeeea"};
-// cut-out photos for each post-it color: [image, height/width, has its own clip/tape/pin]; blue tints the white paper
+// cut-out photos for each post-it color: [image, height/width, has its own clip/tape/pin]
 const NOTE_SHAPES = {
   yellow: [["note-yellow", 1.03], ["note-yellow-clip", 1.0, true], ["note-yellow-tape", 1.1, true], ["note-yellow-pin", .95, true]],
-  pink: [["note-pink", 1.01]], white: [["note-white", .98], ["note-white-2", 1.04]], blue: [["note-white", .98], ["note-white-2", 1.04]],
+  pink: [["note-pink", 1.01]], white: [["note-white", .98], ["note-white-2", 1.04]], blue: [["note-blue", .98], ["note-blue-2", 1.04]],
   green: [["note-green", 1.01]], purple: [["note-purple", 1.03]], cream: [["note-cream", 1.02]]};
 const noteStyle = c => `url(assets/${NOTE_SHAPES[c][0][0]}.webp)`;
 // torn and crumpled notebook paper: [image, height/width, text padding]
@@ -577,6 +584,7 @@ function mapSvg(seed) {
     + `<path d="${river}" stroke="#7b9196" stroke-width="32" fill="none" stroke-linecap="round"/><path d="${river}" stroke="#a7b9bc" stroke-width="26" fill="none" stroke-linecap="round"/>`
     + `<path d="${majors.join("")}" stroke="#9f8350" stroke-width="11" fill="none"/><path d="${majors.join("")}" stroke="#eecd8b" stroke-width="7.5" fill="none"/></svg>`;
 }
+const SHADOW_PAD = 0.07; // the cut-out images carry a baked-in shadow with this much margin (share of width) on each side
 const shapeNo = (d, fallback = 0) => Number.isInteger(d.shape) ? d.shape : fallback;
 const cardShape = d => CARD_SHAPES[shapeNo(d) % CARD_SHAPES.length];
 const STAMPS = [["", "None"], ["CLASSIFIED","Classified"], ["TOP SECRET","Top secret"], ["EYES ONLY","Eyes only"]];
@@ -610,8 +618,6 @@ function h(tag, props = {}, ...kids) {
 function svgUrl(svg) { return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`; }
 function setTextures() {
   const r = document.documentElement.style;
-  r.setProperty("--plaster", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='900' height='900'><filter id='a'><feTurbulence type='fractalNoise' baseFrequency='0.006' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.6  0 0 0 0 0.66  0 0 0 0.9 -0.32'/></filter><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.04  0 0 0 0 0.05  0 0 0 0 0.06  0 0 0 0.75 -0.1'/></filter><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='0.045' numOctaves='3' seed='15' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.02  0 0 0 0 0.03  0 0 0 0 0.04  0 0 0 0.8 -0.3'/></filter><rect width='900' height='900' fill='#2a3137'/><rect width='900' height='900' filter='url(#a)'/><rect width='900' height='900' filter='url(#c)'/><rect width='900' height='900' filter='url(#b)'/></svg>`));
-  r.setProperty("--desk", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='320'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.0015 0.08' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.06  0 0 0 0 0.02  0 0 0 1.6 -0.55'/></filter><filter id='h'><feTurbulence type='fractalNoise' baseFrequency='0.003 0.2' numOctaves='2' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.75  0 0 0 0 0.5  0 0 0 0 0.3  0 0 0 0.9 -0.5'/></filter><rect width='1400' height='320' fill='#4a2e1a'/><rect width='1400' height='320' filter='url(#h)'/><rect width='1400' height='320' filter='url(#g)'/></svg>`));
   r.setProperty("--paper-tex", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(#p)'/></svg>`));
 }
 
@@ -820,15 +826,16 @@ function thunk(strength = 1) {
 /* ---------------- view (pan/zoom) ---------------- */
 function applyView() {
   const v = S.view, vw = innerWidth, vh = innerHeight;
-  v.s = clamp(v.s, minScale(), MAX_S);
+  v.s = clamp(v.s, minScale(), maxZoom());
   const axis = (val, vp, lo, size) => { const mn = vp - (lo + size) * v.s, mx = -lo * v.s; return mn > mx ? (mn + mx) / 2 : clamp(val, mn, mx); };
   v.x = axis(v.x, vw, ROOM.x, ROOM.w); v.y = axis(v.y, vh, ROOM.y, ROOM.h + (S.is3d ? 700 : 0));
-  world.style.transform = `translate(${v.x}px,${v.y}px) scale3d(${v.s},${v.s},${v.s})`;
+  // flat view uses a plain 2D zoom so iPhone Safari can draw the board at the zoomed size (a 3D scale makes it draw everything at full size and run out of memory)
+  world.style.transform = S.is3d ? `translate(${v.x}px,${v.y}px) scale3d(${v.s},${v.s},${v.s})` : `translate(${v.x}px,${v.y}px) scale(${v.s})`;
   if (S.is3d) board.style.setProperty("--persp", (CAM * v.s).toFixed(1) + "px");
   strings.style.setProperty("--hitw", Math.max(18, 26 / v.s).toFixed(1) + "px");
 }
 function zoomAt(px, py, factor) {
-  const v = S.view, ns = clamp(v.s * factor, minScale(), MAX_S);
+  const v = S.view, ns = clamp(v.s * factor, minScale(), maxZoom());
   S.fitMode = null;
   const wx = (px - v.x) / v.s, wy = (py - v.y) / v.s;
   v.s = ns; v.x = px - wx * ns; v.y = py - wy * ns;
@@ -859,7 +866,7 @@ function fitBox(box, maxS = 1.15, animate = false) {
 }
 function zoomToBoard() {
   S.fitMode = "boardClose";
-  fitBox({x: BOARD.x - 24, y: BOARD.y - 24, w: BOARD.w + 48, h: BOARD.h + 48}, MAX_S, true);
+  fitBox({x: BOARD.x - 24, y: BOARD.y - 24, w: BOARD.w + 48, h: BOARD.h + 48}, maxZoom(), true);
 }
 function fitView(mode, animate = false) {
   const wide = innerWidth >= 700;
@@ -969,9 +976,8 @@ function buildContent(rec, id, d) {
   } else if (d.type === "note") {
     const shapes = NOTE_SHAPES[d.color], [img, ar, fastened] = shapes[shapeNo(d, hs) % shapes.length];
     el.style.setProperty("--note-img", `url(assets/${img}.webp)`);
-    el.style.setProperty("--mh", Math.round(160 * ar) + "px");
+    el.style.setProperty("--mh", Math.round(160 * ar) + "px"); el.style.setProperty("--sp", (160 * SHADOW_PAD).toFixed(1) + "px");
     el.style.setProperty("--pad", fastened ? "36px 18px 18px 16px" : "30px 24px 18px 16px");
-    el.style.setProperty("--note-tint", d.color === "blue" ? "sepia(.35) hue-rotate(165deg) saturate(2.6) brightness(.97)" : "none");
     if (fastened) el.classList.add("fastened");
     el.append(h("div", {class: "txt"}, redacted(d.text)));
   } else if (d.variant === "case") {
@@ -984,7 +990,7 @@ function buildContent(rec, id, d) {
   } else if (d.variant === "card") {
     const [img, w, ar, pad] = cardShape(d);
     el.style.setProperty("--card-img", `url(assets/${img}.webp)`);
-    el.style.setProperty("--w", w + "px"); el.style.setProperty("--mh", Math.round(w * ar) + "px"); el.style.setProperty("--pad", pad);
+    el.style.setProperty("--w", w + "px"); el.style.setProperty("--mh", Math.round(w * ar) + "px"); el.style.setProperty("--pad", pad); el.style.setProperty("--sp", (w * SHADOW_PAD).toFixed(1) + "px");
     el.append(h("div", {class: "title"}, redacted(d.title)), h("div", {class: "body"}, redacted(d.body)));
   } else if (d.variant === "clip") {
     el.append(h("div", {class: "in"}, h("div", {class: "rule"}), h("div", {class: "head"}, redacted(d.title)), h("div", {class: "cols"}, redacted(d.body))));
@@ -992,7 +998,7 @@ function buildContent(rec, id, d) {
     const pool = d.body.length > 160 ? TALL_PAPERS : PAPER_SHAPES.map((_, i) => i);
     const [img, ar, pad] = PAPER_SHAPES[pool[shapeNo(d, hs) % pool.length]];
     el.style.setProperty("--paper-img", `url(assets/${img}.webp)`);
-    el.style.setProperty("--mh", Math.round(250 * ar) + "px"); el.style.setProperty("--pad", pad);
+    el.style.setProperty("--mh", Math.round(250 * ar) + "px"); el.style.setProperty("--pad", pad); el.style.setProperty("--sp", (250 * SHADOW_PAD).toFixed(1) + "px");
     el.append(h("div", {class: "title"}, redacted(d.title)), h("div", {class: "body"}, redacted(d.body)));
   }
   if (d.type === "paper" && d.variant !== "clip" && d.stamp) el.append(h("span", {class: "stamp", text: d.stamp}));
@@ -1342,7 +1348,7 @@ addEventListener("pointermove", e => {
     if (pointers.size < 2) return;
     const [p1, p2] = [...pointers.values()];
     const d = Math.hypot(p2.x - p1.x, p2.y - p1.y), m = {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2};
-    const s = clamp(G.v0.s * d / G.d0, minScale(), MAX_S);
+    const s = clamp(G.v0.s * d / G.d0, minScale(), maxZoom());
     S.fitMode = null;
     const wx = (G.m0.x - G.v0.x) / G.v0.s, wy = (G.m0.y - G.v0.y) / G.v0.s;
     S.view = {s, x: m.x - wx * s, y: m.y - wy * s};
@@ -1560,7 +1566,7 @@ function openEditor(id, draft) {
         body.append(h("label", {class: "field"}, h("span", {text: "Note"}), ta),
           h("div", {class: "field"}, h("span", {class: "flabel", text: "Color"}),
             h("div", {class: "tags", role: "group"}, Object.entries(NOTE_COLORS).map(([k, hex]) =>
-              h("button", {type: "button", class: "swatch", style: `--c:${hex};--img:${noteStyle(k)};--blend:${k === "blue" ? "multiply" : "normal"}`, "aria-label": k, "aria-pressed": String(d.color === k), onclick: e => {
+              h("button", {type: "button", class: "swatch", style: `--c:${hex};--img:${noteStyle(k)}`, "aria-label": k, "aria-pressed": String(d.color === k), onclick: e => {
                 d.color = k; e.currentTarget.parentNode.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === e.currentTarget)));
               }})))),
           h("div", {class: "row"}, redactBtn()),
