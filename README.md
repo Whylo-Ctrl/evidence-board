@@ -43,14 +43,14 @@ The site is hosted with GitHub Pages from the `main` branch of this repo.
 The tray at the bottom has five tools.
 
 - **Photo** pins a picture from your phone or computer. Pick a style: **Polaroid**, **Mugshot** (with a booking placard), or **Surveillance** (black-and-white camera still with a timestamp).
-- **Paper** pins **note paper** (a torn, crumpled or hole-punched notebook page with an optional Classified, Top secret, or Eyes only stamp), **cardboard** (a torn piece of box with marker writing), a **case card** (a question with notes, one per line), or a **newspaper clipping** (headline and article in columns).
+- **Paper** pins **note paper** (a torn, crumpled or hole-punched notebook page with an optional Classified, Top secret, or Eyes only stamp), **cardboard** (a torn piece of box with marker writing), a **map** (a folded street map with a place name and notes in the corner), a **case card** (a question with notes, one per line), or a **newspaper clipping** (headline and article in columns).
 - **Post-it** pins a quick handwritten note in yellow, pink, blue, green, purple, cream or white. Yellow ones sometimes come with a paperclip, tape or a pushpin.
 - **String** ties items together with red string. Tap one item, then the item to tie it to, and keep going until you tap **Done**. Pick red, black, yellow or blue string to color-code leads.
 - **Marker** lets you draw on the board: circle a suspect, draw arrows, scrawl a question mark. Choose red or black, use **Undo** for your last line, and tap **Done** to go back to moving things.
 
 Moving around:
 
-- **Drag** anything to move it. Whatever you pick up comes to the front.
+- **Drag** anything to move it. Whatever you pick up comes to the front. Things can hang partly off the edge of the board, like a real one.
 - **Tap** an item for Edit, Tie string, or Remove. Double-tap to edit straight away.
 - **Tap a string** to cut it, or **tap a marker line** to erase it.
 - **Drag the empty wall** to pan, and pinch (phone) or use the mouse wheel (computer) to zoom out and see the whole room. **Board** glides in until the board fills the screen. **Fit** zooms to your items; tap it again for the whole board with the room around it.
@@ -74,4 +74,4 @@ Redaction is for atmosphere. The original words are still saved behind the scene
 
 ### Handler controls
 
-In **Case settings**, the Handler sets the scene for everyone: the **room** (cabin, study, workshop, factory, white brick or garage, each a real photo) and the **board** (plywood in a dark wooden frame, cork in a pine frame, cork in a metal frame, a whiteboard, or pinning straight to the wall). The Handler also picks whether the board stands on a wooden **easel** or is **hung on the wall** from a wire and nail. New cases start in the cabin with the plywood board on an easel. The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
+In **Case settings**, the Handler sets the scene for everyone: the **room** (a dark office with a desk under the board, or a cabin, study, workshop, factory, white brick room or garage, each a real photo) and the **board** (plywood in a dark wooden frame, cork in a pine frame, cork in a metal frame, a whiteboard, or pinning straight to the wall). The Handler also picks whether the board stands on a wooden **easel** or is **hung on the wall** from a wire and nail. In the dark office the board always hangs on the wall above the desk. **Lighting** can be a moody **desk lamp** (warm light from the lower left, dark corners) or **lights on**. New cases start in the cabin with the plywood board on an easel, lit by the desk lamp. The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.

@@ -89,6 +89,20 @@ button{cursor:pointer;touch-action:manipulation}
 #room.industrial{--room-img:url(assets/room-industrial.webp)}
 #room.brick{--room-img:url(assets/room-brick.webp)}
 #room.garage{--room-img:url(assets/room-garage.webp)}
+#room.office{--room-img:var(--plaster)}
+#room.office .rwall{background-size:900px 900px;background-color:#2a3137}
+#room.office .side,#room.office .ceil,#room.office .floor{background-size:auto,900px 900px}
+#room .desk{display:none}
+#room.office .desk{display:block;left:0;top:2660px;width:5000px;height:640px;box-shadow:0 -24px 60px rgba(0,0,0,.55);
+  background:linear-gradient(rgba(255,214,160,.12),rgba(0,0,0,.18) 150px,transparent 150px),
+    linear-gradient(transparent 150px,rgba(255,222,175,.32) 150px,rgba(255,222,175,.32) 157px,rgba(0,0,0,.45) 157px,rgba(0,0,0,.82) 100%),
+    var(--desk) 0 0/1400px 320px,#4a2e1a}
+.is3d #room.office .desk{transform:translateZ(520px)}
+/* desk-lamp lighting */
+#world[data-light="lamp"] #room .rdark{background:radial-gradient(26% 30% at 24% 64%, rgba(255,186,105,.26), transparent 72%),radial-gradient(58% 56% at 38% 52%, rgba(0,0,0,.12), rgba(0,0,0,.62) 60%, rgba(0,0,0,.92) 100%)}
+#world[data-light="lamp"] #boardlight{background:radial-gradient(60% 80% at 2% 88%, rgba(255,190,110,.30), transparent 72%),radial-gradient(110% 105% at 12% 80%, transparent 26%, rgba(6,3,0,.45) 62%, rgba(4,2,0,.72) 100%)}
+#world[data-light="lamp"] .mount{filter:brightness(.62)}
+#app.lamp .vignette{background:radial-gradient(125% 105% at 38% 42%, transparent 42%, rgba(0,0,0,.62) 100%)}
 #room .rp{position:absolute;pointer-events:none}
 #room .rdark{left:0;top:0;width:5000px;height:4000px;background:radial-gradient(60% 62% at 50% 45%, transparent 35%, rgba(0,0,0,.35) 72%, rgba(0,0,0,.75) 100%)}
 #room .floor,#room .ceil,#room .side{background-color:#17110c;background-image:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.8)),var(--room-img);background-size:cover;background-position:center bottom}
@@ -232,6 +246,17 @@ button{cursor:pointer;touch-action:manipulation}
 .item.cut{filter:drop-shadow(0 6px 5px rgba(0,0,0,.4)) drop-shadow(0 1px 1px rgba(0,0,0,.3))}
 .item.cut.dragging{filter:drop-shadow(0 18px 16px rgba(0,0,0,.5)) drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 .item.fastened .pin{display:none}
+.map{width:760px;background:#e3d6b6 var(--paper-tex);padding:10px}
+.map .mapwrap{position:relative;height:500px;overflow:hidden;box-shadow:inset 0 0 0 1.5px rgba(80,60,30,.55)}
+.map .mapsvg{display:block;width:100%;height:100%;filter:sepia(.3) saturate(.85) contrast(.95)}
+.map::after{content:"";position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(90deg,transparent 32.6%,rgba(60,40,10,.18) 33.2%,rgba(255,250,235,.45) 33.6%,transparent 34.4%),
+  linear-gradient(90deg,transparent 65.9%,rgba(60,40,10,.18) 66.5%,rgba(255,250,235,.45) 66.9%,transparent 67.7%),
+  linear-gradient(180deg,transparent 49.2%,rgba(60,40,10,.18) 49.8%,rgba(255,250,235,.45) 50.3%,transparent 51.1%),
+  radial-gradient(120% 120% at 50% 50%, transparent 58%, rgba(110,80,30,.3) 100%)}
+.map .legend{position:absolute;right:24px;bottom:24px;max-width:230px;background:#f2e9d2;border:1.5px solid #3b3123;padding:6px 10px 7px;box-shadow:2px 2px 0 rgba(0,0,0,.22)}
+.map .legend .lt{font-family:var(--news);font-weight:700;font-size:17px;letter-spacing:1px;text-transform:uppercase;line-height:1.15;overflow-wrap:anywhere}
+.map .legend .lb{font-size:11.5px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:3px}
 .note .txt{font-family:var(--hand);font-size:21px;line-height:1.15;white-space:pre-wrap;overflow-wrap:anywhere;color:#2a2418}
 .redact{background:#121010;color:transparent;border-radius:1px;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 1px}
 
@@ -320,7 +345,7 @@ button{cursor:pointer;touch-action:manipulation}
 .seg.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;background:var(--ink)}
 .seg.grid button,.seg.grid button+button{border:0;background:var(--manila-lt);padding:9px 8px}
 .seg.grid button[aria-pressed="true"]{background:var(--ink)}
-.seg.grid.odd::after{content:"";background:var(--manila-lt)}
+.seg.grid .fill{background:var(--manila-lt)}
 .tags{display:flex;gap:8px;flex-wrap:wrap}
 .tagbtn{border:1.5px solid var(--ink);background:transparent;border-radius:20px;padding:7px 13px;font-size:13px;min-height:36px}
 .tagbtn[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
@@ -508,6 +533,7 @@ const FB_VER = "10.12.2";
 const MAX_AGENTS = 4;
 const WORLD_W = 3200, WORLD_H = 2000;
 const PIN_Y = 12;
+const OVERHANG = 0.4; // how far (share of its width) an item may hang off the board edge
 const MAX_S = 2.5;
 const BOARD = {x: 400, y: 250, w: 2400, h: 1500};
 const ROOM = {x: -900, y: -700, w: 5000, h: 4000};
@@ -535,6 +561,22 @@ const PAPER_SHAPES = [["paper-1", .63, "22px 22px 18px"], ["paper-2", .63, "20px
 const TALL_PAPERS = [2, 3, 5, 7];
 // torn cardboard: [image, width, height/width, text padding]
 const CARD_SHAPES = [["card-1", 270, .576, "40px 24px 26px"], ["card-2", 360, .363, "18px 22px 18px"], ["card-3", 250, .517, "20px 22px 26px 30px"], ["card-4", 310, .758, "80px 26px 44px"]];
+// a folded street map drawn from a seed: blocks, streets, a river, main roads, parks
+function mapSvg(seed) {
+  let a = (Math.imul(seed + 1, 2654435761) >>> 0) || 1;
+  const R = () => { a ^= a << 13; a >>>= 0; a ^= a >> 17; a ^= a << 5; a >>>= 0; return a / 4294967296; };
+  const W = 520, H = 360, f = v => v.toFixed(0), st = [], parks = [], majors = [];
+  for (let x = -220 + R() * 40; x < W + 220; x += 30 + R() * 34) st.push(`M${f(x)} -220L${f(x + (R() - .5) * 40)} ${H + 220}`);
+  for (let y = -220 + R() * 40; y < H + 220; y += 26 + R() * 30) st.push(`M-220 ${f(y)}L${W + 220} ${f(y + (R() - .5) * 40)}`);
+  for (let i = 0; i < 4; i++) parks.push(`<rect x="${f(R() * W)}" y="${f(R() * H)}" width="${f(40 + R() * 70)}" height="${f(30 + R() * 50)}" fill="#b9c592"/>`);
+  for (let i = 0; i < 3; i++) majors.push(`M-60 ${f(R() * H)}C${f(W * .3)} ${f(R() * H)} ${f(W * .7)} ${f(R() * H)} ${W + 60} ${f(R() * H)}`);
+  const river = `M${f(R() * W)} -50C${f(R() * W)} ${f(H * .35)} ${f(R() * W)} ${f(H * .65)} ${f(R() * W)} ${H + 50}`;
+  const ang = ((R() - .5) * 26).toFixed(1), streets = st.join("");
+  return `<svg class="mapsvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><rect width="${W}" height="${H}" fill="#d8c9a4"/>`
+    + `<g transform="rotate(${ang} ${W / 2} ${H / 2})">${parks.join("")}<path d="${streets}" stroke="#b9a87f" stroke-width="7" fill="none"/><path d="${streets}" stroke="#f4ecd6" stroke-width="4.5" fill="none"/></g>`
+    + `<path d="${river}" stroke="#7b9196" stroke-width="32" fill="none" stroke-linecap="round"/><path d="${river}" stroke="#a7b9bc" stroke-width="26" fill="none" stroke-linecap="round"/>`
+    + `<path d="${majors.join("")}" stroke="#9f8350" stroke-width="11" fill="none"/><path d="${majors.join("")}" stroke="#eecd8b" stroke-width="7.5" fill="none"/></svg>`;
+}
 const shapeNo = (d, fallback = 0) => Number.isInteger(d.shape) ? d.shape : fallback;
 const cardShape = d => CARD_SHAPES[shapeNo(d) % CARD_SHAPES.length];
 const STAMPS = [["", "None"], ["CLASSIFIED","Classified"], ["TOP SECRET","Top secret"], ["EYES ONLY","Eyes only"]];
@@ -568,23 +610,26 @@ function h(tag, props = {}, ...kids) {
 function svgUrl(svg) { return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`; }
 function setTextures() {
   const r = document.documentElement.style;
+  r.setProperty("--plaster", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='900' height='900'><filter id='a'><feTurbulence type='fractalNoise' baseFrequency='0.006' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.6  0 0 0 0 0.66  0 0 0 0.9 -0.32'/></filter><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.04  0 0 0 0 0.05  0 0 0 0 0.06  0 0 0 0.75 -0.1'/></filter><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='0.045' numOctaves='3' seed='15' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.02  0 0 0 0 0.03  0 0 0 0 0.04  0 0 0 0.8 -0.3'/></filter><rect width='900' height='900' fill='#2a3137'/><rect width='900' height='900' filter='url(#a)'/><rect width='900' height='900' filter='url(#c)'/><rect width='900' height='900' filter='url(#b)'/></svg>`));
+  r.setProperty("--desk", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='320'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.0015 0.08' numOctaves='4' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.06  0 0 0 0 0.02  0 0 0 1.6 -0.55'/></filter><filter id='h'><feTurbulence type='fractalNoise' baseFrequency='0.003 0.2' numOctaves='2' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.75  0 0 0 0 0.5  0 0 0 0 0.3  0 0 0 0.9 -0.5'/></filter><rect width='1400' height='320' fill='#4a2e1a'/><rect width='1400' height='320' filter='url(#h)'/><rect width='1400' height='320' filter='url(#g)'/></svg>`));
   r.setProperty("--paper-tex", svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(#p)'/></svg>`));
 }
 
 /* ---------------- the room around the board ---------------- */
 function buildRoom() {
   // the room photo is the wall; these add the vignette and, in 3D, a floor, ceiling and side walls
-  $("#room").insertAdjacentHTML("beforeend", ["rdark", "floor", "ceil only3d", "side side-l only3d", "side side-r only3d"]
+  $("#room").insertAdjacentHTML("beforeend", ["desk", "rdark", "floor", "ceil only3d", "side side-l only3d", "side side-r only3d"]
     .map(c => `<div class="rp ${c}"></div>`).join(""));
 }
-const ROOMS = [["cabin", "Cabin"], ["cozy", "Study"], ["workshop", "Workshop"], ["industrial", "Factory"], ["brick", "White brick"], ["garage", "Garage"]];
+const ROOMS = [["office", "Dark office"], ["cabin", "Cabin"], ["cozy", "Study"], ["workshop", "Workshop"], ["industrial", "Factory"], ["brick", "White brick"], ["garage", "Garage"]];
 const BOARDS = [["ply", "Plywood"], ["corkwood", "Cork, pine"], ["cork", "Cork, metal"], ["white", "Whiteboard"], ["wall", "Pin to wall"]];
 function sceneOf(m) {
   const legacyCork = m?.background === "cork";
   return {
     room: ROOMS.some(r => r[0] === m?.room) ? m.room : m?.room === "basement" || legacyCork ? "workshop" : "cabin",
     board: BOARDS.some(b => b[0] === m?.board) ? m.board : legacyCork ? "cork" : "wall",
-    mount: m?.mount === "wall" ? "wall" : "stand",
+    mount: m?.mount === "wall" || m?.room === "office" ? "wall" : "stand",
+    light: m?.light === "lamp" ? "lamp" : "bright",
   };
 }
 
@@ -737,7 +782,7 @@ const realPlayers = () => Object.entries(S.players || {})
   .filter(([, p]) => p && p.codename)
   .map(([id, p]) => ({id, ...p}))
   .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
-const widthOf = d => d.type === "photo" ? 200 : d.type === "note" ? 160 : d.variant === "case" ? 230 : d.variant === "clip" ? 240 : d.variant === "card" ? cardShape(d)[1] : 250;
+const widthOf = d => d.type === "photo" ? 200 : d.type === "note" ? 160 : d.variant === "case" ? 230 : d.variant === "clip" ? 240 : d.variant === "card" ? cardShape(d)[1] : d.variant === "map" ? 760 : 250;
 const kindName = d => d.type === "photo" ? "photo" : d.type === "note" ? "post-it" : "paper";
 
 /* ---------------- toast & sound ---------------- */
@@ -839,7 +884,7 @@ function zoomTo(wx, wy, s) {
   S.fitMode = null;
   applyView();
 }
-const EST_H = {photo: 250, note: 160, doc: 300, case: 200, clip: 260, card: 170};
+const EST_H = {photo: 250, note: 160, doc: 300, case: 200, clip: 260, card: 170, map: 520};
 const toWorld = (px, py) => ({x: (px - S.view.x) / S.view.s, y: (py - S.view.y) / S.view.s});
 function freeSpot(w, hgt) {
   const c = viewCenterWorld();
@@ -888,13 +933,13 @@ function sanitize(d) {
   if (Number.isInteger(d.shape)) out.shape = Math.abs(d.shape) % 1000;
   if (d.type === "photo") Object.assign(out, {caption: str(d.caption, 80), tag: str(d.tag, 14), imgRev: +d.imgRev || 0, style: PHOTO_STYLES.includes(d.style) ? d.style : "polaroid"});
   if (d.type === "note") Object.assign(out, {text: str(d.text, 140), color: NOTE_COLORS[d.color] ? d.color : "yellow"});
-  if (d.type === "paper") Object.assign(out, {variant: ["case", "clip", "card"].includes(d.variant) ? d.variant : "doc", title: str(d.title, 70), body: str(d.body, 1500), stamp: STAMPS.some(s => s[0] === d.stamp) ? d.stamp : ""});
+  if (d.type === "paper") Object.assign(out, {variant: ["case", "clip", "card", "map"].includes(d.variant) ? d.variant : "doc", title: str(d.title, 70), body: str(d.body, 1500), stamp: STAMPS.some(s => s[0] === d.stamp) ? d.stamp : ""});
   return out;
 }
 function describe(d) {
   if (d.type === "photo") return "Photo" + (d.caption ? ": " + d.caption : "");
   if (d.type === "note") return "Post-it: " + d.text.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
-  return (d.variant === "case" ? "Case card: " : d.variant === "clip" ? "Clipping: " : d.variant === "card" ? "Cardboard: " : "Paper: ") + d.title.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
+  return (d.variant === "case" ? "Case card: " : d.variant === "clip" ? "Clipping: " : d.variant === "card" ? "Cardboard: " : d.variant === "map" ? "Map: " : "Paper: ") + d.title.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
 }
 function stamp2(n) { return String(n).padStart(2, "0"); }
 function camTime(at) {
@@ -932,6 +977,10 @@ function buildContent(rec, id, d) {
   } else if (d.variant === "case") {
     const lines = d.body.split("\n").map(s => s.replace(/^\s*[-•*]\s*/, "").trim()).filter(Boolean);
     el.append(h("div", {class: "band"}, redacted(d.title)), h("ul", {class: "lines"}, lines.map(s => h("li", {}, redacted(s)))));
+  } else if (d.variant === "map") {
+    const wrap = h("div", {class: "mapwrap"});
+    wrap.innerHTML = mapSvg(shapeNo(d, hs)); // built only from numbers
+    el.append(wrap, h("div", {class: "legend"}, h("div", {class: "lt"}, redacted(d.title)), d.body ? h("div", {class: "lb"}, redacted(d.body)) : null));
   } else if (d.variant === "card") {
     const [img, w, ar, pad] = cardShape(d);
     el.style.setProperty("--card-img", `url(assets/${img}.webp)`);
@@ -1132,6 +1181,8 @@ function applyScene() {
   world.dataset.board = sc.board;
   world.dataset.mount = sc.mount;
   world.dataset.room = sc.room;
+  world.dataset.light = sc.light;
+  $("#app").classList.toggle("lamp", sc.light === "lamp");
   world.style.setProperty("--bt", BOARD_DEPTH[sc.board] + "px");
   $("#room").className = sc.room;
   $("#boardbg").className = sc.board;
@@ -1324,8 +1375,8 @@ addEventListener("pointermove", e => {
     const rec = S.items.get(G.id);
     if (!rec) { G = null; return; }
     const w = widthOf(rec.data);
-    rec.data.x = clamp(G.ox + dx / S.view.s, BOARD.x - 8, BOARD.x + BOARD.w - w + 8);
-    rec.data.y = clamp(G.oy + dy / S.view.s, BOARD.y - 8, BOARD.y + BOARD.h - 90);
+    rec.data.x = clamp(G.ox + dx / S.view.s, BOARD.x - w * OVERHANG, BOARD.x + BOARD.w - w * (1 - OVERHANG));
+    rec.data.y = clamp(G.oy + dy / S.view.s, BOARD.y - 70, BOARD.y + BOARD.h - 60);
     place(rec); updateLinksFor(G.id);
     const now = performance.now();
     clearTimeout(G.timer);
@@ -1381,7 +1432,7 @@ world.addEventListener("keydown", e => {
     if (e.key === "ArrowRight") rec.data.x += step;
     if (e.key === "ArrowUp") rec.data.y -= step;
     if (e.key === "ArrowDown") rec.data.y += step;
-    rec.data.x = clamp(rec.data.x, BOARD.x - 8, BOARD.x + BOARD.w - w + 8); rec.data.y = clamp(rec.data.y, BOARD.y - 8, BOARD.y + BOARD.h - 90);
+    rec.data.x = clamp(rec.data.x, BOARD.x - w * OVERHANG, BOARD.x + BOARD.w - w * (1 - OVERHANG)); rec.data.y = clamp(rec.data.y, BOARD.y - 70, BOARD.y + BOARD.h - 60);
     place(rec); updateLinksFor(id); itemWrite(id);
   }
 });
@@ -1428,7 +1479,11 @@ function segmented(options, current, onPick, disabled = false) {
   }
   return wrap;
 }
-function grid(seg, odd = false) { seg.classList.add("grid"); if (odd) seg.classList.add("odd"); return seg; }
+function grid(seg) {
+  seg.classList.add("grid");
+  for (let n = seg.children.length; n % 3; n++) seg.append(h("span", {class: "fill", "aria-hidden": "true"}));
+  return seg;
+}
 
 /* ---------------- image upload ---------------- */
 async function compressImage(file) {
@@ -1511,14 +1566,14 @@ function openEditor(id, draft) {
           h("div", {class: "row"}, redactBtn()),
           h("p", {class: "hint", text: "Select words and tap Redact to black them out on the board."}));
       } else {
-        const isCase = d.variant === "case", isClip = d.variant === "clip", isCard = d.variant === "card";
+        const isCase = d.variant === "case", isClip = d.variant === "clip", isCard = d.variant === "card", isMap = d.variant === "map";
         const title = trackText(h("input", {class: "line-in", maxlength: 70, value: d.title || "", "data-autofocus": true, oninput: e => d.title = e.target.value}));
         const ta = trackText(h("textarea", {class: "line-in", maxlength: 1500, rows: 6, oninput: e => d.body = e.target.value}));
         ta.value = d.body || "";
         body.append(
-          h("div", {class: "field"}, segmented([["doc", "Note paper"], ["card", "Cardboard"], ["case", "Case card"], ["clip", "Clipping"]], d.variant, v => { d.variant = v; draw(); })),
-          h("label", {class: "field"}, h("span", {text: isCase ? "Question or heading" : isClip ? "Headline" : isCard ? "Big writing" : "Title"}), title),
-          h("label", {class: "field"}, h("span", {text: isCase ? "Notes, one per line" : isClip ? "Article text" : isCard ? "Smaller writing" : "Text"}), ta),
+          h("div", {class: "field"}, grid(segmented([["doc", "Note paper"], ["card", "Cardboard"], ["map", "Map"], ["case", "Case card"], ["clip", "Clipping"]], d.variant, v => { d.variant = v; draw(); }))),
+          h("label", {class: "field"}, h("span", {text: isCase ? "Question or heading" : isClip ? "Headline" : isCard ? "Big writing" : isMap ? "Place name" : "Title"}), title),
+          h("label", {class: "field"}, h("span", {text: isCase ? "Notes, one per line" : isClip ? "Article text" : isCard ? "Smaller writing" : isMap ? "Notes in the corner" : "Text"}), ta),
           h("div", {class: "row", style: "margin-bottom:6px"}, redactBtn()),
           h("p", {class: "hint", style: "margin-bottom:18px", text: "Select words and tap Redact to black them out on the board. To undo, delete the [[ ]] around them."}),
           isClip ? "" : h("div", {class: "field"}, h("span", {class: "flabel", text: "Stamp"}),
@@ -1603,7 +1658,11 @@ function openSettings() {
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Board"}),
       grid(segmented(BOARDS, sc.board, v => S.store.updateMeta(S.code, {board: v}).catch(saveFailed), !handler), BOARDS.length % 3 !== 0),
-      h("div", {style: "margin-top:10px"}, segmented([["stand", "On a stand"], ["wall", "Hung on the wall"]], sc.mount, v => S.store.updateMeta(S.code, {mount: v}).catch(saveFailed), !handler)),
+      h("div", {style: "margin-top:10px"}, segmented([["stand", "On a stand"], ["wall", "Hung on the wall"]], sc.mount, v => S.store.updateMeta(S.code, {mount: v}).catch(saveFailed), !handler || sc.room === "office")),
+      sc.room === "office" ? h("p", {class: "hint", text: "In the dark office the board hangs on the wall above the desk."}) : null),
+    h("div", {class: "section"},
+      h("span", {class: "flabel", text: "Lighting"}),
+      segmented([["lamp", "Desk lamp"], ["bright", "Lights on"]], sc.light, v => S.store.updateMeta(S.code, {light: v}).catch(saveFailed), !handler),
       handler ? null : h("p", {class: "hint", text: "Only the Handler can change the room and board."})));
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Pin sounds"}),
@@ -1660,7 +1719,7 @@ async function createRoom() {
     let code = genCode();
     for (let i = 0; i < 8 && await S.store.getMeta(code); i++) code = genCode();
     const me = {id: uid(), codename, color: S.pickedColor, joinedAt: Date.now()};
-    await S.store.createRoom(code, {handlerId: me.id, createdAt: Date.now(), room: "cabin", board: "ply", mount: "stand"}, me);
+    await S.store.createRoom(code, {handlerId: me.id, createdAt: Date.now(), room: "cabin", board: "ply", mount: "stand", light: "lamp"}, me);
     localStorage.setItem("dgboard:pid:" + code, me.id);
     enterRoom(code, me);
   } catch (err) {
