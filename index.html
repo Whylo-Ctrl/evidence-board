@@ -136,6 +136,29 @@ button{cursor:pointer;touch-action:manipulation}
 .is3d #room .side-l{transform-origin:0 50%;transform:rotateY(-90deg)}
 .is3d #room .side-r{transform-origin:100% 50%;transform:rotateY(90deg)}
 .is3d .item.dragging{transform:translateZ(60px) rotate(var(--rot,0deg)) scale(1.02)}
+.mount{position:absolute;pointer-events:none;z-index:0;display:none}
+#world[data-mount="stand"]:not([data-board="wall"]) .mount.stand,#world[data-mount="wall"]:not([data-board="wall"]) .mount.wall{display:block}
+#world{--floor:2800px}
+#world[data-room="cabin"]{--floor:2830px}
+#world[data-room="cozy"]{--floor:3230px}
+#world[data-room="workshop"]{--floor:2620px}
+#world[data-room="industrial"]{--floor:2760px}
+#world[data-room="brick"]{--floor:2840px}
+#world[data-room="garage"]{--floor:2540px}
+#stand-mast{left:1165px;top:118px;width:70px;height:calc(var(--floor) - 118px);background:linear-gradient(90deg,#24150b,#5a3a20 42%,#4a2f19 70%,#1f1209);box-shadow:24px 30px 40px rgba(0,0,0,.45)}
+#stand-legs{left:300px;top:1780px;width:2600px;height:calc(var(--floor) - 1780px)}
+#stand-legs svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#stand-feet{left:200px;top:calc(var(--floor) - 34px);width:2800px;height:70px;
+  background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent) 210px 0/280px 70px no-repeat,radial-gradient(closest-side,rgba(0,0,0,.5),transparent) 860px 0/280px 70px no-repeat,radial-gradient(closest-side,rgba(0,0,0,.6),transparent) 2310px 0/280px 70px no-repeat}
+#stand-ledge{left:320px;top:1728px;width:2560px;height:66px;border-radius:5px;background:linear-gradient(#80552f,#5e3c21 38%,#3c2414);box-shadow:0 20px 26px rgba(0,0,0,.55),inset 0 3px 0 rgba(255,220,170,.18)}
+#stand-clamp{left:1125px;top:206px;width:150px;height:78px;border-radius:7px;background:linear-gradient(#70482a,#3c2414);box-shadow:0 8px 12px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,220,170,.2)}
+#stand-clamp::after{content:"";position:absolute;left:57px;top:21px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d9d4c8,#77736a 60%,#3a3833);box-shadow:0 3px 4px rgba(0,0,0,.5)}
+#hanger{left:400px;top:-70px;width:2400px;height:330px;overflow:visible}
+#world[data-mount="wall"] #boardbg:not(.wall){box-shadow:0 16px 26px rgba(0,0,0,.55),0 3px 6px rgba(0,0,0,.45)}
+.is3d #world[data-room]{--floor:2550px}
+.is3d .mount{transform:translateZ(calc(-.5 * var(--bt,0px)))}
+.is3d #hanger{transform:translateZ(calc(-1 * var(--bt,0px) + 1px))}
+.is3d #stand-ledge,.is3d #stand-clamp{transform:translateZ(10px)}
 #boardbg{position:absolute;left:400px;top:250px;width:2400px;height:1500px;z-index:0;pointer-events:none}
 #boardbg.ply,#boardbg.cork,#boardbg.corkwood,#boardbg.white{background-color:#8a6a45;background-size:100% 100%;background-repeat:no-repeat;box-shadow:0 46px 80px rgba(0,0,0,.55),0 8px 16px rgba(0,0,0,.45)}
 #boardbg.ply{background-image:url(assets/board-osb.webp)}
@@ -188,7 +211,7 @@ button{cursor:pointer;touch-action:manipulation}
 .photo .cap{font-size:14px;line-height:1.3;text-align:center;padding:9px 2px 14px;min-height:50px;overflow-wrap:anywhere}
 .photo .tag{position:absolute;top:20px;right:18px;background:#f4f3f0;font-size:11px;padding:2px 6px;color:var(--ink-soft)}
 
-.doc{width:250px;min-height:290px;background:#f1f0ec url(assets/paper-plain.webp) center/cover;padding:32px 22px 24px}
+.doc{width:250px;min-height:var(--mh,290px);background:var(--paper-img,url(assets/paper-6.webp)) 0 0/100% 100% no-repeat;padding:var(--pad,32px 22px 24px)}
 .doc .title{font-size:17px;line-height:1.3;margin-bottom:12px;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
 .doc .body{font-size:13.5px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
 .case{width:230px;background:#f1f0ec url(assets/paper-plain.webp) center/cover}
@@ -197,7 +220,18 @@ button{cursor:pointer;touch-action:manipulation}
   background-image:repeating-linear-gradient(transparent 0 25px, rgba(60,90,140,.22) 25px 26px);background-position:0 12px}
 .case .lines li{overflow-wrap:anywhere}
 .stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);border:3px solid var(--stamp);color:var(--stamp);font-size:24px;letter-spacing:2px;padding:4px 12px;opacity:.78;border-radius:4px;white-space:nowrap;mix-blend-mode:multiply;pointer-events:none}
-.note{width:160px;min-height:150px;background:var(--note,#efd35a) var(--note-img,none) center/cover;background-blend-mode:var(--note-blend,normal);padding:28px 14px 16px;box-shadow:0 12px 12px -8px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.4)}
+.note{width:160px;min-height:var(--mh,160px);padding:var(--pad,30px 18px 18px 16px)}
+.note::before,.doc::before,.card::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+.note::before{background:var(--note-img) 0 0/100% 100% no-repeat;filter:var(--note-tint,none)}
+.doc{background:none}.doc::before{background:var(--paper-img) 0 0/100% 100% no-repeat}
+.card{width:var(--w,280px);min-height:var(--mh,170px);padding:var(--pad,26px 26px 22px);color:#17130e}
+.card::before{background:var(--card-img) 0 0/100% 100% no-repeat}
+.card .title{font-family:var(--hand);font-weight:700;font-size:27px;line-height:1.02;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;overflow-wrap:anywhere;opacity:.9}
+.card .body{font-family:var(--hand);font-size:17px;line-height:1.25;white-space:pre-wrap;overflow-wrap:anywhere;opacity:.88}
+.item.cut,.item.cut.dragging{box-shadow:none}
+.item.cut{filter:drop-shadow(0 6px 5px rgba(0,0,0,.4)) drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+.item.cut.dragging{filter:drop-shadow(0 18px 16px rgba(0,0,0,.5)) drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.item.fastened .pin{display:none}
 .note .txt{font-family:var(--hand);font-size:21px;line-height:1.15;white-space:pre-wrap;overflow-wrap:anywhere;color:#2a2418}
 .redact{background:#121010;color:transparent;border-radius:1px;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 1px}
 
@@ -217,10 +251,10 @@ button{cursor:pointer;touch-action:manipulation}
 .photo.cctv .cam{right:15px}
 .photo.cctv .cap{font-size:12px;min-height:34px;padding:7px 2px 4px}
 .photo .tagb{font-size:10px;color:var(--ink-soft);text-align:center;padding-bottom:9px}
-.doc::before{content:"";position:absolute;left:0;right:0;top:47%;height:16px;pointer-events:none;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.07) 45%,rgba(255,255,255,.4) 55%,rgba(255,255,255,0))}
+
 .doc.stain::after{content:"";position:absolute;width:88px;height:88px;left:var(--sx,55%);top:var(--sy,60%);border-radius:50%;pointer-events:none;
   background:radial-gradient(circle, transparent 53%, rgba(122,74,30,.22) 56%, rgba(122,74,30,.08) 61%, transparent 66%)}
-.doc.stain{background-image:url(assets/paper-grunge.webp)}
+
 .item.clip{width:240px;box-shadow:none;filter:drop-shadow(0 7px 9px rgba(0,0,0,.42))}
 .item.clip.dragging{box-shadow:none;filter:drop-shadow(0 18px 18px rgba(0,0,0,.5))}
 .clip .in{background:#eeede9 url(assets/paper-crumpled.webp) center/cover;padding:22px 16px 22px;color:#1f1c18;
@@ -377,8 +411,24 @@ button{cursor:pointer;touch-action:manipulation}
   <div id="board" aria-label="Evidence wall">
     <div id="world">
       <div id="room" class="cabin" aria-hidden="true"><div class="rwall"></div></div>
+      <div id="stand-mast" class="mount stand" aria-hidden="true"></div>
+      <div id="stand-legs" class="mount stand" aria-hidden="true"><svg viewBox="0 0 2600 100" preserveAspectRatio="none">
+        <defs><linearGradient id="gLeg" x1="0" x2="1"><stop offset="0" stop-color="#2a180c"/><stop offset=".45" stop-color="#6a4426"/><stop offset=".75" stop-color="#513320"/><stop offset="1" stop-color="#25150a"/></linearGradient></defs>
+        <rect x="330" y="58" width="1940" height="3.2" fill="#3a2414"/>
+        <polygon points="440,0 515,0 300,100 225,100" fill="url(#gLeg)"/>
+        <polygon points="2085,0 2160,0 2375,100 2300,100" fill="url(#gLeg)"/>
+      </svg></div>
+      <div id="stand-feet" class="mount stand" aria-hidden="true"></div>
+      <svg id="hanger" class="mount wall" viewBox="0 0 2400 330" aria-hidden="true">
+        <polyline points="560,330 1206,58 1840,330" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="8"/>
+        <polyline points="550,322 1200,48 1850,322" fill="none" stroke="#2f2a24" stroke-width="6"/>
+        <circle cx="1208" cy="54" r="18" fill="rgba(0,0,0,.35)"/>
+        <circle cx="1200" cy="44" r="16" fill="#8d8a83" stroke="#4a4740" stroke-width="2"/>
+      </svg>
       <div id="bshadow" class="only3d" aria-hidden="true"></div>
       <div id="boardbg" class="ply" aria-hidden="true"></div>
+      <div id="stand-ledge" class="mount stand" aria-hidden="true"></div>
+      <div id="stand-clamp" class="mount stand" aria-hidden="true"></div>
       <div id="bedgeT" class="bedge only3d" aria-hidden="true"></div>
       <div id="bedgeB" class="bedge only3d" aria-hidden="true"></div>
       <div id="bedgeL" class="bedge only3d" aria-hidden="true"></div>
@@ -472,9 +522,21 @@ const PIN_COLORS = [
   {id:"bone",    name:"Bone",    hex:"#e6ddc6"},
 ];
 const NOTE_COLORS = {yellow:"#efd35a", pink:"#f1a8b5", blue:"#a5c9e1", green:"#3fc7ad", purple:"#b3a6d8", cream:"#e6ebc6", white:"#efeeea"};
-// photo texture for each post-it color; blue tints the white paper
-const NOTE_IMG = {yellow:"note-yellow", pink:"note-pink", blue:"note-white", green:"note-green", purple:"note-purple", cream:"note-cream", white:"note-white"};
-const noteStyle = c => `url(assets/${NOTE_IMG[c]}.webp)`;
+// cut-out photos for each post-it color: [image, height/width, has its own clip/tape/pin]; blue tints the white paper
+const NOTE_SHAPES = {
+  yellow: [["note-yellow", 1.03], ["note-yellow-clip", 1.0, true], ["note-yellow-tape", 1.1, true], ["note-yellow-pin", .95, true]],
+  pink: [["note-pink", 1.01]], white: [["note-white", .98], ["note-white-2", 1.04]], blue: [["note-white", .98], ["note-white-2", 1.04]],
+  green: [["note-green", 1.01]], purple: [["note-purple", 1.03]], cream: [["note-cream", 1.02]]};
+const noteStyle = c => `url(assets/${NOTE_SHAPES[c][0][0]}.webp)`;
+// torn and crumpled notebook paper: [image, height/width, text padding]
+const PAPER_SHAPES = [["paper-1", .63, "22px 22px 18px"], ["paper-2", .63, "20px 20px 18px"], ["paper-3", 1.04, "26px 22px 46px"],
+  ["paper-4", 1.38, "48px 22px 22px"], ["paper-5", .75, "24px 20px 20px 42px"], ["paper-6", .99, "26px 22px 42px"],
+  ["paper-7", .70, "24px 22px 34px"], ["paper-8", 1.36, "30px 22px 22px"], ["paper-9", .50, "20px 20px 20px 46px"]];
+const TALL_PAPERS = [2, 3, 5, 7];
+// torn cardboard: [image, width, height/width, text padding]
+const CARD_SHAPES = [["card-1", 270, .576, "40px 24px 26px"], ["card-2", 360, .363, "18px 22px 18px"], ["card-3", 250, .517, "20px 22px 26px 30px"], ["card-4", 310, .758, "80px 26px 44px"]];
+const shapeNo = (d, fallback = 0) => Number.isInteger(d.shape) ? d.shape : fallback;
+const cardShape = d => CARD_SHAPES[shapeNo(d) % CARD_SHAPES.length];
 const STAMPS = [["", "None"], ["CLASSIFIED","Classified"], ["TOP SECRET","Top secret"], ["EYES ONLY","Eyes only"]];
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const STRING_COLORS = {red: "#a11d1d", black: "#24201c", yellow: "#d2a312", blue: "#2c5a9e"};
@@ -522,6 +584,7 @@ function sceneOf(m) {
   return {
     room: ROOMS.some(r => r[0] === m?.room) ? m.room : m?.room === "basement" || legacyCork ? "workshop" : "cabin",
     board: BOARDS.some(b => b[0] === m?.board) ? m.board : legacyCork ? "cork" : "wall",
+    mount: m?.mount === "wall" ? "wall" : "stand",
   };
 }
 
@@ -674,7 +737,7 @@ const realPlayers = () => Object.entries(S.players || {})
   .filter(([, p]) => p && p.codename)
   .map(([id, p]) => ({id, ...p}))
   .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
-const widthOf = d => d.type === "photo" ? 200 : d.type === "note" ? 160 : d.variant === "case" ? 230 : d.variant === "clip" ? 240 : 250;
+const widthOf = d => d.type === "photo" ? 200 : d.type === "note" ? 160 : d.variant === "case" ? 230 : d.variant === "clip" ? 240 : d.variant === "card" ? cardShape(d)[1] : 250;
 const kindName = d => d.type === "photo" ? "photo" : d.type === "note" ? "post-it" : "paper";
 
 /* ---------------- toast & sound ---------------- */
@@ -776,7 +839,7 @@ function zoomTo(wx, wy, s) {
   S.fitMode = null;
   applyView();
 }
-const EST_H = {photo: 250, note: 160, doc: 300, case: 200, clip: 260};
+const EST_H = {photo: 250, note: 160, doc: 300, case: 200, clip: 260, card: 170};
 const toWorld = (px, py) => ({x: (px - S.view.x) / S.view.s, y: (py - S.view.y) / S.view.s});
 function freeSpot(w, hgt) {
   const c = viewCenterWorld();
@@ -822,15 +885,16 @@ function sanitize(d) {
   if (!d || typeof d !== "object" || !["photo", "paper", "note"].includes(d.type)) return null;
   const str = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
   const out = {type: d.type, x: +d.x || 0, y: +d.y || 0, z: +d.z || 1, rot: clamp(+d.rot || 0, -10, 10), by: str(d.by, 40), at: +d.at || 0};
+  if (Number.isInteger(d.shape)) out.shape = Math.abs(d.shape) % 1000;
   if (d.type === "photo") Object.assign(out, {caption: str(d.caption, 80), tag: str(d.tag, 14), imgRev: +d.imgRev || 0, style: PHOTO_STYLES.includes(d.style) ? d.style : "polaroid"});
   if (d.type === "note") Object.assign(out, {text: str(d.text, 140), color: NOTE_COLORS[d.color] ? d.color : "yellow"});
-  if (d.type === "paper") Object.assign(out, {variant: ["case", "clip"].includes(d.variant) ? d.variant : "doc", title: str(d.title, 70), body: str(d.body, 1500), stamp: STAMPS.some(s => s[0] === d.stamp) ? d.stamp : ""});
+  if (d.type === "paper") Object.assign(out, {variant: ["case", "clip", "card"].includes(d.variant) ? d.variant : "doc", title: str(d.title, 70), body: str(d.body, 1500), stamp: STAMPS.some(s => s[0] === d.stamp) ? d.stamp : ""});
   return out;
 }
 function describe(d) {
   if (d.type === "photo") return "Photo" + (d.caption ? ": " + d.caption : "");
   if (d.type === "note") return "Post-it: " + d.text.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
-  return (d.variant === "case" ? "Case card: " : d.variant === "clip" ? "Clipping: " : "Paper: ") + d.title.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
+  return (d.variant === "case" ? "Case card: " : d.variant === "clip" ? "Clipping: " : d.variant === "card" ? "Cardboard: " : "Paper: ") + d.title.replace(/\[\[[\s\S]+?\]\]/g, "redacted");
 }
 function stamp2(n) { return String(n).padStart(2, "0"); }
 function camTime(at) {
@@ -841,7 +905,8 @@ function buildContent(rec, id, d) {
   const el = rec.el, hs = hashStr(id);
   const kind = d.type === "paper" ? d.variant : d.type === "photo" ? "photo" + (d.style !== "polaroid" ? " " + d.style : "") : d.type;
   const stained = d.type === "paper" && d.variant === "doc" && hs % 4 === 0;
-  el.className = "item " + kind + (stained ? " stain" : "") + (S.selected === id ? " selected" : "");
+  const cut = d.type === "note" || (d.type === "paper" && (d.variant === "doc" || d.variant === "card"));
+  el.className = "item " + kind + (cut ? " cut" : "") + (stained ? " stain" : "") + (S.selected === id ? " selected" : "");
   if (stained) { el.style.setProperty("--sx", (12 + hs % 50) + "%"); el.style.setProperty("--sy", (30 + (hs >> 4) % 45) + "%"); }
   el.replaceChildren(h("span", {class: "pin", "aria-hidden": "true"}));
   if (d.type === "photo") {
@@ -857,16 +922,28 @@ function buildContent(rec, id, d) {
       if (d.tag) el.append(h("span", {class: "tag", text: d.tag}));
     }
   } else if (d.type === "note") {
-    el.style.setProperty("--note", NOTE_COLORS[d.color]);
-    el.style.setProperty("--note-img", noteStyle(d.color));
-    el.style.setProperty("--note-blend", d.color === "blue" ? "multiply" : "normal");
+    const shapes = NOTE_SHAPES[d.color], [img, ar, fastened] = shapes[shapeNo(d, hs) % shapes.length];
+    el.style.setProperty("--note-img", `url(assets/${img}.webp)`);
+    el.style.setProperty("--mh", Math.round(160 * ar) + "px");
+    el.style.setProperty("--pad", fastened ? "36px 18px 18px 16px" : "30px 24px 18px 16px");
+    el.style.setProperty("--note-tint", d.color === "blue" ? "sepia(.35) hue-rotate(165deg) saturate(2.6) brightness(.97)" : "none");
+    if (fastened) el.classList.add("fastened");
     el.append(h("div", {class: "txt"}, redacted(d.text)));
   } else if (d.variant === "case") {
     const lines = d.body.split("\n").map(s => s.replace(/^\s*[-•*]\s*/, "").trim()).filter(Boolean);
     el.append(h("div", {class: "band"}, redacted(d.title)), h("ul", {class: "lines"}, lines.map(s => h("li", {}, redacted(s)))));
+  } else if (d.variant === "card") {
+    const [img, w, ar, pad] = cardShape(d);
+    el.style.setProperty("--card-img", `url(assets/${img}.webp)`);
+    el.style.setProperty("--w", w + "px"); el.style.setProperty("--mh", Math.round(w * ar) + "px"); el.style.setProperty("--pad", pad);
+    el.append(h("div", {class: "title"}, redacted(d.title)), h("div", {class: "body"}, redacted(d.body)));
   } else if (d.variant === "clip") {
     el.append(h("div", {class: "in"}, h("div", {class: "rule"}), h("div", {class: "head"}, redacted(d.title)), h("div", {class: "cols"}, redacted(d.body))));
   } else {
+    const pool = d.body.length > 160 ? TALL_PAPERS : PAPER_SHAPES.map((_, i) => i);
+    const [img, ar, pad] = PAPER_SHAPES[pool[shapeNo(d, hs) % pool.length]];
+    el.style.setProperty("--paper-img", `url(assets/${img}.webp)`);
+    el.style.setProperty("--mh", Math.round(250 * ar) + "px"); el.style.setProperty("--pad", pad);
     el.append(h("div", {class: "title"}, redacted(d.title)), h("div", {class: "body"}, redacted(d.body)));
   }
   if (d.type === "paper" && d.variant !== "clip" && d.stamp) el.append(h("span", {class: "stamp", text: d.stamp}));
@@ -1053,6 +1130,8 @@ const BOARD_DEPTH = {ply: 110, cork: 90, corkwood: 90, white: 70, wall: 0};
 function applyScene() {
   const sc = sceneOf(S.meta);
   world.dataset.board = sc.board;
+  world.dataset.mount = sc.mount;
+  world.dataset.room = sc.room;
   world.style.setProperty("--bt", BOARD_DEPTH[sc.board] + "px");
   $("#room").className = sc.room;
   $("#boardbg").className = sc.board;
@@ -1432,14 +1511,14 @@ function openEditor(id, draft) {
           h("div", {class: "row"}, redactBtn()),
           h("p", {class: "hint", text: "Select words and tap Redact to black them out on the board."}));
       } else {
-        const isCase = d.variant === "case", isClip = d.variant === "clip";
+        const isCase = d.variant === "case", isClip = d.variant === "clip", isCard = d.variant === "card";
         const title = trackText(h("input", {class: "line-in", maxlength: 70, value: d.title || "", "data-autofocus": true, oninput: e => d.title = e.target.value}));
         const ta = trackText(h("textarea", {class: "line-in", maxlength: 1500, rows: 6, oninput: e => d.body = e.target.value}));
         ta.value = d.body || "";
         body.append(
-          h("div", {class: "field"}, segmented([["doc", "Document"], ["case", "Case card"], ["clip", "Clipping"]], d.variant, v => { d.variant = v; draw(); })),
-          h("label", {class: "field"}, h("span", {text: isCase ? "Question or heading" : isClip ? "Headline" : "Title"}), title),
-          h("label", {class: "field"}, h("span", {text: isCase ? "Notes, one per line" : isClip ? "Article text" : "Text"}), ta),
+          h("div", {class: "field"}, segmented([["doc", "Note paper"], ["card", "Cardboard"], ["case", "Case card"], ["clip", "Clipping"]], d.variant, v => { d.variant = v; draw(); })),
+          h("label", {class: "field"}, h("span", {text: isCase ? "Question or heading" : isClip ? "Headline" : isCard ? "Big writing" : "Title"}), title),
+          h("label", {class: "field"}, h("span", {text: isCase ? "Notes, one per line" : isClip ? "Article text" : isCard ? "Smaller writing" : "Text"}), ta),
           h("div", {class: "row", style: "margin-bottom:6px"}, redactBtn()),
           h("p", {class: "hint", style: "margin-bottom:18px", text: "Select words and tap Redact to black them out on the board. To undo, delete the [[ ]] around them."}),
           isClip ? "" : h("div", {class: "field"}, h("span", {class: "flabel", text: "Stamp"}),
@@ -1463,6 +1542,7 @@ function openEditor(id, draft) {
     function save() {
       const f = fields();
       if (isNew) {
+        if (f.type !== "photo") f.shape = Math.floor(Math.random() * 1000);
         const nid = uid(), w = widthOf(f), eh = EST_H[f.type === "paper" ? f.variant : f.type], spot = freeSpot(w, eh);
         const item = {...f, x: spot.x, y: spot.y, rot: +rand(-4.5, 4.5).toFixed(1), z: nextZ(), by: S.me.id, at: Date.now()};
         if (S.view.s < 0.5) zoomTo(spot.x + w / 2, spot.y + eh / 2, 0.62); else ensureVisible(spot.x, spot.y, w, eh);
@@ -1523,6 +1603,7 @@ function openSettings() {
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Board"}),
       grid(segmented(BOARDS, sc.board, v => S.store.updateMeta(S.code, {board: v}).catch(saveFailed), !handler), BOARDS.length % 3 !== 0),
+      h("div", {style: "margin-top:10px"}, segmented([["stand", "On a stand"], ["wall", "Hung on the wall"]], sc.mount, v => S.store.updateMeta(S.code, {mount: v}).catch(saveFailed), !handler)),
       handler ? null : h("p", {class: "hint", text: "Only the Handler can change the room and board."})));
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Pin sounds"}),
@@ -1579,7 +1660,7 @@ async function createRoom() {
     let code = genCode();
     for (let i = 0; i < 8 && await S.store.getMeta(code); i++) code = genCode();
     const me = {id: uid(), codename, color: S.pickedColor, joinedAt: Date.now()};
-    await S.store.createRoom(code, {handlerId: me.id, createdAt: Date.now(), room: "cabin", board: "ply"}, me);
+    await S.store.createRoom(code, {handlerId: me.id, createdAt: Date.now(), room: "cabin", board: "ply", mount: "stand"}, me);
     localStorage.setItem("dgboard:pid:" + code, me.id);
     enterRoom(code, me);
   } catch (err) {

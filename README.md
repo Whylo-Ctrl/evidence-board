@@ -2,7 +2,7 @@
 
 A shared evidence wall for your Delta Green table. Up to 4 people per case (Handler included) can pin photos, papers and post-its, tie them together with red string, and see each other's changes live from their own phone or laptop.
 
-The app is one file, `index.html`, plus the photo textures in the `assets` folder (rooms, boards, post-its, paper, the polaroid frame and the cardboard tray). Keep the `assets` folder next to `index.html` when you copy or host it.
+The app is one file, `index.html`, plus the photos in the `assets` folder: rooms, boards, cut-out post-its (some bent, some with a paperclip, tape or pin), torn and crumpled notebook paper, torn cardboard, the polaroid frame and the cardboard tray. Keep the `assets` folder next to `index.html` when you copy or host it.
 
 ## Shared rooms
 
@@ -43,8 +43,8 @@ The site is hosted with GitHub Pages from the `main` branch of this repo.
 The tray at the bottom has five tools.
 
 - **Photo** pins a picture from your phone or computer. Pick a style: **Polaroid**, **Mugshot** (with a booking placard), or **Surveillance** (black-and-white camera still with a timestamp).
-- **Paper** pins a **document** (typed page with an optional Classified, Top secret, or Eyes only stamp), a **case card** (a question with notes, one per line), or a **newspaper clipping** (headline and article in columns).
-- **Post-it** pins a quick handwritten note in yellow, pink, blue or green.
+- **Paper** pins **note paper** (a torn, crumpled or hole-punched notebook page with an optional Classified, Top secret, or Eyes only stamp), **cardboard** (a torn piece of box with marker writing), a **case card** (a question with notes, one per line), or a **newspaper clipping** (headline and article in columns).
+- **Post-it** pins a quick handwritten note in yellow, pink, blue, green, purple, cream or white. Yellow ones sometimes come with a paperclip, tape or a pushpin.
 - **String** ties items together with red string. Tap one item, then the item to tie it to, and keep going until you tap **Done**. Pick red, black, yellow or blue string to color-code leads.
 - **Marker** lets you draw on the board: circle a suspect, draw arrows, scrawl a question mark. Choose red or black, use **Undo** for your last line, and tap **Done** to go back to moving things.
 
@@ -74,4 +74,4 @@ Redaction is for atmosphere. The original words are still saved behind the scene
 
 ### Handler controls
 
-In **Case settings**, the Handler sets the scene for everyone: the **room** (cabin, study, workshop, factory, white brick or garage, each a real photo) and the **board** (plywood in a dark wooden frame, cork in a pine frame, cork in a metal frame, a whiteboard, or pinning straight to the wall). New cases start in the cabin with the plywood board. The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
+In **Case settings**, the Handler sets the scene for everyone: the **room** (cabin, study, workshop, factory, white brick or garage, each a real photo) and the **board** (plywood in a dark wooden frame, cork in a pine frame, cork in a metal frame, a whiteboard, or pinning straight to the wall). The Handler also picks whether the board stands on a wooden **easel** or is **hung on the wall** from a wire and nail. New cases start in the cabin with the plywood board on an easel. The Handler can also remove agents and clear the whole board (items, strings and marker lines). Anyone can turn pin sounds on or off for themselves.
