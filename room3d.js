@@ -540,7 +540,7 @@ export function createRoom(THREE, opts) {
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
       if (Math.hypot(dx, dy) > 6) drag.moved = true;
       const k = (camera.fov / 60) * 0.0042;
-      pose.yaw = drag.yaw + dx * k; pose.pitch = THREE.MathUtils.clamp(drag.pitch + dy * k, -1.2, 1.2);
+      pose.yaw = drag.yaw - dx * k; pose.pitch = THREE.MathUtils.clamp(drag.pitch + dy * k, -1.2, 1.2); // drag right to look right; up/down unchanged
       applyPose();
     } else if (e.pointerType === "mouse") canvas.style.cursor = hitBoard(e) || hitTray(e) ? "pointer" : "grab";
   };
