@@ -92,6 +92,17 @@ button{cursor:pointer;touch-action:manipulation}
 #room.brick{--room-img:url(assets/room-brick.webp)}
 #room.garage{--room-img:url(assets/room-garage.webp)}
 #room.office{--room-img:var(--plaster)}
+/* photos that already show a board: sized and placed so our board covers theirs */
+#room.den{--room-img:url(assets/room-den.webp)}
+#room.den .rwall{background-color:#0c0a08;background-size:3064px 1695px;background-position:918px 893px;background-repeat:no-repeat}
+#room.archive{--room-img:url(assets/room-archive.webp)}
+#room.archive .rwall{background-color:#0c0a08;background-size:3880px 1898px;background-position:7px 847px;background-repeat:no-repeat}
+#room.precinct{--room-img:url(assets/room-precinct.webp)}
+#room.precinct .rwall{background-color:#0c0a08;background-size:3436px 2219px;background-position:782px 591px;background-repeat:no-repeat}
+#room.tabletop{--room-img:url(assets/room-tabletop.webp)}
+#room.tabletop .rwall{background-color:#0c0a08;background-size:3350px 1971px;background-position:800px 700px;background-repeat:no-repeat}
+#world[data-mount="photo"] #boardbg:not(.wall){box-shadow:0 8px 16px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4)}
+#world[data-mount="photo"] #room .rdark{background:radial-gradient(75% 72% at 50% 45%, transparent 45%, rgba(0,0,0,.45) 85%, rgba(0,0,0,.75) 100%)}
 #room.office .rwall{background-size:900px 900px;background-color:#2a3137}
 #room.office .side,#room.office .ceil,#room.office .floor{background-size:auto,900px 900px}
 #room .desk{display:none}
@@ -644,14 +655,15 @@ function buildRoom() {
   $("#room").insertAdjacentHTML("beforeend", ["desk", "prop prop-lamp", "prop prop-phone", "prop prop-typewriter", "rdark", "floor", "ceil only3d", "side side-l only3d", "side side-r only3d"]
     .map(c => `<div class="rp ${c}"></div>`).join(""));
 }
-const ROOMS = [["office", "Dark office"], ["cabin", "Cabin"], ["cozy", "Study"], ["workshop", "Workshop"], ["industrial", "Factory"], ["brick", "White brick"], ["garage", "Garage"]];
+const ROOMS = [["office", "Dark office"], ["den", "Den"], ["archive", "Archive"], ["precinct", "Precinct"], ["tabletop", "Tabletop"], ["cabin", "Cabin"], ["cozy", "Study"], ["workshop", "Workshop"], ["industrial", "Factory"], ["brick", "White brick"], ["garage", "Garage"]];
 const BOARDS = [["ply", "Plywood"], ["corkwood", "Cork, pine"], ["cork", "Cork, metal"], ["white", "Whiteboard"], ["wall", "Pin to wall"]];
+const PHOTO_BOARD_ROOMS = ["den", "archive", "precinct", "tabletop"]; // their photo already has the board's hanging and shadows
 function sceneOf(m) {
   const legacyCork = m?.background === "cork";
   return {
     room: ROOMS.some(r => r[0] === m?.room) ? m.room : m?.room === "basement" || legacyCork ? "workshop" : "cabin",
     board: BOARDS.some(b => b[0] === m?.board) ? m.board : legacyCork ? "cork" : "wall",
-    mount: m?.mount === "wall" || m?.room === "office" ? "wall" : "stand",
+    mount: PHOTO_BOARD_ROOMS.includes(m?.room) ? "photo" : m?.mount === "wall" || m?.room === "office" ? "wall" : "stand",
     light: m?.light === "lamp" ? "lamp" : "bright",
   };
 }
@@ -1726,8 +1738,8 @@ function openSettings() {
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Board"}),
       grid(segmented(BOARDS, sc.board, v => S.store.updateMeta(S.code, {board: v}).catch(saveFailed), !handler), BOARDS.length % 3 !== 0),
-      h("div", {style: "margin-top:10px"}, segmented([["stand", "On a stand"], ["wall", "Hung on the wall"]], sc.mount, v => S.store.updateMeta(S.code, {mount: v}).catch(saveFailed), !handler || sc.room === "office")),
-      sc.room === "office" ? h("p", {class: "hint", text: "In the dark office the board hangs on the wall above the desk."}) : null),
+      h("div", {style: "margin-top:10px"}, segmented([["stand", "On a stand"], ["wall", "Hung on the wall"]], sc.mount, v => S.store.updateMeta(S.code, {mount: v}).catch(saveFailed), !handler || sc.room === "office" || sc.mount === "photo")),
+      sc.room === "office" ? h("p", {class: "hint", text: "In the dark office the board hangs on the wall above the desk."}) : sc.mount === "photo" ? h("p", {class: "hint", text: "In this room the board sits where it is in the photo."}) : null),
     h("div", {class: "section"},
       h("span", {class: "flabel", text: "Lighting"}),
       segmented([["lamp", "Desk lamp"], ["bright", "Lights on"]], sc.light, v => S.store.updateMeta(S.code, {light: v}).catch(saveFailed), !handler),
