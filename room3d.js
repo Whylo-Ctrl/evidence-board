@@ -25,7 +25,7 @@ const STYLES = {
 };
 
 export function createRoom(THREE, opts) {
-  const {canvas, boardCanvas, mobile, onFocused, reducedMotion, addons = {}} = opts;
+  const {canvas, boardCanvas, mobile, onFocused, onTray, reducedMotion, addons = {}} = opts;
   const renderer = new THREE.WebGLRenderer({canvas, antialias: !mobile, powerPreference: mobile ? "low-power" : "high-performance"});
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : addons.EffectComposer ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -43,7 +43,9 @@ export function createRoom(THREE, opts) {
   if (!mobile && addons.EffectComposer && addons.RenderPass) {
     composer = new addons.EffectComposer(renderer);
     composer.addPass(new addons.RenderPass(scene, camera));
-    if (addons.GTAOPass) { const ao = new addons.GTAOPass(scene, camera, 1, 1); ao.blendIntensity = 1; ao.updateGtaoMaterial?.({radius: 0.4, distanceExponent: 1.4, thickness: 1.2, scale: 1.1}); composer.addPass(ao); }
+    if (addons.GTAOPass) { const ao = new addons.GTAOPass(scene, camera, 1, 1); ao.blendIntensity = 1; ao.updateGtaoMaterial?.({radius: 0.4, distanceExponent: 1.4, thickness: 1.2, scale: 1.1}); composer.addPass(ao);
+      // cut-out photos are flat rectangles to this effect, so leave them out of it
+      const hideBase = ao.overrideVisibility?.bind(ao); if (hideBase) ao.overrideVisibility = () => { hideBase(); scene.traverse(o => { if (o.userData.noAO) o.visible = false; }); }; }
     if (addons.UnrealBloomPass) composer.addPass(new addons.UnrealBloomPass(new THREE.Vector2(256, 256), 0.18, 0.4, 0.97));
     if (addons.OutputPass) composer.addPass(new addons.OutputPass());
     if (addons.ShaderPass) {
@@ -155,7 +157,7 @@ export function createRoom(THREE, opts) {
     cyl(rt, rb, h, m, x, y, z, seg = 18) { const g = new THREE.CylinderGeometry(rt, rb, h, seg); disposables.push(g); const c = new THREE.Mesh(g, m); c.position.set(x, y, z); c.castShadow = c.receiveShadow = !mobile; furn.add(c); return c; },
     canvasTex(w, h, draw) { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; disposables.push(t); return t; },
     // a flat cut-out photo standing up (props), or lying down on a surface
-    stand(url, w, h, x, yBottom, z, ry = 0) { const p = plane(w, h, mat({map: tex(url), transparent: true, alphaTest: 0.45, roughness: 0.6, side: THREE.DoubleSide})); p.position.set(x, yBottom + h / 2, z); p.rotation.y = ry; p.castShadow = !mobile; furn.add(p); facers.push(p); return p; },
+    stand(url, w, h, x, yBottom, z, ry = 0) { const p = plane(w, h, mat({map: tex(url), transparent: true, alphaTest: 0.45, roughness: 0.6, side: THREE.DoubleSide})); p.position.set(x, yBottom + h / 2, z); p.rotation.y = ry; p.castShadow = !mobile; p.userData.noAO = true; furn.add(p); facers.push(p); return p; },
     lay(map, w, h, x, y, z, rz = 0, transparent = true) { const p = plane(w, h, mat({map, transparent, alphaTest: transparent ? 0.3 : 0, roughness: 0.85, side: THREE.DoubleSide})); p.position.set(x, y, z); p.rotation.set(-Math.PI / 2, 0, rz); furn.add(p); return p; },
     onWall(map, wall, z, y, w, h, opts = {}) {
       const m = opts.basic ? new THREE.MeshBasicMaterial({map}) : mat({map, roughness: 0.6}); if (opts.basic) disposables.push(m);
@@ -417,11 +419,70 @@ export function createRoom(THREE, opts) {
       B.bulb(0, -2.0, 2.25, 18, 0xfff0d0); ambientK = 0.7; B.boardLight(0, 2.2, -2.0, 5, 0, 1.6);
     },
   };
+  // ---------- the dice tray ----------
+  const TRAY = {office: [0.78, 0.76, -2.4], den: [0.75, 0.76, -2.4], cozy: [0.75, 0.76, -2.4], cabin: [0.72, 0.78, -2.4], tabletop: [0.15, 0.78, -2.42],
+    archive: [0.75, 0.7, -2.4], precinct: [0.25, 0.76, -2.42], workshop: [0.3, 0.86, -2.45], garage: [0.0, 0.86, -2.42], brick: [0.65, 0.75, -2.4], industrial: [-0.55, 0.5, -2.15]};
+  let tray = null;
+  const dice = [];
+  function buildTray(key) {
+    const [x, y, z] = TRAY[key] || TRAY.office;
+    tray = new THREE.Group(); tray.position.set(x, y, z); furn.add(tray);
+    const wood = mat({map: tex("assets/desk-wood.webp", 1, 1), color: 0x4a2c18, roughness: 0.5}), felt = mat({color: 0x1f4a2e, roughness: 1});
+    const add = (w, h, d, m, px, py, pz) => box(w, h, d, m, px, py, pz, tray);
+    add(0.34, 0.012, 0.24, felt, 0, 0.006, 0);
+    add(0.36, 0.035, 0.012, wood, 0, 0.018, -0.126); add(0.36, 0.035, 0.012, wood, 0, 0.018, 0.126);
+    add(0.012, 0.035, 0.24, wood, -0.174, 0.018, 0); add(0.012, 0.035, 0.24, wood, 0.174, 0.018, 0);
+    if (key === "industrial") B.crate(x, 0, z, 0.5, 0.15); // something to put it on
+    pickTray.length = 0; tray.traverse(o => { if (o.isMesh) pickTray.push(o); });
+    // a couple of resting dice so it reads as a dice tray
+    showDice([{kind: "d100", results: [rnd() * 99 + 1 | 0]}].map(() => null), true);
+  }
+  const pickTray = [];
+  const DIE_SHAPES = {d4: () => new THREE.TetrahedronGeometry(0.022), d6: () => new THREE.BoxGeometry(0.03, 0.03, 0.03), d8: () => new THREE.OctahedronGeometry(0.022),
+    d10: () => new THREE.OctahedronGeometry(0.023, 0), d12: () => new THREE.DodecahedronGeometry(0.021), d20: () => new THREE.IcosahedronGeometry(0.022), d100: () => new THREE.IcosahedronGeometry(0.023)};
+  const numTex = text => B.canvasTex(128, 64, (c, w, h) => { c.fillStyle = "rgba(20,13,8,.85)"; c.beginPath(); c.roundRect(6, 6, w - 12, h - 12, 16); c.fill(); c.fillStyle = "#efe3c6"; c.font = 'bold 36px "Special Elite", monospace'; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(text, w / 2, h / 2 + 2); });
+  function clearDice() { for (const d of dice) { tray?.remove(d.mesh); if (d.label) tray?.remove(d.label); } dice.length = 0; }
+  // r: a roll ({kind, results}); resting=true just places idle dice
+  function showDice(_unused, resting) {
+    clearDice();
+    if (!tray || !resting) return;
+    const colors = [0xf3eee2, 0xa11d1d];
+    [["d100", -0.06, -0.03], ["d10", 0.05, 0.04]].forEach(([k, px, pz], i) => {
+      const g = DIE_SHAPES[k](); disposables.push(g);
+      const m = new THREE.Mesh(g, mat({color: colors[i], roughness: 0.35})); m.position.set(px, 0.035, pz); m.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); m.castShadow = true; tray.add(m);
+      dice.push({mesh: m});
+    });
+  }
+  function rollDice(r) {
+    if (!tray) return;
+    clearDice();
+    const list = r.kind === "d100" ? [["d100", String(r.results[0] >= 100 ? "00" : String(Math.floor(r.results[0] / 10) * 10).padStart(2, "0")), 0xa11d1d], ["d10", String(r.results[0] % 10), 0xf3eee2]]
+      : r.results.map(v => [r.kind, String(v), 0xf3eee2]);
+    list.slice(0, 6).forEach(([k, text, color], i) => {
+      const g = (DIE_SHAPES[k] || DIE_SHAPES.d6)(); disposables.push(g);
+      const m = new THREE.Mesh(g, mat({color, roughness: 0.35})); m.castShadow = true; tray.add(m);
+      const n = list.length, tx = (i - (n - 1) / 2) * 0.055, tz = (i % 2 ? 0.035 : -0.03);
+      const sm = new THREE.SpriteMaterial({map: numTex(text), depthWrite: false, transparent: true, toneMapped: false}); disposables.push(sm);
+      const label = new THREE.Sprite(sm); label.scale.set(0.07, 0.035, 1); label.visible = false; if (composer) label.layers.set(1); tray.add(label);
+      dice.push({mesh: m, label, from: {x: -0.14 + rnd() * 0.04, z: 0.1 - rnd() * 0.2}, to: {x: tx, z: tz}, spin: [rnd() * 20 + 8, rnd() * 20 + 8, rnd() * 20 + 8], t0: performance.now() + i * 90, ms: reducedMotion ? 1 : 1100});
+    });
+  }
+  function stepDice(now) {
+    for (const d of dice) {
+      if (!d.to) continue;
+      const k = Math.max(0, Math.min(1, (now - d.t0) / d.ms)), e = 1 - Math.pow(1 - k, 3);
+      d.mesh.position.set(d.from.x + (d.to.x - d.from.x) * e, 0.03 + Math.abs(Math.sin(k * Math.PI * 3)) * 0.05 * (1 - k), d.from.z + (d.to.z - d.from.z) * e);
+      const slow = (1 - e);
+      d.mesh.rotation.x += d.spin[0] * 0.016 * slow; d.mesh.rotation.y += d.spin[1] * 0.016 * slow; d.mesh.rotation.z += d.spin[2] * 0.016 * slow;
+      if (k >= 1 && !d.label.visible) { d.label.visible = true; d.label.position.set(d.to.x, 0.09, d.to.z); }
+    }
+  }
   function furnish(key) {
     furn.clear(); flickers.length = 0; facers.length = 0; shadowBulb = null; ambientK = 1; seed = 7;
     furnishGen++; curRoom = LAYOUTS[key] ? key : "office";
     (LAYOUTS[key] || LAYOUTS.office)();
     if (USE_MODELS) EXTRAS[curRoom]?.();
+    buildTray(curRoom);
     setLight(lightMode);
   }
 
@@ -479,15 +540,22 @@ export function createRoom(THREE, opts) {
       const k = (camera.fov / 60) * 0.0042;
       pose.yaw = drag.yaw + dx * k; pose.pitch = THREE.MathUtils.clamp(drag.pitch + dy * k, -1.2, 1.2);
       applyPose();
-    } else if (e.pointerType === "mouse") canvas.style.cursor = hitBoard(e) ? "pointer" : "grab";
+    } else if (e.pointerType === "mouse") canvas.style.cursor = hitBoard(e) || hitTray(e) ? "pointer" : "grab";
   };
   const onUp = e => {
     pointers.delete(e.pointerId);
     if (pointers.size < 2) pinch0 = null;
-    if (drag && !drag.moved && e.type === "pointerup" && hitBoard(e)) focusBoard();
+    if (drag && !drag.moved && e.type === "pointerup") { if (hitBoard(e)) focusBoard(); else if (hitTray(e)) onTray?.(); }
     if (!pointers.size) drag = null;
   };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function hitTray(e) {
+    if (!pickTray.length) return false;
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    return ray.intersectObjects(pickTray, false).length > 0;
+  }
   function hitBoard(e) {
     const r = canvas.getBoundingClientRect();
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
@@ -516,6 +584,7 @@ export function createRoom(THREE, opts) {
     }
     else applyPose(Math.sin(now * 0.0011) * 0.004); // a little breathing while you stand still
     stepAvatars(dt);
+    stepDice(now);
     for (const p of facers) p.rotation.y = Math.atan2(camera.position.x - p.position.x, camera.position.z - p.position.z);
     const tt = now * 0.0001;
     for (let i = 0; i < DUST; i++) { const k = i * 3; dustPos[k] = dustBase[k] + Math.sin(tt * 3 + i) * 0.15; dustPos[k + 1] = dustBase[k + 1] + Math.sin(tt * 2 + i * 1.7) * 0.12; dustPos[k + 2] = dustBase[k + 2] + Math.cos(tt * 2.5 + i * 0.7) * 0.15; }
@@ -523,7 +592,7 @@ export function createRoom(THREE, opts) {
     if (grainPass) grainPass.uniforms.time.value = (now * 0.001) % 100;
     if (composer) {
       composer.render();
-      if (avatars.size) { renderer.setRenderTarget(null); renderer.autoClear = false; renderer.clearDepth(); camera.layers.set(1); renderer.render(scene, camera); camera.layers.set(0); renderer.autoClear = true; }
+      if (avatars.size || dice.some(d => d.label?.visible)) { renderer.setRenderTarget(null); renderer.autoClear = false; renderer.clearDepth(); camera.layers.set(1); renderer.render(scene, camera); camera.layers.set(0); renderer.autoClear = true; }
     } else renderer.render(scene, camera);
   }
 
@@ -582,6 +651,7 @@ export function createRoom(THREE, opts) {
     fromBoard() { resize(); Object.assign(pose, focusPose()); applyPose(); moveTo(ROOM_POSE, 1100); },
     focusBoard,
     setAvatars,
+    rollDice,
     getPose() { return {mode: "room", x: +pose.x.toFixed(2), z: +pose.z.toFixed(2), yaw: +pose.yaw.toFixed(2)}; },
     lookFrom(x, y, z, yaw, pitch) { anim = null; Object.assign(pose, {x, y, z, yaw, pitch}); applyPose(); },
     start() { if (running) return; running = true; resize(); applyPose(); last = performance.now(); renderer.setAnimationLoop(frame); },

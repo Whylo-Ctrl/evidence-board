@@ -347,6 +347,20 @@ button{cursor:pointer;touch-action:manipulation}
 .ico-photo::before{content:"";position:absolute;inset:1px 3px 0;background:#f6f2e8;box-shadow:0 1px 2px rgba(0,0,0,.4);transform:rotate(-6deg)}
 .ico-photo::after{content:"";position:absolute;left:6px;top:4px;width:15px;height:13px;background:#3c3833;transform:rotate(-6deg)}
 .ico-paper::before{content:"";position:absolute;inset:0 5px;background:#f3ecdb repeating-linear-gradient(transparent 0 5px, #8d8371 5px 6px) 4px 6px/12px 16px no-repeat;box-shadow:0 1px 2px rgba(0,0,0,.4);transform:rotate(3deg)}
+.ico-dice::before{content:"";position:absolute;left:4px;top:3px;width:18px;height:18px;border-radius:4px;background:#f3eee2;box-shadow:0 2px 2px rgba(0,0,0,.35);transform:rotate(-10deg);
+  background-image:radial-gradient(circle,#a11d1d 2.2px,transparent 2.6px),radial-gradient(circle,#a11d1d 2.2px,transparent 2.6px),radial-gradient(circle,#a11d1d 2.2px,transparent 2.6px);background-size:18px 18px;background-position:-5px -5px,0 0,5px 5px;background-repeat:no-repeat}
+#rollCard{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 64px);transform:translateX(-50%);z-index:45;min-width:240px;max-width:calc(100vw - 32px);background:#1a1410f0;color:#efe3c6;border:1px solid #5a4632;border-radius:10px;padding:12px 18px 14px;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.6);pointer-events:none}
+#rollCard .who{font-size:13px;color:#d9b46a}
+#rollCard .who b{color:#efe3c6;font-weight:normal}
+#rollCard .faces{display:flex;gap:8px;justify-content:center;margin:10px 0 6px;flex-wrap:wrap}
+#rollCard .face{min-width:44px;height:44px;padding:0 6px;border-radius:8px;background:#f3eee2;color:#1a1410;font:bold 22px/44px "Special Elite",monospace;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+#rollCard .face.d100{background:#a11d1d;color:#fff}
+#rollCard .total{font-size:15px}
+#rollCard .verdict{margin-top:6px;font:bold 18px var(--hand);letter-spacing:.5px}
+#rollCard .verdict.crit{color:#7fd47f}#rollCard .verdict.ok{color:#cfe0a8}#rollCard .verdict.fail{color:#e0a080}#rollCard .verdict.fumble{color:#ff6a5a}
+.dicelog{margin:0;padding:0;list-style:none;max-height:180px;overflow:auto;font-size:13px;line-height:1.5}
+.dicelog li{padding:4px 0;border-bottom:1px dashed rgba(0,0,0,.18)}
+.dicelog small{color:var(--ink-soft)}
 .ico-note::before{content:"";position:absolute;inset:2px 3px;background:#efd35a;box-shadow:0 2px 2px rgba(0,0,0,.35);transform:rotate(-4deg)}
 .ico-string::before{content:"";position:absolute;left:3px;right:3px;top:12px;height:2px;background:#a11d1d;transform:rotate(-28deg);box-shadow:0 1px 1px rgba(0,0,0,.3)}
 .ico-string::after{content:"";position:absolute;left:3px;top:16px;width:7px;height:7px;border-radius:50%;background:#c23a2e;box-shadow:16px -11px 0 #2f5fa8}
@@ -502,6 +516,7 @@ button{cursor:pointer;touch-action:manipulation}
   </div>
   <div class="light"></div><div class="vignette"></div>
   <div id="walkfade" hidden aria-hidden="true"></div>
+  <div id="rollCard" hidden role="status" aria-live="polite"></div>
   <canvas id="room3d" hidden aria-label="The room in 3D. Drag to look around, click the board to work on it."></canvas>
   <div id="exploreHint" hidden></div>
 
@@ -526,6 +541,7 @@ button{cursor:pointer;touch-action:manipulation}
     <button data-add="photo"><span class="ico ico-photo" aria-hidden="true"></span>Photo</button>
     <button data-add="paper"><span class="ico ico-paper" aria-hidden="true"></span>Paper</button>
     <button data-add="note"><span class="ico ico-note" aria-hidden="true"></span>Post-it</button>
+    <button data-add="dice"><span class="ico ico-dice" aria-hidden="true"></span>Dice</button>
     <button data-mode="string" aria-pressed="false"><span class="ico ico-string" aria-hidden="true"></span>String</button>
     <button data-mode="marker" aria-pressed="false"><span class="ico ico-marker" aria-hidden="true"></span>Marker</button>
   </nav>
@@ -691,6 +707,7 @@ function makeLocalStore() {
       for (const k in b) { if (!(k in a)) add(k, b[k]); else if (!same(a[k], b[k])) chg(k, b[k]); }
       for (const k in a) if (!(k in b)) rem(k);
     }
+    if (hd.rollAdded) { const a = p.rolls || {}, b = n.rolls || {}; for (const k in b) if (!(k in a)) hd.rollAdded(k, b[k]); }
     if (!same(p.players, n.players)) hd.players(n.players || {});
     if (!same(p.meta, n.meta)) hd.meta(n.meta || null);
   }
@@ -732,6 +749,7 @@ function makeLocalStore() {
     async clearBoard(c) { Object.keys(read(c)?.items || {}).forEach(id => localStorage.removeItem(KI(c, id))); mutate(c, st => { st.items = {}; st.links = {}; st.marks = {}; }); },
     async removePlayer(c, pid) { mutate(c, st => { delete st.players?.[pid]; }); },
     presence() { return () => {}; },
+    async addRoll(c, id, r) { mutate(c, st => { st.rolls = st.rolls || {}; st.rolls[id] = r; const ks = Object.keys(st.rolls).sort((a, b) => st.rolls[a].at - st.rolls[b].at); while (ks.length > 15) delete st.rolls[ks.shift()]; }); },
     async setPose() {},
     async removePose() {},
   };
@@ -773,6 +791,7 @@ async function makeFirebaseStore() {
       offs.push(F.onValue(R(c, "players"), s => hd.players(s.val() || {})));
       offs.push(F.onValue(R(c, "meta"), s => hd.meta(s.val())));
       if (hd.poses) offs.push(F.onValue(R(c, "poses"), s => hd.poses(s.val() || {})));
+      if (hd.rollAdded) offs.push(F.onChildAdded(F.query(R(c, "rolls"), F.limitToLast(15)), s => hd.rollAdded(s.key, s.val())));
       return () => offs.forEach(off => off());
     },
     async getImage(c, id) { return (await F.get(R(c, "images/" + id))).val(); },
@@ -789,9 +808,10 @@ async function makeFirebaseStore() {
     setMark: (c, id, d) => F.set(R(c, "marks/" + id), d),
     removeMark: (c, id) => F.remove(R(c, "marks/" + id)),
     updateMeta: (c, patch) => F.update(R(c, "meta"), patch),
-    clearBoard: c => F.update(R(c), {items: null, links: null, images: null, marks: null}),
+    clearBoard: c => F.update(R(c), {items: null, links: null, images: null, marks: null, rolls: null}),
     removePlayer: (c, pid) => F.remove(R(c, "players/" + pid)),
     setPose: (c, pid, d) => F.set(R(c, "poses/" + pid), d),
+    addRoll: (c, id, r) => F.set(R(c, "rolls/" + id), r),
     removePose: (c, pid) => F.remove(R(c, "poses/" + pid)),
     presence(c, pid) {
       const onRef = R(c, "players/" + pid + "/online");
@@ -2023,7 +2043,7 @@ async function openExplore(opts = {}) {
   if (!exploring) return;
   if (!R3) {
     const [THREE, mod, addons] = R3mods;
-    R3 = mod.createRoom(THREE, {canvas: cv, boardCanvas, mobile: TOUCH, addons, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, onFocused: closeExplore});
+    R3 = mod.createRoom(THREE, {canvas: cv, boardCanvas, mobile: TOUCH, addons, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, onFocused: closeExplore, onTray: () => openDice()});
   }
   R3.setScene(sceneOf(S.meta));
   pushAvatars();
@@ -2055,6 +2075,79 @@ function startPoseSync() {
   }, 300);
 }
 function stopPoseSync() { clearInterval(poseTimer); poseTimer = null; if (S.code && S.me) S.store.removePose?.(S.code, S.me.id).catch(() => {}); }
+/* ---------------- dice ---------------- */
+const DICE = [["d100", 100], ["d20", 20], ["d12", 12], ["d10", 10], ["d8", 8], ["d6", 6], ["d4", 4]];
+const rollDie = sides => { const a = new Uint32Array(1); crypto.getRandomValues(a); return 1 + (a[0] % sides); };
+// Delta Green percentile: at or under skill succeeds; 01 or matching digits at/under skill = critical; 100 or matching digits over skill = fumble
+function dgVerdict(v, target) {
+  if (!target) return null;
+  const doubles = v < 100 && v % 11 === 0;
+  if (v === 1 || (doubles && v <= target)) return ["crit", "Critical success!"];
+  if (v === 100 || (doubles && v > target)) return ["fumble", "Fumble!"];
+  return v <= target ? ["ok", "Success"] : ["fail", "Failure"];
+}
+let rollCardTimer = null, rollsSeenAt = 0;
+function gotRoll(id, r) {
+  if (!r || !Array.isArray(r.results)) return;
+  S.rolls = [{id, ...r}, ...(S.rolls || []).filter(x => x.id !== id)].slice(0, 15);
+  if ((r.at || 0) < rollsSeenAt - 3000) return; // old rolls from before you joined go to the log only
+  showRoll(r);
+  if (R3 && exploring) R3.rollDice(r);
+}
+function showRoll(r) {
+  const card = $("#rollCard"), name = S.players[r.by]?.codename || r.name || "Someone";
+  const faces = h("div", {class: "faces"}), shown = r.results.map(() => h("div", {class: "face" + (r.kind === "d100" ? " d100" : "")}));
+  faces.append(...shown);
+  card.replaceChildren(h("div", {class: "who"}, h("b", {text: name}), r.label ? " · " + r.label : ""), faces);
+  card.hidden = false;
+  const sides = (DICE.find(d => d[0] === r.kind) || DICE[0])[1], t0 = performance.now(), spin = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900;
+  const tick = now => {
+    const done = now - t0 >= spin;
+    shown.forEach((f, i) => { f.textContent = done ? String(r.results[i]).padStart(r.kind === "d100" ? 2 : 1, "0").replace(/^100$/, "00") : String(rollDie(sides)); });
+    if (!done) return requestAnimationFrame(tick);
+    if (r.results.length > 1) card.append(h("div", {class: "total", text: "Total " + r.results.reduce((a, b) => a + b, 0)}));
+    if (r.kind === "d100") {
+      const v = dgVerdict(r.results[0], r.target);
+      if (r.target) card.append(h("div", {class: "total", text: `${r.results[0]} vs ${r.target}%`}));
+      if (v) card.append(h("div", {class: "verdict " + v[0], text: v[1]}));
+    }
+  };
+  requestAnimationFrame(tick);
+  clearTimeout(rollCardTimer); rollCardTimer = setTimeout(() => { card.hidden = true; }, 6500);
+}
+function openDice() {
+  let kind = localStorage.getItem("dgboard:dicekind") || "d100", count = 1;
+  openModal(sheet => {
+    sheet.setAttribute("aria-label", "Roll dice");
+    const target = h("input", {class: "line-in", type: "number", min: 1, max: 99, inputmode: "numeric", placeholder: "e.g. 45", style: "max-width:120px"});
+    const label = h("input", {class: "line-in", maxlength: 40, placeholder: "e.g. SAN check, Alertness", "data-autofocus": true});
+    const countRow = h("div", {class: "field"});
+    const targetRow = h("label", {class: "field"}, h("span", {text: "Skill % (optional)"}), target);
+    const drawCount = () => { countRow.replaceChildren(h("span", {class: "flabel", text: "How many"}), segmented([["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"]], String(count), v => { count = +v; })); countRow.hidden = kind === "d100"; targetRow.hidden = kind !== "d100"; };
+    const roll = () => {
+      const sides = (DICE.find(d => d[0] === kind) || DICE[0])[1], n = kind === "d100" ? 1 : count;
+      const r = {kind, results: Array.from({length: n}, () => rollDie(sides)), label: label.value.trim().slice(0, 40), by: S.me.id, name: S.me.codename || "", at: Date.now()};
+      const t = Math.round(+target.value); if (kind === "d100" && t >= 1 && t <= 99) r.target = t;
+      localStorage.setItem("dgboard:dicekind", kind);
+      closeModal();
+      S.store.addRoll(S.code, uid(), r).catch(saveFailed);
+    };
+    label.addEventListener("keydown", e => { if (e.key === "Enter") roll(); });
+    target.addEventListener("keydown", e => { if (e.key === "Enter") roll(); });
+    const log = h("ul", {class: "dicelog"}, (S.rolls || []).slice(0, 10).map(r => {
+      const v = r.kind === "d100" ? dgVerdict(r.results[0], r.target) : null;
+      return h("li", {}, h("b", {text: (S.players[r.by]?.codename || r.name || "?") + ": "}), `${r.kind}${r.results.length > 1 ? "×" + r.results.length : ""} → ${r.results.join(", ")}${r.target ? " vs " + r.target + "%" : ""}${v ? " (" + v[1].replace("!", "") + ")" : ""} `, r.label ? h("small", {text: "· " + r.label}) : null);
+    }));
+    sheet.append(h("h2", {text: "Dice tray"}),
+      h("div", {class: "field"}, h("span", {class: "flabel", text: "Dice"}), grid(segmented(DICE.map(([k]) => [k, k]), kind, v => { kind = v; drawCount(); }))),
+      countRow, targetRow,
+      h("label", {class: "field"}, h("span", {text: "What's it for? (optional)"}), label),
+      h("p", {class: "hint", text: "Everyone in the case sees the roll. For d100, a matching pair (11, 22…) at or under your skill is a critical, over it is a fumble."}),
+      S.rolls?.length ? h("div", {class: "field"}, h("span", {class: "flabel", text: "Recent rolls"}), log) :"",
+      h("div", {class: "foot"}, h("button", {type: "button", class: "btn", text: "Close", onclick: closeModal}), h("button", {type: "button", class: "btn primary", text: "Roll", onclick: roll})));
+    drawCount();
+  });
+}
 function closeExplore() {
   if (!exploring) return;
   fitView("board");
@@ -2093,6 +2186,7 @@ function enterRoom(code, me) {
   applyScene();
   if (CAN3D) { fitView(innerWidth >= 700 ? "board" : undefined); openExplore({walkIn: true}).catch(walkInFailed); }
   else walkIn(innerWidth >= 700 ? "board" : undefined);
+  S.rolls = []; rollsSeenAt = Date.now();
   S.unsub = S.store.subscribe(code, {
     itemAdded: renderItem, itemChanged: renderItem, itemRemoved: removeItemEl,
     linkAdded: renderLink, linkRemoved: removeLinkEl,
@@ -2104,6 +2198,7 @@ function enterRoom(code, me) {
     },
     meta: m => { if (m) { S.meta = m; applyScene(); renderAgents(); } },
     poses: p => { S.poses = p || {}; pushAvatars(); },
+    rollAdded: (id, r) => gotRoll(id, r),
   });
   startPoseSync();
   S.unpresence = S.store.presence(code, me.id);
@@ -2166,6 +2261,7 @@ $("#tray").addEventListener("click", async e => {
   }
   if (kind === "paper") openEditor(null, {type: "paper", variant: "doc", title: "", body: "", stamp: ""});
   if (kind === "note") openEditor(null, {type: "note", text: "", color: "yellow"});
+  if (kind === "dice") openDice();
 });
 addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
