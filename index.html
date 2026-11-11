@@ -74,7 +74,7 @@ button{cursor:pointer;touch-action:manipulation}
 .toggles{display:flex;flex-wrap:wrap;gap:6px}.tog{border:1.5px solid var(--ink);background:transparent;border-radius:16px;padding:7px 12px;font:inherit;font-size:13px;min-height:36px;color:var(--ink)}.tog[aria-pressed="true"]{background:var(--ink);color:var(--manila-lt)}
 .pinpick.auto{background:repeating-linear-gradient(45deg,#d8cdb0 0 4px,#b9ad8e 4px 8px)}
 .lookmini img{width:100%;height:100%;object-fit:cover;display:block}
-.lookctl{justify-content:center;margin-top:8px}.lookstyle{margin:0 0 8px}.lookctl .btn{min-height:40px;padding:8px 12px}
+.lookctl{justify-content:center;margin-top:8px}.lookstyle{margin:0 0 8px}.lookstyle .seg{width:100%;display:flex}.lookstyle .seg button{flex:1;padding:9px 4px;font-size:13px}.lookctl .btn{min-height:40px;padding:8px 12px}
 @media (max-width:640px){.lookwrap{flex-direction:column;align-items:stretch;gap:10px}.lookside{width:auto;position:sticky;top:-24px;z-index:3;background:var(--manila-lt);margin:0 -22px;padding:6px 22px 8px;box-shadow:0 6px 8px -6px rgba(0,0,0,.25)}.lookprev{height:200px}.lookpanel{min-height:0}.lookctl{margin-top:6px}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--ink);background:transparent;padding:10px 16px;border-radius:4px;font-size:15px;line-height:1.1;min-height:44px}
 .btn:hover{background:rgba(0,0,0,.06)}
@@ -582,7 +582,7 @@ button{cursor:pointer;touch-action:manipulation}
 <noscript><p style="color:#fff;padding:20px">The evidence board needs JavaScript turned on.</p></noscript>
 
 <script type="module">
-import * as A from "./agent3d.js?v=20261111b";
+import * as A from "./agent3d.js?v=20261111c";
 /* ==========================================================
    PASTE YOUR FIREBASE SETTINGS HERE  (see README.md)
    The board only needs databaseURL. Clear it to use practice mode.
@@ -2057,7 +2057,7 @@ async function openExplore(opts = {}) {
   $("#viewBtn").textContent = "Board"; $("#viewBtn").title = "Walk up to the board";
   if (!boardCanvas) { boardCanvas = document.createElement("canvas"); const big = !TOUCH; boardCanvas.width = big ? 2048 : 1400; boardCanvas.height = Math.round(boardCanvas.width * (BOARD.h + TEX_MARGIN * 2) / (BOARD.w + TEX_MARGIN * 2)); }
   if (!R3mods) {
-    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111b")]);
+    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111c")]);
     const addons = {};
     await Promise.all((TOUCH ? ADDONS_PHONE : ADDONS_ALL).map(p => import("three/addons/" + p).then(m => Object.assign(addons, m)).catch(() => {})));
     R3mods = [THREE, mod, addons];
@@ -2079,11 +2079,12 @@ async function openExplore(opts = {}) {
 // other agents in the same case appear in the 3D room where they're standing (or at the board if they're working on it)
 let poseTimer = null, lastPoseKey = "", lastPoseAt = 0;
 function pushAvatars() {
+  ensureAthletic();
   if (!R3) return;
   const now = Date.now();
   R3.setAvatars(Object.entries(S.poses || {})
     .filter(([id, p]) => id !== S.me?.id && p && S.players[id]?.codename && S.players[id]?.online !== false && now - (p.at || 0) < 90000)
-    .map(([id, p]) => ({id, name: S.players[id].codename, color: colorHex(S.players[id].color), look: A.cleanLook(S.players[id].look), style: agentStyle(), pose: p})));
+    .map(([id, p]) => ({id, name: S.players[id].codename, color: colorHex(S.players[id].color), look: A.cleanLook(S.players[id].look), style: buildStyle(), pose: p})));
 }
 function startPoseSync() {
   clearInterval(poseTimer);
@@ -2140,8 +2141,19 @@ function showRoll(r) {
 /* ---------------- character creator ---------------- */
 // Pick each piece separately (uniform, vest, gear, headgear, face, patches, ID) so no two agents look the same.
 // how agents are drawn on this screen: realistic or blocky (each person picks for themselves)
-const agentStyle = () => localStorage.getItem("dgboard:agentstyle") === "blocky" ? "blocky" : "real";
-function setAgentStyle(v) { localStorage.setItem("dgboard:agentstyle", v); pushAvatars(); }
+const agentStyle = () => { const v = localStorage.getItem("dgboard:agentstyle"); return v === "blocky" || v === "athletic" ? v : "real"; };
+// the athletic body is a model file, loaded the first time someone picks that style; until then agents show as realistic
+const buildStyle = () => agentStyle() === "athletic" && !A.athleticReady() ? "real" : agentStyle();
+const athReady = new Set(); let athLoading = null;
+function ensureAthletic() {
+  if (agentStyle() !== "athletic" || A.athleticReady() || athLoading) return;
+  athLoading = Promise.all([import("three"), import("three/addons/loaders/FBXLoader.js")])
+    .then(([T, {FBXLoader}]) => A.loadAthletic(T, FBXLoader, {mobile: TOUCH}))
+    .then(() => { pushAvatars(); athReady.forEach(fn => fn()); })
+    .catch(err => { console.warn(err); toast("Couldn't load the athletic agents, so they show as realistic."); })
+    .finally(() => { athLoading = null; });
+}
+function setAgentStyle(v) { localStorage.setItem("dgboard:agentstyle", v); ensureAthletic(); pushAvatars(); }
 function myLook() { try { return A.cleanLook(JSON.parse(localStorage.getItem("dgboard:look") || "null")); } catch { return A.cleanLook(null); } }
 const SILHOUETTE = `<svg viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="18" r="11" fill="#5a4a38"/><path d="M12 86 L14 40 Q30 30 46 40 L48 86 Z" fill="#3a3128"/></svg>`;
 function lookMini() { const img = localStorage.getItem("dgboard:lookimg"); return img && img.startsWith("data:image/") ? `<img alt="" src="${img}">` : SILHOUETTE; }
@@ -2162,7 +2174,7 @@ async function makePreview(host) {
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.42, 32), new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.22}));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.002; scene.add(shadow);
   const cam = new THREE.PerspectiveCamera(28, 1, 0.05, 20);
-  const VIEWS_BY = {real: {full: [0, 1.0, -4.3, 0.93], face: [0, 1.66, -1.45, 1.62]}, blocky: {full: [0, 0.9, -4.4, 0.82], face: [0, 1.42, -1.7, 1.38]}};
+  const VIEWS_BY = {real: {full: [0, 1.0, -4.3, 0.93], face: [0, 1.66, -1.45, 1.62]}, athletic: {full: [0, 1.0, -4.3, 0.93], face: [0, 1.71, -1.35, 1.68]}, blocky: {full: [0, 0.9, -4.4, 0.82], face: [0, 1.42, -1.7, 1.38]}};
   let VIEWS = VIEWS_BY[agentStyle()];
   let style = agentStyle(), lastArgs = null, view = "full", cur = [...VIEWS.full], yaw = 0, auto = true, resumeAt = 0, agent = null, trash = [], raf = 0, last = performance.now();
   const holder = new THREE.Group(); scene.add(holder);
@@ -2185,8 +2197,9 @@ async function makePreview(host) {
   raf = requestAnimationFrame(frame);
   const clear = () => { if (agent) holder.remove(agent); trash.forEach(t => t.dispose?.()); trash = []; agent = null; };
   return {
-    set(look, color, name) { lastArgs = [look, color, name]; clear(); const b = A.buildAgent(THREE, look, {color, name, style}); agent = b.group; trash = b.trash; holder.add(agent); },
+    set(look, color, name) { lastArgs = [look, color, name]; clear(); const b = A.buildAgent(THREE, look, {color, name, style: style === "athletic" && !A.athleticReady() ? "real" : style}); agent = b.group; trash = b.trash; holder.add(agent); },
     style(v) { style = v; VIEWS = VIEWS_BY[v]; if (lastArgs) this.set(...lastArgs); },
+    rebuild() { if (lastArgs) this.set(...lastArgs); },
     view(v) { view = v; },
     snapshot() {
       const keep = [yaw, ...cur]; holder.rotation.y = 0; cur = [...VIEWS.full]; place(); renderer.render(scene, cam);
@@ -2260,7 +2273,7 @@ function openLook(onSave) {
         closeModal(); onSave?.(); toast("Looking sharp, Agent.");
       }})));
     drawFac(); draw();
-    makePreview(stage).then(p => { if (!$("#modal").hidden && sheet.contains(stage)) { preview = p; preview?.set(l, pin, name); modalCleanup = () => { p?.dispose(); preview = null; }; } else p?.dispose(); });
+    makePreview(stage).then(p => { if (!$("#modal").hidden && sheet.contains(stage)) { preview = p; preview?.set(l, pin, name); const onAth = () => preview?.rebuild(); athReady.add(onAth); ensureAthletic(); modalCleanup = () => { athReady.delete(onAth); p?.dispose(); preview = null; }; } else p?.dispose(); });
   });
 }
 

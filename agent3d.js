@@ -258,6 +258,7 @@ const PATCH_STYLE = {fed: {bg: "#1d2742", fg: "#e8c22c"}, cia: {bg: "#141414", f
 // ---------- the figure ----------
 export function buildAgent(THREE, look, o = {}) {
   if (o.style === "blocky") return buildBlocky(THREE, look, o);
+  if (o.style === "athletic" && ATH) return buildAthletic(THREE, look, o);
   const L = cleanLook(look), f = L.faction, top = topOf(L), mobile = !!o.mobile, pin = o.color || "#c0392b";
   const g = new THREE.Group(), trash = [], mats = new Map();
   const M = p => { const m = new THREE.MeshStandardMaterial({envMapIntensity: 0.35, ...p}); trash.push(m); return m; };
@@ -283,9 +284,11 @@ export function buildAgent(THREE, look, o = {}) {
   // torso shape: tapered, flattened cylinder from y .95 to 1.49
   const bulk = L.vest === "concealed" ? 1.07 : 1;
   const rAt = y => 0.175 + 0.03 * Math.min(1, Math.max(0, (y - 0.95) / 0.54));
-  const fz = y => -rAt(y) * 0.62 * bulk; // front surface
-  const bz = y => rAt(y) * 0.62 * bulk;  // back surface
+  const fz = o.fz || (y => -rAt(y) * 0.62 * bulk); // front surface
+  const bz = o.bz || (y => rAt(y) * 0.62 * bulk);  // back surface
+  const G = !!o.gearOnly; // only the clothes-on-top layer (for the athletic body)
 
+  if (!G) {
   // ----- legs and feet -----
   const pantsId = L.pants === "auto" ? (top.pants || "match") : L.pants;
   const pSpec = pantsId === "match" ? {c: body, cargo: !["suit", "trench", "open"].includes(top.kind)} : (PANTS.find(p => p[0] === pantsId)?.[2] || {c: C.charcoal});
@@ -389,6 +392,8 @@ export function buildAgent(THREE, look, o = {}) {
     }
   }
 
+  } // end of the body parts
+
   // ----- vests -----
   const V = L.vest, hardVest = ["soft", "badge", "heavy", "plate", "lowpro", "iotv"].includes(V);
   let chestZ = fz(1.32) - 0.004, backZ = bz(1.3) + 0.004, vestD = 0;
@@ -418,7 +423,7 @@ export function buildAgent(THREE, look, o = {}) {
   // ----- belt and gear -----
   const belt = top.tuck || L.gear.some(x => ["belt", "ammo", "med", "light", "badge", "legholster"].includes(x));
   if (belt) {
-    box(0.375, 0.048, 0.24, solid(L.gear.includes("belt") ? (f === "mil" ? "#5c4f3a" : "#161616") : "#1b1410", 0.6), 0, 0.97, 0);
+    if (!G) box(0.375, 0.048, 0.24, solid(L.gear.includes("belt") ? (f === "mil" ? "#5c4f3a" : "#161616") : "#1b1410", 0.6), 0, 0.97, 0);
     box(0.045, 0.035, 0.01, solid("#9a9a9a", 0.3, {metalness: 0.7}), 0, 0.97, -0.125);
   }
   if (L.gear.includes("ammo")) for (const x of [-0.07, -0.125]) box(0.048, 0.08, 0.035, gearM, x, 0.95, -0.13);
@@ -450,18 +455,20 @@ export function buildAgent(THREE, look, o = {}) {
 
   // ----- neck and head -----
   const bala = L.cover === "balaclava", balaCol = f === "mil" ? "#2a2c22" : "#111214";
-  cyl(0.05, 0.052, 0.1, bala ? solid(balaCol, 0.9) : skinM, 0, 1.54, 0);
+  if (!G) cyl(0.05, 0.052, 0.1, bala ? solid(balaCol, 0.9) : skinM, 0, 1.54, 0);
   if (L.neck === "shemagh") { const sm = M({map: checkerTex(THREE, f === "mil" ? "#b9a77f" : "#2a2a2a", f === "mil" ? "#5a4a32" : "#d8d2c4"), roughness: 0.95}); cyl(0.095, 0.11, 0.085, sm, 0, 1.51, 0, null, [1, 1, 0.9]); add(new THREE.ConeGeometry(0.08, 0.14, 3), sm, 0, 1.4, fz(1.4) - 0.02, [Math.PI, 0, 0], [1, 1, 0.2]); }
   else if (L.neck === "gaiter") cyl(0.066, 0.066, 0.11, fabric(gearCol, 0.9), 0, 1.53, 0);
   else if (L.neck === "scarf") { const sm = solid(f === "cia" ? "#6b1e24" : "#4a4a4a", 0.95); cyl(0.08, 0.086, 0.06, sm, 0, 1.51, 0); box(0.05, 0.3, 0.012, sm, 0.05, 1.33, fz(1.33) - 0.012 - vestD); }
 
   const HY = 1.66; // centre of the head
+  if (!G) {
   sph(0.115, skinM, 0, HY, 0, [1, 1.1, 1], null, 22);
   sph(0.02, L.cover === "balaclava" ? solid(f === "mil" ? "#2a2c22" : "#111214", 0.9) : skinM, 0, 1.652, -0.117, [0.8, 1, 1.1], null, 10); // nose
   if (L.cover !== "balaclava") for (const sx of [-1, 1]) sph(0.022, skinM, sx * 0.115, HY, 0, [0.5, 1, 1], null, 10); // ears
   const face = add(new THREE.SphereGeometry(0.1163, 32, 16, Math.PI, Math.PI, 0.25 * Math.PI, 0.5 * Math.PI), M({map: faceTex(THREE, L), transparent: true, alphaTest: 0.04, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -1}), 0, HY, 0, null, [1, 1.1, 1]);
   face.castShadow = false;
   if (bala) sph(0.1188, M({map: balaclavaTex(THREE, balaCol), transparent: true, alphaTest: 0.5, roughness: 0.95}), 0, HY, 0, [1, 1.1, 1], null, 26);
+  }
   // hair
   const helmet = isHelmet(L.head), hatOn = L.head !== "none";
   if (!bala && L.hair !== "bald") {
@@ -547,14 +554,22 @@ export function buildAgent(THREE, look, o = {}) {
   }
   const backText = L.patchBack || (top.back && !hardVest ? top.back : "") || (f === "fed" && (V === "soft" || V === "heavy") ? "FBI" : "");
   if (backText && L.pack === "none") decal(textTex(THREE, backText, {w: 320, h: 100, fg: hardVest ? vestTextCol : "#e8c22c"}), 0.27, 0.085, 0, 1.3, backZ + 0.002, 0);
-  if (L.patchShoulder) decal(textTex(THREE, L.patchShoulder, {w: 128, h: 128, ...ps, border: ps.fg, round: 40, scale: 0.42}), 0.075, 0.075, -0.284, 1.32, 0, -Math.PI / 2);
-  if (L.flag !== "none") decal(flagTex(THREE, L.flag), 0.085, 0.045, 0.284, 1.34, 0, Math.PI / 2);
+  if (L.patchShoulder) decal(textTex(THREE, L.patchShoulder, {w: 128, h: 128, ...ps, border: ps.fg, round: 40, scale: 0.42}), 0.075, 0.075, -(o.armX || 0.284), o.armY || 1.32, 0, -Math.PI / 2);
+  if (L.flag !== "none") decal(flagTex(THREE, L.flag), 0.085, 0.045, o.armX || 0.284, (o.armY || 1.32) + 0.02, 0, Math.PI / 2);
 
+  // fit everything worn on the head onto a different head (centre, scale per axis)
+  if (G && o.head) {
+    const {c, k} = o.head;
+    for (const m of [...g.children]) if (m.position.y > 1.545) {
+      m.position.set(c[0] + m.position.x * k[0], c[1] + (m.position.y - HY) * k[1], c[2] + m.position.z * k[2]);
+      m.scale.multiply(new THREE.Vector3(k[0], k[1], k[2]));
+    }
+  }
   return {group: g, trash, look: L};
 }
 
 // ---------- blocky style: a chunky toy figure with the outfit painted onto the blocks ----------
-export const STYLES = [["real", "Realistic"], ["blocky", "Blocky"]];
+export const STYLES = [["real", "Realistic"], ["athletic", "Athletic"], ["blocky", "Blocky"]];
 function buildBlocky(THREE, look, o = {}) {
   const L = cleanLook(look), f = L.faction, top = topOf(L), mobile = !!o.mobile, pin = o.color || "#c0392b";
   const g = new THREE.Group(), trash = [];
@@ -789,5 +804,153 @@ function buildBlocky(THREE, look, o = {}) {
     }
     g.add(im);
   }
+  return {group: g, trash, look: L};
+}
+
+// ---------- athletic style: a sculpted human body (assets/agent/man.fbx) with the uniform painted on ----------
+// The model stands in an A-pose with no skeleton, so the arms are bent down here once, after loading.
+let ATH = null, athPromise = null;
+export const athleticReady = () => !!ATH;
+const BLANK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+export function loadAthletic(THREE, FBXLoader, {mobile = false, base = "assets/agent/"} = {}) {
+  if (athPromise) return athPromise;
+  athPromise = new Promise((ok, bad) => {
+    const mgr = new THREE.LoadingManager(); mgr.setURLModifier(u => /\.(jpe?g|png|tga|tiff?|bmp)$/i.test(u) ? BLANK : u); // skip the textures named inside the FBX
+    new FBXLoader(mgr).load(base + "man.fbx", g => {
+      const img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = () => { try { ATH = prepAthletic(THREE, g, img, mobile ? null : base + "skin-nrm.jpg"); ok(); } catch (e) { bad(e); } };
+      img.onerror = bad; img.src = base + (mobile ? "skin-1k.jpg" : "skin-2k.jpg");
+    }, undefined, bad);
+  });
+  athPromise.catch(() => { athPromise = null; });
+  return athPromise;
+}
+function prepAthletic(THREE, root, skinImg, nrmUrl) {
+  let man = null; root.updateMatrixWorld(true);
+  root.traverse(o => { if (o.isMesh && (o.name === "Man" || (!man && o.geometry.attributes.position.count > 5000))) man = o; });
+  const src = man.geometry.clone(); src.applyMatrix4(man.matrixWorld);
+  const geo = src.index ? src.toNonIndexed() : src;
+  geo.computeBoundingBox();
+  const bb = geo.boundingBox, k = 1.8 / (bb.max.y - bb.min.y), cx = (bb.max.x + bb.min.x) / 2, cz = (bb.max.z + bb.min.z) / 2;
+  const pos = geo.attributes.position, nor = geo.attributes.normal, n = pos.count;
+  // scale to 1.8 m, stand on y = 0, turn to face -z
+  const ox = new Float32Array(n), oy = new Float32Array(n), oz = new Float32Array(n);
+  for (let i = 0; i < n; i++) { ox[i] = -(pos.getX(i) - cx) * k; oy[i] = (pos.getY(i) - bb.min.y) * k; oz[i] = -(pos.getZ(i) - cz) * k; }
+  // bend the arms down from about 42 degrees to about 10 degrees, pivoting at the shoulder
+  const PX = 0.19, PY = 1.4, BEND = 32 * Math.PI / 180, D = [Math.sin(42 * Math.PI / 180), -Math.cos(42 * Math.PI / 180)];
+  const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const armW = new Float32Array(n), armT = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const ax = Math.abs(ox[i]), dx = ax - PX, dy = oy[i] - PY, r = Math.hypot(dx, dy);
+    const phi = Math.atan2(dx, -dy) * 180 / Math.PI; // 0 = straight down, 42 = along the arm
+    let w = sm(14, 28, phi) * sm(0.1, 0.16, ax) * sm(0.02, 0.12, r);
+    if (oy[i] < 0.85) w = 0;
+    armW[i] = w; armT[i] = dx * D[0] + dy * D[1];
+    const s = Math.sign(ox[i]) || 1, a = -s * BEND * w, ca = Math.cos(a), sa = Math.sin(a);
+    const rx = ox[i] - s * PX, ry = oy[i] - PY;
+    pos.setXYZ(i, s * PX + rx * ca - ry * sa, PY + rx * sa + ry * ca, oz[i]);
+    if (nor) { const nx = -nor.getX(i), ny = nor.getY(i), nz = -nor.getZ(i); nor.setXYZ(i, nx * ca - ny * sa, nx * sa + ny * ca, nz); }
+  }
+  pos.needsUpdate = true; if (nor) nor.needsUpdate = true; else geo.computeVertexNormals();
+  geo.computeBoundingBox(); geo.computeBoundingSphere();
+  // per triangle: where it was on the original body (used to decide what clothing covers it)
+  const T = n / 3, tri = new Float32Array(T * 6); // x, y, z, armWeight, armT, side
+  for (let t = 0; t < T; t++) {
+    let sx = 0, sy = 0, sz = 0, sw = 0, st = 0; for (let j = 0; j < 3; j++) { const i = t * 3 + j; sx += ox[i]; sy += oy[i]; sz += oz[i]; sw += armW[i]; st += armT[i]; }
+    tri.set([sx / 3, sy / 3, sz / 3, sw / 3, st / 3, Math.sign(sx) || 1], t * 6);
+  }
+  // skin: keep the detail, drop the original colour, so any skin tone can be chosen
+  const c = document.createElement("canvas"); c.width = skinImg.width; c.height = skinImg.height;
+  const x = c.getContext("2d"); x.drawImage(skinImg, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), px = d.data; let sum = 0, cnt = 0;
+  for (let i = 0; i < px.length; i += 64) { const l = px[i] * 0.3 + px[i + 1] * 0.59 + px[i + 2] * 0.11; if (l > 20) { sum += l; cnt++; } }
+  const avg = sum / Math.max(1, cnt);
+  for (let i = 0; i < px.length; i += 4) { const l = px[i] * 0.3 + px[i + 1] * 0.59 + px[i + 2] * 0.11, v = Math.min(255, (l / avg) * 205); const red = Math.max(0, px[i] - px[i + 1]) * 0.35; px[i] = Math.min(255, v + red); px[i + 1] = v; px[i + 2] = Math.min(255, v * 0.97); }
+  x.putImageData(d, 0, 0);
+  const skinTex = new THREE.CanvasTexture(c); skinTex.colorSpace = THREE.SRGBColorSpace; skinTex.anisotropy = 4;
+  let nrmTex = null; if (nrmUrl) nrmTex = new THREE.TextureLoader().load(nrmUrl);
+  return {geo, tri, T, skinTex, nrmTex};
+}
+// the athletic body measured after loading: where the gear layer has to sit
+const ATH_FRONT = [[0.9, -0.1], [1.0, -0.108], [1.1, -0.12], [1.2, -0.13], [1.3, -0.13], [1.4, -0.118], [1.45, -0.1], [1.52, -0.075]];
+const ATH_BACK = [[0.9, 0.125], [1.1, 0.125], [1.3, 0.132], [1.45, 0.142], [1.52, 0.115]];
+const lerpTable = tb => y => { if (y <= tb[0][0]) return tb[0][1]; for (let i = 1; i < tb.length; i++) if (y <= tb[i][0]) { const [a, va] = tb[i - 1], [b, vb] = tb[i]; return va + (vb - va) * (y - a) / (b - a); } return tb[tb.length - 1][1]; };
+function buildAthletic(THREE, look, o = {}) {
+  const L = cleanLook(look), f = L.faction, top = topOf(L), mobile = !!o.mobile, pin = o.color || "#c0392b";
+  const g = new THREE.Group(), trash = [];
+  const isPat = v => typeof v === "string" && v.startsWith("pat:");
+  const cloth = (v, r = 0.85, rx = 7, ry = 7) => {
+    if (isPat(v)) { const t = patTex(THREE, v.slice(4)).clone(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.needsUpdate = true; trash.push(t); const m = new THREE.MeshStandardMaterial({map: t, roughness: 0.9, envMapIntensity: 0.35}); trash.push(m); return m; }
+    const m = new THREE.MeshStandardMaterial({color: v, roughness: r, envMapIntensity: 0.35}); trash.push(m); return m;
+  };
+  const body = L.color && !isPat(top.body) ? L.color : top.body;
+  const pantsId = L.pants === "auto" ? (top.pants || "match") : L.pants;
+  const pSpec = pantsId === "match" ? {c: body} : (PANTS.find(p => p[0] === pantsId)?.[2] || {c: C.charcoal});
+  const pantsC = top.kind === "coverall" ? body : pSpec.c;
+  const bootsId = L.boots === "auto" ? top.boots : L.boots;
+  const bootH = bootsId === "dress" ? 0.1 : bootsId === "tactical" ? 0.15 : 0.23;
+  const bala = L.cover === "balaclava", balaCol = f === "mil" ? "#2a2c22" : "#111214";
+  const gloveCol = L.gloves === "none" ? null : L.gloves === "leather" ? "#2f1e14" : f === "mil" ? "#6e5d45" : "#161616";
+  const belt = top.tuck || L.gear.some(x => ["belt", "ammo", "med", "light", "badge", "legholster"].includes(x));
+  const skinM = new THREE.MeshStandardMaterial({map: ATH.skinTex, normalMap: ATH.nrmTex || null, color: SKINS[L.skin], roughness: 0.55, envMapIntensity: 0.3}); trash.push(skinM);
+  // material slots
+  const MAT = [skinM, cloth(body, top.nylon ? 0.45 : 0.85), cloth(top.sleeves || body), cloth(pantsC, 0.8), cloth(bootsId === "desert" ? "#7a6446" : "#121212", bootsId === "dress" ? 0.3 : 0.7),
+    cloth(top.shirt || body, 0.7), cloth(top.tie === "pin" ? pin : (top.tie || body), 0.5), cloth(L.gear.includes("belt") && f === "mil" ? "#5c4f3a" : "#161616", 0.6), cloth("#1a1a1a", 0.6),
+    cloth(L.watch === "analog" ? "#4a3626" : "#111", 0.5), cloth(balaCol, 0.95), cloth(gloveCol || "#000", L.gloves === "leather" ? 0.45 : 0.75)];
+  const SKIN = 0, TOP = 1, SLEEVE = 2, PANTS_ = 3, BOOT = 4, SHIRT = 5, TIE = 6, BELT = 7, PAD = 8, WATCH = 9, BALA = 10, GLOVE = 11;
+  const k = top.kind, suit = k === "suit" || k === "trench", tri = ATH.tri, lists = MAT.map(() => []);
+  for (let t = 0; t < ATH.T; t++) {
+    const x = tri[t * 6], y = tri[t * 6 + 1], z = tri[t * 6 + 2], w = tri[t * 6 + 3], at = tri[t * 6 + 4], side = tri[t * 6 + 5], ax = Math.abs(x);
+    let m;
+    if (w > 0.5) { // arm
+      if (at > 0.5) m = gloveCol ? (L.gloves === "fingerless" && at > 0.57 ? SKIN : GLOVE) : SKIN;
+      else if (side < 0 && L.watch !== "none" && at > 0.46) m = WATCH;
+      else if (suit && at > 0.475) m = SHIRT;
+      else m = SLEEVE;
+    } else if (y > 1.555) { // head and neck
+      m = SKIN;
+      if (bala && !(z < -0.07 && y > 1.69 && y < 1.735 && ax < 0.07)) m = BALA;
+      else if (y < 1.585 && (suit || k === "shirt" || k === "coverall" || k === "jacket" || k === "hoodie") && !bala) m = k === "jacket" || k === "hoodie" ? TOP : SHIRT;
+    } else if (y >= 1.0 || (k === "trench" && y > 0.55) || (top.hem && !top.tuck && y > 0.9)) { // torso
+      m = TOP;
+      if (belt && y >= 0.97 && y < 1.02) m = BELT;
+      else if (suit && z < -0.05 && y > 1.28 && ax < (y - 1.28) * 0.24 + 0.006) m = top.tie && ax < 0.016 + (1.5 - y) * 0.02 && y < 1.53 ? TIE : SHIRT;
+      else if (k === "open" && z < -0.05 && ax < 0.045 && y > 1.0) m = SHIRT;
+    } else { // legs
+      m = PANTS_;
+      if (y < bootH) m = BOOT;
+      else if (L.gear.includes("kneepads") && z < -0.03 && y > 0.43 && y < 0.53) m = PAD;
+    }
+    lists[m].push(t * 3, t * 3 + 1, t * 3 + 2);
+  }
+  const geo = new THREE.BufferGeometry();
+  for (const name of Object.keys(ATH.geo.attributes)) geo.setAttribute(name, ATH.geo.attributes[name]);
+  const index = []; let start = 0;
+  lists.forEach((l, i) => { if (!l.length) return; for (const v of l) index.push(v); geo.addGroup(start, l.length, i); start += l.length; });
+  geo.setIndex(index); geo.boundingSphere = ATH.geo.boundingSphere; geo.boundingBox = ATH.geo.boundingBox;
+  trash.push(geo);
+  const mesh = new THREE.Mesh(geo, MAT); mesh.castShadow = !mobile; mesh.receiveShadow = !mobile; g.add(mesh);
+  // real cloth shapes around the hips, so clothes read as clothes: trouser seat, jacket hem, coat skirt
+  const ring = (rt, rb, h, m, y, open) => { const cg = new THREE.CylinderGeometry(rt, rb, h, 32, 1, !!open); trash.push(cg); const me = new THREE.Mesh(cg, m); me.position.set(0, y, 0.01); me.scale.z = 0.68; me.castShadow = !mobile; g.add(me); return me; };
+  const ringM = (v, r) => isPat(v) ? cloth(v, r, 3, 0.5) : null;
+  ring(0.182, 0.186, 0.2, ringM(pantsC) || MAT[PANTS_], 0.895);
+  if (suit || k === "open" || (top.hem && !top.tuck) || k === "jacket" || k === "hoodie") ring(0.192, 0.197, 0.13, ringM(body) || MAT[TOP], 0.96);
+  if (k === "trench") {
+    const coatM = isPat(body) ? MAT[TOP] : new THREE.MeshStandardMaterial({color: body, roughness: 0.8, side: THREE.DoubleSide, envMapIntensity: 0.35}); if (coatM !== MAT[TOP]) trash.push(coatM);
+    ring(0.2, 0.27, 0.56, coatM, 0.76, true);
+    ring(0.196, 0.196, 0.05, cloth(body, 0.6), 1.04);
+  }
+  if (belt) ring(0.188, 0.188, 0.045, MAT[BELT], 0.995);
+  // boots and shoes over the feet (the model's feet are bare)
+  for (const sx of [-1, 1]) {
+    const bm = MAT[BOOT], dress = bootsId === "dress";
+    const bg = new THREE.BoxGeometry(0.112, dress ? 0.08 : 0.095, 0.28); trash.push(bg);
+    const b = new THREE.Mesh(bg, bm); b.position.set(sx * 0.135, dress ? 0.04 : 0.048, -0.01); b.rotation.y = -sx * 0.18; b.castShadow = !mobile; g.add(b);
+    if (!dress) { const h = bootsId === "tactical" ? 0.1 : 0.2, cg = new THREE.CylinderGeometry(0.064, 0.068, h, 18); trash.push(cg); const c = new THREE.Mesh(cg, bm); c.position.set(sx * 0.108, 0.07 + h / 2, 0.07); c.castShadow = !mobile; g.add(c); }
+    const sg = new THREE.BoxGeometry(0.116, 0.02, 0.285); trash.push(sg); const so = new THREE.Mesh(sg, MAT[PAD]); so.position.set(sx * 0.135, 0.011, -0.01); so.rotation.y = -sx * 0.18; g.add(so);
+  }
+  // the gear layer from the realistic style, fitted to this body
+  const gear = buildAgent(THREE, look, {...o, style: "real", gearOnly: true, fz: lerpTable(ATH_FRONT), bz: lerpTable(ATH_BACK), armX: 0.262, armY: 1.3, head: {c: [0, 1.7, -0.022], k: [0.8, 0.86, 0.93]}});
+  g.add(gear.group); trash.push(...gear.trash);
   return {group: g, trash, look: L};
 }
