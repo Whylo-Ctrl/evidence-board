@@ -149,6 +149,32 @@ export function labelLines(look, name) {
 }
 export const isHelmet = id => HELMETS.includes(id);
 export const topOf = l => TOPS.find(t => t.id === l.top) || TOPS[0];
+// limbs that can swing: pivots at the hips and shoulders (and the neck), driven by the room's walk cycle
+function makeRig(legs, arms, head, sign = 1, eyes = null, extra = null) {
+  return {
+    set(st) {
+      if (legs) { legs[0].rotation.x = sign * st.legL; legs[1].rotation.x = sign * st.legR; }
+      if (arms) { arms[0].rotation.x = sign * st.armL; arms[1].rotation.x = sign * st.armR; }
+      if (head) head.rotation.y = st.head || 0;
+      extra?.(st);
+    },
+    blink(v) { if (eyes) for (const e of eyes) e.scale.y = Math.max(0.08, 1 - v); },
+  };
+}
+// sort a flat figure's parts onto hip / shoulder / neck pivots by where they sit
+function rigFlat(THREE, g, P) {
+  const mk = (x, y, z) => { const p = new THREE.Group(); p.position.set(x, y, z); g.add(p); return p; };
+  const legs = [mk(-P.hipX, P.hipY, 0), mk(P.hipX, P.hipY, 0)], arms = [mk(-P.shX, P.shY, P.shZ || 0), mk(P.shX, P.shY, P.shZ || 0)], head = P.neckY ? mk(0, P.neckY, 0) : null;
+  for (const m of [...g.children]) {
+    if (!m.isMesh || m.isInstancedMesh) continue;
+    const {x, y} = m.position, ax = Math.abs(x); let to = null;
+    if (head && y > 1.545) to = head;
+    else if (y < 0.86 && ax > 0.02) to = legs[x < 0 ? 0 : 1];
+    else if (ax > P.armX && (y > 1.0 || ax > 0.23) && y < 1.5) to = arms[x < 0 ? 0 : 1];
+    if (to) { m.position.sub(to.position); to.add(m); }
+  }
+  return {legs, arms, head};
+}
 
 // ---------- canvas textures (shared, small) ----------
 const texCache = new Map();
@@ -558,6 +584,7 @@ export function buildAgent(THREE, look, o = {}) {
   if (L.flag !== "none") decal(flagTex(THREE, L.flag), 0.085, 0.045, o.armX || 0.284, (o.armY || 1.32) + 0.02, 0, Math.PI / 2);
 
   // fit everything worn on the head onto a different head (centre, scale per axis)
+  let rigParts;
   if (G && o.head) {
     const {c, k} = o.head;
     for (const m of [...g.children]) if (m.position.y > 1.545) {
@@ -565,7 +592,9 @@ export function buildAgent(THREE, look, o = {}) {
       m.scale.multiply(new THREE.Vector3(k[0], k[1], k[2]));
     }
   }
-  return {group: g, trash, look: L};
+  rigParts = G ? rigFlat(THREE, g, {hipX: 0.1, hipY: 0.92, shX: 0.19, shY: 1.4, shZ: 0.04, armX: 0.2}) : rigFlat(THREE, g, {hipX: 0.09, hipY: 0.92, shX: 0.19, shY: 1.44, armX: 0.175, neckY: 1.5});
+  const rig = makeRig(rigParts.legs, rigParts.arms, rigParts.head, 1);
+  return {group: g, trash, look: L, rig, rigParts};
 }
 
 // ---------- blocky style: a chunky toy figure with the outfit painted onto the blocks ----------
@@ -698,7 +727,8 @@ function buildBlocky(THREE, look, o = {}) {
   // eyes: glossy dark ovals with a white glint
   const eyeM = plastic(shadeHex(EYE_COLORS[L.eyeColor], -0.5), {roughness: 0.2, clearcoat: 0.5, envMapIntensity: 0.45}), glintM = new THREE.MeshBasicMaterial({color: "#ffffff"}); trash.push(glintM);
   const sphG = new THREE.SphereGeometry(1, 16, 12), glintG = new THREE.SphereGeometry(0.0048, 8, 6); trash.push(sphG, glintG);
-  for (const s of [-1, 1]) { const grp = new THREE.Group(); grp.position.set(s * 0.05, 0.014, FZ); head.add(grp); add(grp, sphG, eyeM, null, null, [0.017, 0.026, 0.007]); add(grp, glintG, glintM, [-0.0052, 0.0095, 0.0052]).castShadow = false; }
+  const eyeGroups = [];
+  for (const s of [-1, 1]) { const grp = new THREE.Group(); grp.position.set(s * 0.05, 0.014, FZ); head.add(grp); eyeGroups.push(grp); add(grp, sphG, eyeM, null, null, [0.017, 0.026, 0.007]); add(grp, glintG, glintM, [-0.0052, 0.0095, 0.0052]).castShadow = false; }
   // eyebrows in the hair colour (darker when bald or very light)
   const browHex = L.hair === "bald" || ["#d2b27a", "#8f8c88"].includes(hairHex) ? shadeHex("#5a3a22", -0.1) : shadeHex(hairHex, -0.15);
   for (const s of [-1, 1]) add(head, RB(0.042, 0.011, 0.007, 0.004), plastic(browHex, {roughness: 0.5}), [s * 0.05, 0.054, FZ + 0.001]).castShadow = false;
@@ -829,13 +859,15 @@ function buildBlocky(THREE, look, o = {}) {
   const pantsM = cloth(top.kind === "coverall" ? body0 : pSpec.c);
   const bootsId = L.boots === "auto" ? top.boots : L.boots, shoeM = plastic(bootsId === "desert" ? "#a88d63" : "#111111", {roughness: 0.4, clearcoat: 0.35});
   add(root, RB(TW - 0.02, 0.12, TD - 0.01, 0.03), pantsM, [0, baseY - 0.04, 0]);
-  for (const s of [-1, 1]) {
-    add(root, RB(LW, baseY - 0.05, LW, 0.035), pantsM, [s * 0.085, (baseY - 0.05) / 2 + 0.05, 0]);
-    add(root, RB(LW + 0.008, 0.08, 0.23, 0.032), shoeM, [s * 0.085, 0.04, 0.035]);
-    if (bootsId === "combat" || bootsId === "desert") add(root, RB(LW + 0.012, 0.12, LW + 0.012, 0.03), shoeM, [s * 0.085, 0.13, 0]);
-    if (L.gear.includes("kneepads")) add(root, RB(LW - 0.02, 0.09, 0.03, 0.012), plastic("#1a1a1a"), [s * 0.085, 0.42, LW / 2 + 0.01]);
+  const HIPY = baseY - 0.05, legPiv = {};
+  for (const s of [-1, 1]) { // s = -1 is the avatar's right leg (the casino figure faces +z)
+    const hp = new THREE.Group(); hp.position.set(s * 0.085, HIPY, 0); root.add(hp); legPiv[s] = hp;
+    add(hp, RB(LW, baseY - 0.05, LW, 0.035), pantsM, [0, (baseY - 0.05) / 2 + 0.05 - HIPY, 0]);
+    add(hp, RB(LW + 0.008, 0.08, 0.23, 0.032), shoeM, [0, 0.04 - HIPY, 0.035]);
+    if (bootsId === "combat" || bootsId === "desert") add(hp, RB(LW + 0.012, 0.12, LW + 0.012, 0.03), shoeM, [0, 0.13 - HIPY, 0]);
+    if (L.gear.includes("kneepads")) add(hp, RB(LW - 0.02, 0.09, 0.03, 0.012), plastic("#1a1a1a"), [0, 0.42 - HIPY, LW / 2 + 0.01]);
   }
-  if (L.gear.includes("legholster")) add(root, RB(0.045, 0.16, 0.09, 0.015), plastic("#111"), [-(0.085 + LW / 2 + 0.02), 0.55, 0]);
+  if (L.gear.includes("legholster")) add(legPiv[-1], RB(0.045, 0.16, 0.09, 0.015), plastic("#111"), [-(LW / 2 + 0.02), 0.55 - HIPY, 0]);
   if (top.kind === "trench") add(root, RB(TW + 0.04, 0.36, TD + 0.05, 0.05), cloth(body0), [0, baseY - 0.12, 0]);
 
   // arms: upper block, rounded elbow, forearm, cuff and a toy hand (palm, index finger, mitten, thumb), hanging relaxed
@@ -846,8 +878,9 @@ function buildBlocky(THREE, look, o = {}) {
   const seg = (w, len, d, r) => { const g = RB(w, len, d, r); return {g, off: len / 2}; };
   const segMesh = (parent, w, len, d, r, m) => { const s = seg(w, len, d, r); return add(parent, s.g, m, [0, s.off, 0]); };
   const L1 = 0.29, L2 = 0.27, W = AW;
+  const shoulders = {};
   for (const side of [1, -1]) { // 1 = right (at -x in casino space)
-    const shoulder = new THREE.Group(); shoulder.position.set(-side * (TW / 2 + AW / 2 + 0.003), TH - 0.06, 0); body.add(shoulder);
+    const shoulder = new THREE.Group(); shoulder.position.set(-side * (TW / 2 + AW / 2 + 0.003), TH - 0.06, 0); body.add(shoulder); shoulders[side] = shoulder;
     // point the arm down, back of the hand outward
     const upper = new THREE.Group(); shoulder.add(upper);
     const X = new THREE.Vector3(0, 0, -side), Y = new THREE.Vector3(0, -1, 0), Z = new THREE.Vector3(-side, 0, 0);
@@ -876,7 +909,9 @@ function buildBlocky(THREE, look, o = {}) {
     const prox = new THREE.Group(); prox.position.set(0, 0.03, 0); prox.rotation.x = -0.2; meta.add(prox); segMesh(prox, 0.022, 0.026, 0.022, 0.008, fingerM);
   }
   // shared rounded-box geometries are cached for everyone; only per-figure things go in trash
-  return {group: outer, trash, look: L};
+  // casino space faces +z, so a forward swing is a negative turn about x
+  const rig = makeRig([legPiv[1], legPiv[-1]], [shoulders[-1], shoulders[1]], head, -1, eyeGroups);
+  return {group: outer, trash, look: L, rig};
 }
 
 // ---------- athletic style: a sculpted human body (assets/agent/man.fbx) with the uniform painted on ----------
@@ -924,6 +959,13 @@ function prepAthletic(THREE, root, skinImg, nrmUrl) {
     if (nor) { const nx = -nor.getX(i), ny = nor.getY(i), nz = -nor.getZ(i); nor.setXYZ(i, nx * ca - ny * sa, nx * sa + ny * ca, nz); }
   }
   pos.needsUpdate = true; if (nor) nor.needsUpdate = true; else geo.computeVertexNormals();
+  // which limb each vertex belongs to (1 left leg, 2 right leg, 3 left arm, 4 right arm) and how strongly, for the walk cycle
+  const limb = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) {
+    if (armW[i] > 0.02) { limb[i * 2] = ox[i] < 0 ? 3 : 4; limb[i * 2 + 1] = armW[i]; }
+    else if (oy[i] < 0.95) { limb[i * 2] = ox[i] < 0 ? 1 : 2; limb[i * 2 + 1] = sm(0.95, 0.8, oy[i]); }
+  }
+  geo.setAttribute("aLimb", new THREE.BufferAttribute(limb, 2));
   geo.computeBoundingBox(); geo.computeBoundingSphere();
   // per triangle: where it was on the original body (used to decide what clothing covers it)
   const T = n / 3, tri = new Float32Array(T * 6); // x, y, z, armWeight, armT, side
@@ -970,6 +1012,18 @@ function buildAthletic(THREE, look, o = {}) {
     cloth(top.shirt || body, 0.7), cloth(top.tie === "pin" ? pin : (top.tie || body), 0.5), cloth(L.gear.includes("belt") && f === "mil" ? "#5c4f3a" : "#161616", 0.6), cloth("#1a1a1a", 0.6),
     cloth(L.watch === "analog" ? "#4a3626" : "#111", 0.5), cloth(balaCol, 0.95), cloth(gloveCol || "#000", L.gloves === "leather" ? 0.45 : 0.75)];
   const SKIN = 0, TOP = 1, SLEEVE = 2, PANTS_ = 3, BOOT = 4, SHIRT = 5, TIE = 6, BELT = 7, PAD = 8, WATCH = 9, BALA = 10, GLOVE = 11;
+  // swing the legs and arms of the body in the vertex shader (the model has no skeleton)
+  const swingU = {value: new THREE.Vector4()};
+  for (const m of MAT) {
+    m.onBeforeCompile = sh => {
+      sh.uniforms.uSwing = swingU;
+      sh.vertexShader = sh.vertexShader
+        .replace("#include <common>", "#include <common>\nattribute vec2 aLimb;\nuniform vec4 uSwing;\nvec4 limbRot(){ float a = 0.0; vec2 p = vec2(0.0); if (aLimb.x > 0.5) { if (aLimb.x < 1.5) { a = uSwing.x; p = vec2(0.92, 0.01); } else if (aLimb.x < 2.5) { a = uSwing.y; p = vec2(0.92, 0.01); } else if (aLimb.x < 3.5) { a = uSwing.z; p = vec2(1.4, 0.04); } else { a = uSwing.w; p = vec2(1.4, 0.04); } } a *= aLimb.y; return vec4(cos(a), sin(a), p); }")
+        .replace("#include <beginnormal_vertex>", "#include <beginnormal_vertex>\nvec4 lr = limbRot(); objectNormal.yz = vec2(lr.x * objectNormal.y - lr.y * objectNormal.z, lr.y * objectNormal.y + lr.x * objectNormal.z);")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\n{ vec2 q = transformed.yz - lr.zw; transformed.yz = lr.zw + vec2(lr.x * q.x - lr.y * q.y, lr.y * q.x + lr.x * q.y); }");
+    };
+    m.customProgramCacheKey = () => "athletic-limbs";
+  }
   const k = top.kind, suit = k === "suit" || k === "trench", tri = ATH.tri, lists = MAT.map(() => []);
   for (let t = 0; t < ATH.T; t++) {
     const x = tri[t * 6], y = tri[t * 6 + 1], z = tri[t * 6 + 2], w = tri[t * 6 + 3], at = tri[t * 6 + 4], side = tri[t * 6 + 5], ax = Math.abs(x);
@@ -1024,5 +1078,8 @@ function buildAthletic(THREE, look, o = {}) {
   // the gear layer from the realistic style, fitted to this body
   const gear = buildAgent(THREE, look, {...o, style: "real", gearOnly: true, fz: lerpTable(ATH_FRONT), bz: lerpTable(ATH_BACK), armX: 0.262, armY: 1.3, head: {c: [0, 1.7, -0.022], k: [0.8, 0.86, 0.93]}});
   g.add(gear.group); trash.push(...gear.trash);
-  return {group: g, trash, look: L};
+  // boots go with the legs
+  for (const b of [...g.children]) if (b.isMesh && b !== mesh && b.position.y < 0.3) { const leg = gear.rigParts.legs[b.position.x < 0 ? 0 : 1]; b.position.sub(leg.position); leg.add(b); }
+  const rig = {set(st) { gear.rig.set({...st, head: 0}); swingU.value.set(st.legL, st.legR, st.armL, st.armR); }, blink() {}};
+  return {group: g, trash, look: L, rig};
 }

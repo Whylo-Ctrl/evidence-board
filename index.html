@@ -582,7 +582,8 @@ button{cursor:pointer;touch-action:manipulation}
 <noscript><p style="color:#fff;padding:20px">The evidence board needs JavaScript turned on.</p></noscript>
 
 <script type="module">
-import * as A from "./agent3d.js?v=20261111d";
+import * as A from "./agent3d.js?v=20261111e";
+import {createAudio} from "./ambience.js?v=20261111e";
 /* ==========================================================
    PASTE YOUR FIREBASE SETTINGS HERE  (see README.md)
    The board only needs databaseURL. Clear it to use practice mode.
@@ -1820,6 +1821,10 @@ function openSettings() {
       segmented([["lamp", "Desk lamp"], ["bright", "Lights on"]], sc.light, v => S.store.updateMeta(S.code, {light: v}).catch(saveFailed), !handler),
       handler ? null : h("p", {class: "hint", text: "Only the Handler can change the room and board."})));
     sheet.append(h("div", {class: "section"},
+      h("span", {class: "flabel", text: "Room sounds"}),
+      segmented([["on", "On"], ["off", "Off"]], roomSoundsOn() ? "on" : "off", v => { localStorage.setItem("dgboard:roomsound", v === "on" ? "1" : "0"); roomAudio().setEnabled(v === "on"); roomAudio().unlock(); }),
+      h("p", {class: "hint", text: "Rain, the stove, lights humming, a ticking clock, footsteps and dice in the 3D room. Just for you."})));
+    sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Pin sounds"}),
       segmented([["on", "On"], ["off", "Off"]], S.muted ? "off" : "on", v => { S.muted = v === "off"; localStorage.setItem("dgboard:muted", S.muted ? "1" : "0"); })));
     if (!NO3D) sheet.append(h("div", {class: "section"},
@@ -2057,7 +2062,7 @@ async function openExplore(opts = {}) {
   $("#viewBtn").textContent = "Board"; $("#viewBtn").title = "Walk up to the board";
   if (!boardCanvas) { boardCanvas = document.createElement("canvas"); const big = !TOUCH; boardCanvas.width = big ? 2048 : 1400; boardCanvas.height = Math.round(boardCanvas.width * (BOARD.h + TEX_MARGIN * 2) / (BOARD.w + TEX_MARGIN * 2)); }
   if (!R3mods) {
-    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111d")]);
+    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111e")]);
     const addons = {};
     await Promise.all((TOUCH ? ADDONS_PHONE : ADDONS_ALL).map(p => import("three/addons/" + p).then(m => Object.assign(addons, m)).catch(() => {})));
     R3mods = [THREE, mod, addons];
@@ -2065,7 +2070,7 @@ async function openExplore(opts = {}) {
   if (!exploring) return;
   if (!R3) {
     const [THREE, mod, addons] = R3mods;
-    R3 = mod.createRoom(THREE, {canvas: cv, boardCanvas, mobile: TOUCH, addons, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, onFocused: closeExplore, onTray: () => openDice()});
+    R3 = mod.createRoom(THREE, {canvas: cv, boardCanvas, mobile: TOUCH, addons, audio: roomAudio(), reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, onFocused: closeExplore, onTray: () => openDice()});
   }
   R3.setScene(sceneOf(S.meta));
   pushAvatars();
@@ -2140,6 +2145,11 @@ function showRoll(r) {
 }
 /* ---------------- character creator ---------------- */
 // Pick each piece separately (uniform, vest, gear, headgear, face, patches, ID) so no two agents look the same.
+// the room's sounds (rain, stove, hum, clock, footsteps, dice), made live with Web Audio; browsers only allow sound after a tap or key
+let AUDIO = null;
+const roomSoundsOn = () => localStorage.getItem("dgboard:roomsound") !== "0";
+function roomAudio() { if (!AUDIO) { AUDIO = createAudio(); AUDIO.setEnabled(roomSoundsOn()); } return AUDIO; }
+for (const ev of ["pointerdown", "keydown", "touchend"]) addEventListener(ev, () => AUDIO?.unlock(), {passive: true});
 // how agents are drawn on this screen: realistic or blocky (each person picks for themselves)
 const agentStyle = () => { const v = localStorage.getItem("dgboard:agentstyle"); return v === "blocky" || v === "athletic" ? v : "real"; };
 // the athletic body is a model file, loaded the first time someone picks that style; until then agents show as realistic

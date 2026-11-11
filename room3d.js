@@ -1,4 +1,4 @@
-import {buildAgent, labelLines} from "./agent3d.js?v=20261111d";
+import {buildAgent, labelLines} from "./agent3d.js?v=20261111e";
 // A walk-around 3D room for the evidence board, drawn with three.js.
 // The board on the back wall shows a live picture of the real board (painted by index.html).
 // Click / tap the board and the camera walks up to it, then index.html swaps to the normal board view for editing.
@@ -26,7 +26,7 @@ const STYLES = {
 };
 
 export function createRoom(THREE, opts) {
-  const {canvas, boardCanvas, mobile, onFocused, onTray, reducedMotion, addons = {}} = opts;
+  const {canvas, boardCanvas, mobile, onFocused, onTray, reducedMotion, addons = {}, audio = null} = opts;
   const renderer = new THREE.WebGLRenderer({canvas, antialias: !mobile, powerPreference: mobile ? "low-power" : "high-performance"});
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : addons.EffectComposer ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -459,6 +459,7 @@ export function createRoom(THREE, opts) {
     clearDice();
     const list = r.kind === "d100" ? [["d100", String(r.results[0] >= 100 ? "00" : String(Math.floor(r.results[0] / 10) * 10).padStart(2, "0")), 0xa11d1d], ["d10", String(r.results[0] % 10), 0xf3eee2]]
       : r.results.map(v => [r.kind, String(v), 0xf3eee2]);
+    audio?.dice(list.length);
     list.slice(0, 6).forEach(([k, text, color], i) => {
       const g = (DIE_SHAPES[k] || DIE_SHAPES.d6)(); disposables.push(g);
       const m = new THREE.Mesh(g, mat({color, roughness: 0.35})); m.castShadow = true; tray.add(m);
@@ -569,7 +570,7 @@ export function createRoom(THREE, opts) {
   canvas.addEventListener("pointerdown", onDown); addEventListener("pointermove", onMove); addEventListener("pointerup", onUp); addEventListener("pointercancel", onUp);
   canvas.addEventListener("wheel", onWheel, {passive: false}); addEventListener("keydown", onKey); addEventListener("keyup", onKey); addEventListener("resize", resize);
 
-  let last = performance.now();
+  let last = performance.now(), stepX = null, stepZ = null, stepAcc = 0;
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     for (const f of flickers) f.l.intensity = f.kind === "fire" ? f.base * (0.78 + 0.22 * Math.sin(now * 0.011) * Math.sin(now * 0.017 + 1.3) + 0.1 * Math.random()) : f.base * (Math.random() < 0.006 ? 0.25 : 1);
@@ -584,7 +585,10 @@ export function createRoom(THREE, opts) {
       applyPose();
     }
     else applyPose(Math.sin(now * 0.0011) * 0.004); // a little breathing while you stand still
-    stepAvatars(dt);
+    // your own footsteps while you walk (keys, or walking up to the board)
+    if (stepX !== null) { const m = Math.hypot(camera.position.x - stepX, camera.position.z - stepZ); if (m / Math.max(dt, 1e-3) > 0.35) { stepAcc += m; if (stepAcc > 0.62) { stepAcc = 0; audio?.step({vol: 0.5, pan: (Math.random() - 0.5) * 0.2}); } } else stepAcc = Math.min(stepAcc, 0.3); }
+    stepX = camera.position.x; stepZ = camera.position.z;
+    stepAvatars(dt, now);
     stepDice(now);
     for (const p of facers) p.rotation.y = Math.atan2(camera.position.x - p.position.x, camera.position.z - p.position.z);
     const tt = now * 0.0001;
@@ -618,7 +622,8 @@ export function createRoom(THREE, opts) {
     const label = new THREE.Sprite(sm); label.scale.set(0.7, lines.length > 1 ? 0.21 : 0.14, 1); label.position.y = 2.1; g.add(label);
     if (composer) label.layers.set(1); // drawn after the effects (ambient occlusion can't handle sprites)
     scene.add(g);
-    return {g, name: a.name, color: a.color, lookKey: JSON.stringify(a.look || {}) + a.style, target: {x: 0, z: 0, yaw: 0}, placed: false};
+    return {g, inner: built.group, rig: built.rig, name: a.name, color: a.color, lookKey: JSON.stringify(a.look || {}) + a.style, target: {x: 0, z: 0, yaw: 0}, placed: false,
+      phase: 0, walk: 0, half: 0, seed: Math.random() * 10, headYaw: 0, blinkIn: 1 + Math.random() * 3, blink: 0, glance: 0, glanceIn: 2};
   }
   function setAvatars(list) {
     const seen = new Set();
@@ -634,11 +639,38 @@ export function createRoom(THREE, opts) {
     }
     for (const [id, av] of avatars) if (!seen.has(id)) { scene.remove(av.g); avatars.delete(id); }
   }
-  function stepAvatars(dt) {
+  // where a sound at (x, z) sits for the listener: volume by distance, pan by direction
+  function earOf(x, z) {
+    const dx = x - camera.position.x, dz = z - camera.position.z, d = Math.hypot(dx, dz) || 1;
+    const rx = Math.cos(pose.yaw), rz = -Math.sin(pose.yaw);
+    return {vol: 0.9 / (1 + d * 0.9), pan: Math.max(-1, Math.min(1, (dx * rx + dz * rz) / d))};
+  }
+  function stepAvatars(dt, now = performance.now()) {
     const k = Math.min(1, dt * 7);
     for (const av of avatars.values()) {
-      av.g.position.x += (av.target.x - av.g.position.x) * k; av.g.position.z += (av.target.z - av.g.position.z) * k;
+      const px = av.g.position.x, pz = av.g.position.z;
+      av.g.position.x += (av.target.x - px) * k; av.g.position.z += (av.target.z - pz) * k;
       const d = ((av.target.yaw - av.g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI; av.g.rotation.y += d * k;
+      // walk cycle: legs and arms swing with the distance covered, a little bob, footsteps on each stride
+      const dist = Math.hypot(av.g.position.x - px, av.g.position.z - pz), spd = dist / Math.max(dt, 1e-3);
+      av.walk += ((spd > 0.12 ? Math.min(1, spd / 0.9) : 0) - av.walk) * Math.min(1, dt * 6);
+      av.phase += dist * 6.4;
+      const half = Math.floor(av.phase / Math.PI);
+      if (half !== av.half) { av.half = half; if (av.walk > 0.25 && audio) audio.step(earOf(av.g.position.x, av.g.position.z)); }
+      const sw = Math.sin(av.phase) * 0.55 * av.walk, idle = Math.sin(now * 0.0012 + av.seed) * 0.04 * (1 - av.walk);
+      av.inner.position.y = Math.abs(Math.sin(av.phase)) * 0.028 * av.walk + Math.sin(now * 0.0016 + av.seed) * 0.003;
+      // look at you when you're close, otherwise glance around now and then
+      const lx = camera.position.x - av.g.position.x, lz = camera.position.z - av.g.position.z, ry = av.g.rotation.y;
+      const vx = lx * Math.cos(ry) - lz * Math.sin(ry), vz = lx * Math.sin(ry) + lz * Math.cos(ry);
+      av.glanceIn -= dt; if (av.glanceIn < 0) { av.glanceIn = 2 + Math.random() * 5; av.glance = (Math.random() - 0.5) * 1.0; }
+      let want = Math.hypot(lx, lz) < 3.2 ? Math.atan2(-vx, -vz) : av.glance;
+      want = Math.max(-0.9, Math.min(0.9, want));
+      av.headYaw += (want - av.headYaw) * Math.min(1, dt * 4);
+      av.rig?.set({legL: sw, legR: -sw, armL: -sw * 0.8 + idle, armR: sw * 0.8 - idle, head: av.headYaw});
+      // blinking
+      av.blinkIn -= dt;
+      if (av.blinkIn < 0) { av.blink = Math.min(1, av.blink + dt / 0.06); if (av.blinkIn < -0.13) av.blinkIn = 2 + Math.random() * 4; } else av.blink = Math.max(0, av.blink - dt / 0.09);
+      av.rig?.blink?.(av.blink);
     }
   }
   function focusBoard() {
@@ -646,7 +678,7 @@ export function createRoom(THREE, opts) {
     moveTo(focusPose(), 1100, {done: () => onFocused?.()});
   }
   return {
-    setScene(sc) { buildShell(sc.room); setLight(sc.light); },
+    setScene(sc) { buildShell(sc.room); setLight(sc.light); audio?.setRoom(curRoom, sc.light); },
     refreshBoard() { boardTex.needsUpdate = true; },
     walkIn() { Object.assign(pose, DOOR_POSE); applyPose(); moveTo(ROOM_POSE, 2600, {bob: true}); },
     toRoom() { moveTo(ROOM_POSE, 900); },
@@ -656,8 +688,8 @@ export function createRoom(THREE, opts) {
     rollDice,
     getPose() { return {mode: "room", x: +pose.x.toFixed(2), z: +pose.z.toFixed(2), yaw: +pose.yaw.toFixed(2)}; },
     lookFrom(x, y, z, yaw, pitch) { anim = null; Object.assign(pose, {x, y, z, yaw, pitch}); applyPose(); },
-    start() { if (running) return; running = true; resize(); applyPose(); last = performance.now(); renderer.setAnimationLoop(frame); },
-    stop() { running = false; keys.clear(); renderer.setAnimationLoop(null); },
+    start() { if (running) return; running = true; resize(); applyPose(); last = performance.now(); stepX = null; audio?.setActive(true); renderer.setAnimationLoop(frame); },
+    stop() { running = false; keys.clear(); audio?.setActive(false); renderer.setAnimationLoop(null); },
     get busy() { return !!anim; },
     dispose() {
       this.stop();
