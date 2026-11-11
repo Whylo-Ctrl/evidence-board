@@ -36,7 +36,7 @@ The site is hosted with GitHub Pages from the `main` branch of this repo.
 
 **Seats.** Each case has 4 seats. If someone switches devices, they rejoin with the same codename to get their seat back. The Handler can remove an agent from **Case settings** to free up a seat.
 
-**Walking in.** When you open or join a case, the screen fades up from black and you walk into the room toward the board. Tap anywhere to skip it. It's turned off if your device is set to reduce motion.
+**The 3D room.** When you open or join a case you walk into a 3D room: walls, floor and ceiling textured from the room you picked, a desk with a lamp, rotary phone and typewriter, a filing cabinet, a bookshelf, a night window and a bare bulb. Your board hangs on the wall showing your real notes, papers, string and marker. Drag to look around (WASD or the arrow keys walk on a computer), and pinch or scroll to zoom. **Click or tap the board** and you walk up to it and switch to the board view to work on it. Tap **Room** at the top to step back into the room. The 3D room is drawn with three.js (`room3d.js`), and the room textures are in `assets` (`t-*.webp`). Phones get lighter settings (no shadows); if a device can't do 3D, you go straight to the board.
 
 **Saving.** The board saves automatically. Next session, enter the same code and everything is where you left it.
 
