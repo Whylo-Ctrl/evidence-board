@@ -583,7 +583,7 @@ button{cursor:pointer;touch-action:manipulation}
 
 <script type="module">
 import * as A from "./agent3d.js?v=20261111e";
-import {createAudio} from "./ambience.js?v=20261111e";
+import {createAudio} from "./ambience.js?v=20261111g";
 /* ==========================================================
    PASTE YOUR FIREBASE SETTINGS HERE  (see README.md)
    The board only needs databaseURL. Clear it to use practice mode.
@@ -1823,7 +1823,7 @@ function openSettings() {
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Room sounds"}),
       segmented([["on", "On"], ["off", "Off"]], roomSoundsOn() ? "on" : "off", v => { localStorage.setItem("dgboard:roomsound", v === "on" ? "1" : "0"); roomAudio().setEnabled(v === "on"); roomAudio().unlock(); }),
-      h("p", {class: "hint", text: "Rain, the stove, lights humming, a ticking clock, footsteps and dice in the 3D room. Just for you."})));
+      h("p", {class: "hint", text: "Footsteps and dice in the 3D room. Just for you."})));
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Pin sounds"}),
       segmented([["on", "On"], ["off", "Off"]], S.muted ? "off" : "on", v => { S.muted = v === "off"; localStorage.setItem("dgboard:muted", S.muted ? "1" : "0"); })));
@@ -2145,7 +2145,7 @@ function showRoll(r) {
 }
 /* ---------------- character creator ---------------- */
 // Pick each piece separately (uniform, vest, gear, headgear, face, patches, ID) so no two agents look the same.
-// the room's sounds (rain, stove, hum, clock, footsteps, dice), made live with Web Audio; browsers only allow sound after a tap or key
+// the room's sound effects (footsteps, dice), made live with Web Audio; browsers only allow sound after a tap or key
 let AUDIO = null;
 const roomSoundsOn = () => localStorage.getItem("dgboard:roomsound") !== "0";
 function roomAudio() { if (!AUDIO) { AUDIO = createAudio(); AUDIO.setEnabled(roomSoundsOn()); } return AUDIO; }
