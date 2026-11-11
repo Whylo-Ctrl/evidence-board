@@ -257,6 +257,7 @@ const PATCH_STYLE = {fed: {bg: "#1d2742", fg: "#e8c22c"}, cia: {bg: "#141414", f
 
 // ---------- the figure ----------
 export function buildAgent(THREE, look, o = {}) {
+  if (o.style === "blocky") return buildBlocky(THREE, look, o);
   const L = cleanLook(look), f = L.faction, top = topOf(L), mobile = !!o.mobile, pin = o.color || "#c0392b";
   const g = new THREE.Group(), trash = [], mats = new Map();
   const M = p => { const m = new THREE.MeshStandardMaterial({envMapIntensity: 0.35, ...p}); trash.push(m); return m; };
@@ -549,5 +550,244 @@ export function buildAgent(THREE, look, o = {}) {
   if (L.patchShoulder) decal(textTex(THREE, L.patchShoulder, {w: 128, h: 128, ...ps, border: ps.fg, round: 40, scale: 0.42}), 0.075, 0.075, -0.284, 1.32, 0, -Math.PI / 2);
   if (L.flag !== "none") decal(flagTex(THREE, L.flag), 0.085, 0.045, 0.284, 1.34, 0, Math.PI / 2);
 
+  return {group: g, trash, look: L};
+}
+
+// ---------- blocky style: a chunky toy figure with the outfit painted onto the blocks ----------
+export const STYLES = [["real", "Realistic"], ["blocky", "Blocky"]];
+function buildBlocky(THREE, look, o = {}) {
+  const L = cleanLook(look), f = L.faction, top = topOf(L), mobile = !!o.mobile, pin = o.color || "#c0392b";
+  const g = new THREE.Group(), trash = [];
+  const plastic = p => { const m = new THREE.MeshStandardMaterial({roughness: 0.42, metalness: 0, envMapIntensity: 0.5, ...p}); trash.push(m); return m; };
+  const add = (geo, m, x, y, z, rot, scl) => { trash.push(geo); const me = new THREE.Mesh(geo, m); me.position.set(x, y, z); if (rot) me.rotation.set(rot[0] || 0, rot[1] || 0, rot[2] || 0); if (scl) me.scale.set(...scl); me.castShadow = !mobile; g.add(me); return me; };
+  const box = (w, h, d, m, x, y, z, rot) => add(new THREE.BoxGeometry(w, h, d), m, x, y, z, rot);
+  const cyl = (rt, rb, h, m, x, y, z, rot, scl, seg = 24) => add(new THREE.CylinderGeometry(rt, rb, h, seg), m, x, y, z, rot, scl);
+  const paint = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; trash.push(t); return plastic({map: t}); };
+  const isPat = v => typeof v === "string" && v.startsWith("pat:");
+  const fill = (c, v, x, y, w, h) => { if (isPat(v)) { const p = c.createPattern(patTex(THREE, v.slice(4)).image, "repeat"); c.fillStyle = p; } else c.fillStyle = v; c.fillRect(x, y, w, h); };
+  const text = (c, s, x, y, w, h, col, bg) => { if (bg) { c.fillStyle = bg; c.fillRect(x - w / 2, y - h / 2, w, h); } c.fillStyle = col; c.textAlign = "center"; c.textBaseline = "middle"; let fs = h * 0.78; do { c.font = `bold ${fs}px Arial, sans-serif`; fs -= 1; } while (c.measureText(s).width > w * 0.92 && fs > 6); c.fillText(s, x, y + 1); };
+
+  const body = L.color && !isPat(top.body) ? L.color : top.body;
+  const sleeve = top.sleeves || body, skin = SKINS[L.skin], hair = HAIRS[L.hairColor];
+  const pantsId = L.pants === "auto" ? (top.pants || "match") : L.pants;
+  const pSpec = pantsId === "match" ? {c: body, cargo: !["suit", "trench", "open"].includes(top.kind)} : (PANTS.find(p => p[0] === pantsId)?.[2] || {c: C.charcoal});
+  const pants = top.kind === "coverall" ? body : pSpec.c;
+  const bootsId = L.boots === "auto" ? top.boots : L.boots;
+  const bootCol = bootsId === "desert" ? "#a88d63" : bootsId === "dress" ? "#0f0d0b" : "#141414", bootH = bootsId === "dress" ? 0.08 : bootsId === "tactical" ? 0.14 : 0.22;
+  const V = L.vest, hardVest = ["soft", "badge", "heavy", "plate", "lowpro", "iotv"].includes(V);
+  const gearAuto = f === "fed" ? (V === "heavy" ? "#17181a" : "#1d2639") : f === "cia" ? "#17181a" : (["ocp", "multicam", "cia_fatigues"].includes(top.id) ? P("multicam") : "#7e6a4e");
+  const gearCol = L.vestColor === "auto" ? gearAuto : GEAR_COLORS.find(x => x[0] === L.vestColor)[2];
+  const belt = top.tuck || L.gear.some(x => ["belt", "ammo", "med", "light", "badge", "legholster"].includes(x));
+  const ps = PATCH_STYLE[f];
+  const vestText = isPat(gearCol) || lum(gearCol) > 0.35 ? "#16160f" : f === "fed" ? "#e8c22c" : "#e9e5da";
+  const chestText = L.patchChest || (f === "fed" && (V === "soft" || V === "heavy") ? "FBI" : "");
+  const backText = L.patchBack || (top.back && !hardVest ? top.back : "") || (f === "fed" && (V === "soft" || V === "heavy") ? "FBI" : "");
+  const S = 0.3; // one block unit
+
+  // ----- torso: 2 x 2 x 1 units, front faces -z (box face index 5) -----
+  const front = paint(256, 256, (c, w, h) => {
+    fill(c, body, 0, 0, w, h);
+    const k = top.kind;
+    if (k === "suit" || k === "trench" || k === "open") {
+      if (k === "open") { c.fillStyle = top.shirt; c.fillRect(96, 0, 64, h); }
+      else {
+        c.fillStyle = top.shirt; c.beginPath(); c.moveTo(84, 0); c.lineTo(172, 0); c.lineTo(128, 120); c.fill();
+        c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = 6; c.beginPath(); c.moveTo(80, 0); c.lineTo(128, 128); c.lineTo(176, 0); c.stroke();
+        if (top.tie) { c.fillStyle = top.tie === "pin" ? pin : top.tie; c.beginPath(); c.moveTo(118, 6); c.lineTo(138, 6); c.lineTo(134, 18); c.lineTo(142, 104); c.lineTo(128, 120); c.lineTo(114, 104); c.lineTo(122, 18); c.fill(); }
+        c.fillStyle = "#111"; for (const y of [150, 196]) { c.beginPath(); c.arc(128, y, 5, 0, 7); c.fill(); }
+      }
+      if (top.brass) { c.fillStyle = "#d6b23a"; for (const y of [140, 175, 210]) { c.beginPath(); c.arc(150, y, 6, 0, 7); c.fill(); } ["#9c1f24", "#1f3f8a", "#d6b23a"].forEach((col, i) => { c.fillStyle = col; c.fillRect(176 + i * 16, 60, 15, 10); }); }
+      if (k === "trench") { c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(0, 196, w, 22); }
+    } else if (k === "shirt" || k === "ghillie") {
+      c.fillStyle = "rgba(0,0,0,.28)"; c.beginPath(); c.moveTo(100, 0); c.lineTo(128, 40); c.lineTo(156, 0); c.fill();
+      c.fillRect(124, 40, 8, h);
+      for (const x of [56, 168]) { c.fillStyle = "rgba(0,0,0,.18)"; c.fillRect(x, 70, 44, 50); c.fillStyle = "rgba(0,0,0,.32)"; c.fillRect(x - 2, 66, 48, 14); }
+    } else {
+      c.fillStyle = "#9a9a9a"; c.fillRect(126, 0, 4, h);
+      c.fillStyle = "rgba(0,0,0,.3)"; c.fillRect(0, 0, w, 16);
+      if (k === "hoodie") { c.fillStyle = "rgba(0,0,0,.22)"; c.fillRect(66, 176, 124, 56); c.fillStyle = "#ddd"; c.fillRect(108, 16, 4, 50); c.fillRect(144, 16, 4, 50); }
+      else { c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = 4; for (const sx of [-1, 1]) { c.beginPath(); c.moveTo(128 + sx * 40, 150); c.lineTo(128 + sx * 62, 200); c.stroke(); } }
+    }
+    if (belt) { c.fillStyle = L.gear.includes("belt") && f === "mil" ? "#5c4f3a" : "#161616"; c.fillRect(0, 226, w, 26); c.fillStyle = "#9a9a9a"; c.fillRect(114, 228, 28, 22); }
+    if (L.gear.includes("badge")) { c.fillStyle = "#d4af37"; c.fillRect(170, 224, 18, 26); }
+    if (!hardVest && V !== "rig") {
+      if (chestText) { c.strokeStyle = ps.fg; c.lineWidth = 3; text(c, chestText, 196, 60, 70, 28, ps.fg, ps.bg); c.strokeRect(161, 46, 70, 28); }
+      if (L.nametape && o.name) text(c, String(o.name).toUpperCase().slice(0, 12), 62, 60, 76, 20, f === "mil" ? "#141410" : "#e9e5da", f === "mil" ? "#8a8466" : "#1b1b1b");
+      if (L.gear.includes("radio")) { c.strokeStyle = "#1a1a1a"; c.lineWidth = 12; c.beginPath(); c.moveTo(20, 0); c.lineTo(236, 226); c.stroke(); }
+    }
+    if (L.gear.includes("holster")) { c.strokeStyle = "#2a1d14"; c.lineWidth = 10; c.beginPath(); c.moveTo(30, 0); c.lineTo(10, 150); c.moveTo(226, 0); c.lineTo(246, 150); c.stroke(); }
+  });
+  const back = paint(256, 256, (c, w, h) => {
+    fill(c, body, 0, 0, w, h);
+    if (top.kind === "hoodie") { c.fillStyle = "rgba(0,0,0,.2)"; c.fillRect(50, 0, 156, 50); }
+    if (belt) { c.fillStyle = "#161616"; c.fillRect(0, 226, w, 26); }
+    if (backText && !hardVest && L.pack === "none") text(c, backText, 128, 96, 200, 60, "#e8c22c");
+    if (L.gear.includes("holster")) { c.strokeStyle = "#2a1d14"; c.lineWidth = 10; c.beginPath(); c.moveTo(20, 0); c.lineTo(236, 180); c.moveTo(236, 0); c.lineTo(20, 180); c.stroke(); }
+  });
+  const side = paint(128, 256, (c, w, h) => { fill(c, body, 0, 0, w, h); if (belt) { c.fillStyle = "#161616"; c.fillRect(0, 226, w, 26); } });
+  const topM = plastic({color: isPat(body) ? "#5b5f3e" : body});
+  box(2 * S, 2 * S, S, [side, side, topM, topM, back, front], 0, 3 * S, 0);
+
+  // ----- arms: 1 x 2 x 1, with hands painted at the bottom -----
+  const gloveCol = L.gloves === "none" ? null : L.gloves === "leather" ? "#2f1e14" : f === "mil" ? "#6e5d45" : "#161616";
+  const armTex = (outer, sx) => paint(128, 256, (c, w, h) => {
+    fill(c, sleeve, 0, 0, w, h);
+    if (top.kind === "suit" || top.kind === "trench") { c.fillStyle = top.shirt || "#eee"; c.fillRect(0, 186, w, 14); }
+    c.fillStyle = skin; c.fillRect(0, 200, w, 56);
+    if (gloveCol) { c.fillStyle = gloveCol; c.fillRect(0, L.gloves === "fingerless" ? 200 : 200, w, L.gloves === "fingerless" ? 30 : 56); }
+    if (sx < 0 && L.watch !== "none") { c.fillStyle = L.watch === "analog" ? "#4a3626" : "#111"; c.fillRect(0, 176, w, 14); if (outer) { c.fillStyle = L.watch === "analog" ? "#eee" : "#333"; c.fillRect(48, 172, 32, 22); } }
+    if (outer && sx < 0 && L.patchShoulder) { c.fillStyle = ps.bg; c.beginPath(); c.arc(64, 54, 40, 0, 7); c.fill(); c.strokeStyle = ps.fg; c.lineWidth = 4; c.stroke(); text(c, L.patchShoulder, 64, 54, 70, 22, ps.fg); }
+    if (outer && sx > 0 && L.flag !== "none") c.drawImage(flagTex(THREE, L.flag).image, 22, 34, 84, 44);
+  });
+  for (const sx of [-1, 1]) {
+    const outer = armTex(true, sx), plain = armTex(false, sx), capM = plastic({color: isPat(sleeve) ? "#5b5f3e" : sleeve}), handM = plastic({color: gloveCol || skin});
+    // box faces: +x, -x, +y, -y, +z, -z ; the outer face is +x for the right arm (sx 1), -x for the left
+    box(S, 2 * S, S, sx > 0 ? [outer, plain, capM, handM, plain, plain] : [plain, outer, capM, handM, plain, plain], sx * 1.5 * S, 3 * S, 0);
+  }
+
+  // ----- legs: 1 x 2 x 1, boots painted at the bottom -----
+  const legTex = (frontFace, outerFace) => paint(128, 256, (c, w, h) => {
+    fill(c, pants, 0, 0, w, h);
+    if (top.kind === "trench") { c.fillStyle = body; c.fillRect(0, 0, w, 130); }
+    if (top.hem && !top.tuck && top.kind !== "coverall") fill(c, body, 0, 0, w, 18);
+    if (pSpec.cargo && outerFace) { c.fillStyle = "rgba(0,0,0,.22)"; c.fillRect(24, 70, 80, 60); c.fillStyle = "rgba(0,0,0,.32)"; c.fillRect(22, 66, 84, 12); }
+    if (frontFace && L.gear.includes("kneepads")) { c.fillStyle = "#1a1a1a"; c.fillRect(24, 112, 80, 56); }
+    c.fillStyle = bootCol; c.fillRect(0, h - bootH / (2 * S) * h, w, bootH / (2 * S) * h);
+    c.fillStyle = "rgba(0,0,0,.35)"; c.fillRect(0, h - 10, w, 10);
+  });
+  for (const sx of [-1, 1]) {
+    const fr = legTex(true, false), out = legTex(false, true), pl = legTex(false, false), capM = plastic({color: isPat(pants) ? "#5b5f3e" : pants}), sole = plastic({color: "#111"});
+    box(S, 2 * S, S, sx > 0 ? [out, pl, capM, sole, pl, fr] : [pl, out, capM, sole, pl, fr], sx * 0.5 * S, S, 0);
+  }
+
+  // ----- head: a rounded cylinder with the face painted on -----
+  const bala = L.cover === "balaclava", balaCol = f === "mil" ? "#2a2c22" : "#111214";
+  const headCol = bala ? balaCol : skin;
+  const faceM = paint(512, 128, (c, w, h) => {
+    c.fillStyle = headCol; c.fillRect(0, 0, w, h);
+    const X = 256; // middle of the face
+    if (bala) { c.fillStyle = skin; c.fillRect(X - 70, 30, 140, 40); }
+    if (!bala && L.paint === "camo") { ["#2c3a22", "#16180f", "#4f5a32", "#16180f"].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.moveTo(X - 110 + i * 56, 0); c.lineTo(X - 80 + i * 56, 0); c.lineTo(X - 110 + i * 56, h); c.lineTo(X - 140 + i * 56, h); c.fill(); }); }
+    if (!bala && L.freckles) { c.fillStyle = "rgba(120,60,30,.55)"; const r = seeded(5); for (let i = 0; i < 30; i++) c.fillRect(X - 50 + r() * 100, 62 + r() * 14, 2.5, 2.5); }
+    if (!bala && (L.facial === "stubble")) { c.fillStyle = "rgba(30,22,16,.28)"; c.fillRect(X - 80, 78, 160, 50); }
+    if (!bala && L.facial === "beard") { c.fillStyle = hair; c.fillRect(X - 86, 66, 172, 62); c.fillStyle = headCol; c.fillRect(X - 30, 82, 60, 14); }
+    if (!bala && (L.facial === "mustache" || L.facial === "goatee" || L.facial === "beard")) { c.fillStyle = hair; c.fillRect(X - 34, 72, 68, 10); }
+    if (!bala && L.facial === "goatee") { c.fillStyle = hair; c.fillRect(X - 16, 96, 32, 32); }
+    if (!bala && L.paint === "eyeblack") { c.fillStyle = "#111"; c.fillRect(X - 52, 58, 30, 8); c.fillRect(X + 22, 58, 30, 8); }
+    if (!bala && L.scar) { c.strokeStyle = "#a35050"; c.lineWidth = 3; c.beginPath(); c.moveTo(X + 50, 24); c.lineTo(X + 62, 70); c.stroke(); }
+    // classic toy face: oval eyes and a smile
+    for (const sx of [-1, 1]) { c.fillStyle = "#111"; c.beginPath(); c.ellipse(X + sx * 34, 44, 8, 12, 0, 0, 7); c.fill(); c.fillStyle = "#fff"; c.fillRect(X + sx * 34 - 3, 36, 4, 5); }
+    if (!bala) { c.strokeStyle = "#111"; c.lineWidth = 5; c.lineCap = "round"; c.beginPath(); c.arc(X, 64, 30, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke(); }
+    if (!bala) { c.strokeStyle = hair; c.lineWidth = 5; for (const sx of [-1, 1]) { c.beginPath(); c.moveTo(X + sx * 22, 24); c.lineTo(X + sx * 46, 22); c.stroke(); } }
+    // eyewear drawn on
+    const E = L.eyewear;
+    if (E === "sun") { c.fillStyle = "#0b0b0b"; c.fillRect(X - 62, 32, 124, 26); }
+    else if (E === "aviator") { c.fillStyle = "#2d3b31"; for (const sx of [-1, 1]) { c.beginPath(); c.ellipse(X + sx * 34, 46, 24, 17, 0, 0, 7); c.fill(); } c.strokeStyle = "#c9a24a"; c.lineWidth = 3; for (const sx of [-1, 1]) { c.beginPath(); c.ellipse(X + sx * 34, 46, 24, 17, 0, 0, 7); c.stroke(); } c.beginPath(); c.moveTo(X - 10, 36); c.lineTo(X + 10, 36); c.stroke(); }
+    else if (E === "goggles") { c.fillStyle = "#151515"; c.fillRect(0, 32, w, 10); c.fillStyle = "rgba(200,225,235,.55)"; c.fillRect(X - 66, 28, 132, 34); c.strokeStyle = "#151515"; c.lineWidth = 5; c.strokeRect(X - 66, 28, 132, 34); }
+    else if (E === "disguise" || E === "glasses") { c.strokeStyle = E === "disguise" ? "#0d0d0d" : "#5a4632"; c.lineWidth = E === "disguise" ? 7 : 3; for (const sx of [-1, 1]) c.strokeRect(X + sx * 34 - 22, 32, 44, 28); c.beginPath(); c.moveTo(X - 12, 42); c.lineTo(X + 12, 42); c.stroke(); }
+  });
+  const capHead = plastic({color: headCol});
+  const HY = 4 * S + 0.18; // head centre
+  cyl(0.19, 0.19, 0.26, [faceM, capHead, capHead], 0, HY, 0, [0, 0, 0], null, 32);
+  for (const sy of [-1, 1]) add(new THREE.SphereGeometry(0.19, 32, 10, 0, Math.PI * 2, sy > 0 ? 0 : Math.PI * 0.5, Math.PI * 0.5), capHead, 0, HY + sy * 0.13, 0, null, [1, 0.32, 1]);
+  cyl(0.11, 0.12, 0.05, capHead, 0, 4 * S + 0.01, 0); // neck
+
+  // ----- hair blocks -----
+  const hairM = plastic({color: hair, roughness: 0.6});
+  const helmet = isHelmet(L.head), hatOn = L.head !== "none";
+  if (!bala && L.hair !== "bald" && !helmet && L.head !== "beanie") {
+    const H = L.hair, t = H === "buzz" || H === "fade" ? 0.035 : 0.06;
+    if (!hatOn) box(0.4, t, 0.4, hairM, 0, HY + 0.19 + t / 2 - 0.02, 0.0);
+    if (H !== "buzz") box(0.4, H === "long" ? 0.42 : 0.24, 0.06, hairM, 0, HY + (H === "long" ? -0.02 : 0.08), 0.18);
+    if (H === "short" || H === "long" || H === "slick" || H === "crew") for (const sx of [-1, 1]) box(0.05, 0.14, 0.32, hairM, sx * 0.18, HY + 0.12, 0.03);
+    if (H === "slick" && !hatOn) box(0.36, 0.06, 0.1, hairM, 0, HY + 0.2, -0.16, [-0.3, 0, 0]);
+    if ((H === "short" || H === "crew") && !hatOn) box(0.36, 0.06, 0.06, hairM, 0, HY + 0.17, -0.17);
+  }
+
+  // ----- headgear -----
+  const hc = L.headColor === "auto" ? null : HEAD_COLORS.find(x => x[0] === L.headColor)[2];
+  const topIsPat = isPat(top.body);
+  const autoHat = {fedora: "#15130f", cap: f === "fed" ? "#1c2638" : f === "cia" ? "#151515" : (topIsPat ? top.body : "#4d5435"), beanie: f === "mil" ? "#3e4535" : "#1a1a1c",
+    boonie: topIsPat ? top.body : f === "mil" ? "#7e6a4e" : "#3e4535", patrol: topIsPat ? top.body : f === "mil" ? "#4d5435" : "#1c2638", beret: f === "mil" ? "#2f4a2b" : pin,
+    fast: f === "mil" ? "#7e6a4e" : "#1b1c1e", ach: f === "mil" ? "#7a6b4e" : "#1b1c1e", pilot: "#c9ccd0"}[L.head];
+  const hcol = hc || autoHat;
+  const hatM = !hatOn ? null : isPat(hcol) ? paint(256, 64, (c, w, h) => fill(c, hcol, 0, 0, w, h)) : plastic({color: hcol});
+  const HT = HY + 0.2; // top of the head
+  switch (L.head) {
+    case "fedora": cyl(0.31, 0.31, 0.025, hatM, 0, HT - 0.01, 0); cyl(0.18, 0.2, 0.16, hatM, 0, HT + 0.07, 0); cyl(0.202, 0.202, 0.04, plastic({color: pin}), 0, HT + 0.02, 0); break;
+    case "cap": {
+      cyl(0.2, 0.205, 0.12, hatM, 0, HT + 0.02, 0); box(0.3, 0.025, 0.18, hatM, 0, HT - 0.03, -0.25);
+      if (L.capText) { const t = paint(256, 64, (c, w, h) => { fill(c, hcol, 0, 0, w, h); text(c, L.capText, w / 2, h / 2, 220, 44, f === "fed" ? "#e8c22c" : "#e9e5da"); }); const p = add(new THREE.PlaneGeometry(0.22, 0.055), t, 0, HT + 0.03, -0.207, [0, Math.PI, 0]); p.castShadow = false; t.polygonOffset = true; t.polygonOffsetFactor = -2; }
+      break;
+    }
+    case "beanie": cyl(0.205, 0.205, 0.17, hatM, 0, HT + 0.02, 0); add(new THREE.SphereGeometry(0.205, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2), hatM, 0, HT + 0.1, 0, null, [1, 0.35, 1]); break;
+    case "boonie": cyl(0.33, 0.33, 0.02, hatM, 0, HT - 0.02, 0); cyl(0.19, 0.205, 0.13, hatM, 0, HT + 0.05, 0); break;
+    case "patrol": cyl(0.215, 0.2, 0.15, hatM, 0, HT + 0.04, 0); box(0.26, 0.02, 0.12, hatM, 0, HT - 0.02, -0.24, [-0.15, 0, 0]); break;
+    case "beret": cyl(0.23, 0.22, 0.07, hc ? hatM : plastic({color: autoHat}), 0.03, HT + 0.02, 0, [0, 0, -0.2]); break;
+    case "fast": case "ach": case "pilot": {
+      add(new THREE.SphereGeometry(0.235, 32, 14, 0, Math.PI * 2, 0, Math.PI * (L.head === "pilot" ? 0.62 : 0.52)), hatM, 0, HY + 0.02, 0, null, [1, 0.95, 1]);
+      if (L.head === "fast") for (const sx of [-1, 1]) box(0.03, 0.05, 0.2, plastic({color: "#222"}), sx * 0.232, HY + 0.04, 0);
+      if (L.head === "pilot") add(new THREE.SphereGeometry(0.24, 32, 10, Math.PI * 1.15, Math.PI * 0.7, Math.PI * 0.32, Math.PI * 0.2), plastic({color: "#20262c", metalness: 0.6, roughness: 0.05, transparent: true, opacity: 0.85, side: THREE.DoubleSide}), 0, HY + 0.02, 0);
+      break;
+    }
+  }
+  if (helmet) {
+    const am = plastic({color: "#1c1c1c"});
+    if (L.helmetAdd.includes("nvg")) { box(0.06, 0.08, 0.04, am, 0, HY + 0.16, -0.24); for (const sx of [-1, 1]) cyl(0.03, 0.03, 0.1, am, sx * 0.045, HY + 0.07, -0.27, [Math.PI / 2, 0, 0], null, 12); }
+    if (L.helmetAdd.includes("camera")) box(0.05, 0.05, 0.08, am, -0.25, HY + 0.08, 0);
+    if (L.helmetAdd.includes("hlight")) cyl(0.025, 0.025, 0.1, am, 0.25, HY + 0.06, -0.06, [Math.PI / 2, 0, 0], null, 12);
+  }
+  if (L.ears === "headset") { const hm = plastic({color: "#1a1a1a"}); for (const sx of [-1, 1]) box(0.06, 0.13, 0.13, hm, sx * 0.21, HY, 0); if (!helmet) box(0.44, 0.04, 0.05, hm, 0, HY + 0.22, 0); }
+  if (L.ears === "earpiece") cyl(0.012, 0.012, 0.14, plastic({color: "#d8d0c4"}), 0.17, HY - 0.12, 0.04, null, null, 6);
+
+  // ----- vests, packs and gear -----
+  const gearM = isPat(gearCol) ? paint(128, 128, (c, w, h) => fill(c, gearCol, 0, 0, w, h)) : plastic({color: gearCol, roughness: 0.7});
+  if (hardVest || V === "rig") {
+    const heavy = V === "heavy" || V === "iotv", d = V === "rig" ? 0.08 : heavy ? 0.42 : V === "soft" || V === "badge" ? 0.36 : 0.39;
+    const hgt = V === "rig" ? 0.24 : heavy ? 0.56 : 0.46, wid = V === "rig" ? 0.56 : heavy ? 0.66 : 0.63, y = V === "rig" ? 2.55 * S : heavy ? 3.05 * S : 3.2 * S;
+    const vfront = paint(256, 192, (c, w, h) => {
+      fill(c, gearCol, 0, 0, w, h);
+      if (V === "plate" || V === "rig") for (const x of [62, 104, 146, 188]) { c.fillStyle = "rgba(0,0,0,.28)"; c.fillRect(x - 18, h - 84, 36, 70); }
+      if (V === "badge") { c.fillStyle = "#d4af37"; c.fillRect(176, 30, 30, 38); }
+      if (chestText && V !== "rig") text(c, chestText, 128, V === "plate" ? 46 : 70, 210, 44, vestText);
+      if (L.nametape && o.name && V !== "rig") text(c, String(o.name).toUpperCase().slice(0, 12), 128, 16, 120, 20, f === "mil" ? "#141410" : "#e9e5da", f === "mil" ? "#8a8466" : "#1b1b1b");
+      if (L.gear.includes("radio")) { c.fillStyle = "#111"; c.fillRect(30, 30, 30, 60); }
+    });
+    const vback = paint(256, 192, (c, w, h) => { fill(c, gearCol, 0, 0, w, h); if (backText && L.pack === "none" && V !== "rig") text(c, backText, 128, 80, 210, 54, vestText); });
+    if (V === "rig") box(wid, hgt, d, [gearM, gearM, gearM, gearM, gearM, vfront], 0, y, -S / 2 - d / 2 + 0.01);
+    else box(wid, hgt, d, [gearM, gearM, gearM, gearM, vback, vfront], 0, y, 0);
+    if (heavy) { for (const sx of [-1, 1]) box(0.34, 0.08, 0.36, gearM, sx * 0.44, 3.85 * S, 0, [0, 0, sx * -0.3]); box(0.26, 0.2, 0.06, gearM, 0, 1.75 * S, -S / 2 - 0.02); }
+  }
+  if (L.pack !== "none") {
+    const [w, h, d] = {small: [0.4, 0.42, 0.16], medium: [0.46, 0.5, 0.2], assault: [0.5, 0.58, 0.22], radio: [0.4, 0.48, 0.2]}[L.pack];
+    const pm = isPat(gearCol) ? gearM : plastic({color: L.vestColor === "auto" && f !== "mil" ? "#1d1d1f" : gearCol, roughness: 0.7});
+    box(w, h, d, pm, 0, 3.15 * S, S / 2 + (hardVest ? 0.06 : 0) + d / 2);
+    if (L.pack === "radio") cyl(0.008, 0.008, 0.6, plastic({color: "#111"}), 0.14, 3.15 * S + h / 2 + 0.3, S / 2 + d / 2, null, null, 6);
+  }
+  if (L.gear.includes("legholster")) box(0.08, 0.2, 0.18, plastic({color: "#111"}), S + 0.04, 1.3 * S, 0);
+  if (L.gear.includes("ammo")) for (const x of [-0.14, -0.22]) box(0.07, 0.1, 0.06, gearM, x, 2.15 * S, -S / 2 - 0.03);
+  if (L.gear.includes("med")) box(0.12, 0.1, 0.07, plastic({color: "#b23a3a"}), 0.2, 2.15 * S, S / 2 + 0.035);
+  if (L.gear.includes("light")) cyl(0.025, 0.025, 0.14, plastic({color: "#111"}), -0.3, 2.1 * S, 0, null, null, 10);
+  if (L.gear.includes("radio") && !(hardVest || V === "rig")) box(0.07, 0.13, 0.05, plastic({color: "#111"}), -0.17, 3.6 * S, -S / 2 - 0.025);
+  if (L.neck === "shemagh" || L.neck === "gaiter" || L.neck === "scarf") {
+    const nm = L.neck === "shemagh" ? plastic({map: checkerTex(THREE, f === "mil" ? "#b9a77f" : "#2a2a2a", f === "mil" ? "#5a4a32" : "#d8d2c4")}) : plastic({color: L.neck === "scarf" ? (f === "cia" ? "#6b1e24" : "#4a4a4a") : (isPat(gearCol) ? "#7e6a4e" : gearCol), roughness: 0.9});
+    cyl(0.2, 0.22, 0.07, nm, 0, 4 * S + 0.02, 0);
+    if (L.neck === "scarf") box(0.08, 0.36, 0.03, nm, 0.12, 3.4 * S, -S / 2 - 0.015);
+  }
+  if (top.kind === "hoodie") box(0.42, 0.14, 0.12, plastic({color: body}), 0, 4 * S + 0.03, S / 2 + 0.02);
+  if (top.kind === "ghillie") {
+    const n = mobile ? 90 : 200, cone = new THREE.ConeGeometry(0.03, 0.13, 4); trash.push(cone);
+    const im = new THREE.InstancedMesh(cone, plastic({roughness: 1}), n); im.castShadow = !mobile;
+    const dmy = new THREE.Object3D(), col = new THREE.Color(), pal = ["#4b5a2c", "#6b6a3a", "#3a3f22", "#7a6a42", "#5a4a2c"], rnd = seeded(42);
+    for (let i = 0; i < n; i++) {
+      const part = rnd(); let x, y, z;
+      if (part < 0.5) { x = (rnd() - 0.5) * 0.62; y = 2 * S + rnd() * 2 * S; z = rnd() < 0.5 ? -S / 2 - 0.01 : S / 2 + 0.01; if (rnd() < 0.3) { x = (rnd() < 0.5 ? -1 : 1) * 0.31; z = (rnd() - 0.5) * S; } }
+      else if (part < 0.75) { const sx = rnd() < 0.5 ? -1 : 1; x = sx * (1.5 * S + (rnd() < 0.5 ? 0.16 : 0)); y = 2 * S + rnd() * 2 * S; z = (rnd() - 0.5) * S; }
+      else { const sx = rnd() < 0.5 ? -1 : 1; x = sx * (0.5 * S + (rnd() - 0.5) * S); y = 0.3 + rnd() * 0.3; z = rnd() < 0.5 ? -S / 2 - 0.01 : S / 2 + 0.01; }
+      dmy.position.set(x, y, z); dmy.rotation.set(Math.PI + (rnd() - 0.5) * 1.1, rnd() * 6.28, (rnd() - 0.5) * 1.1); dmy.scale.setScalar(0.7 + rnd() * 0.7); dmy.updateMatrix();
+      im.setMatrixAt(i, dmy.matrix); im.setColorAt(i, col.set(pal[Math.floor(rnd() * pal.length)]));
+    }
+    g.add(im);
+  }
   return {group: g, trash, look: L};
 }

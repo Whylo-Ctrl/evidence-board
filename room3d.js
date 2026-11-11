@@ -611,14 +611,14 @@ export function createRoom(THREE, opts) {
   });
   function makeAvatar(a) {
     const g = new THREE.Group();
-    const built = buildAgent(THREE, a.look, {color: a.color, name: a.name, mobile});
+    const built = buildAgent(THREE, a.look, {color: a.color, name: a.name, mobile, style: a.style});
     disposables.push(...built.trash); g.add(built.group);
     const lines = labelLines(a.look, a.name);
     const sm = new THREE.SpriteMaterial({map: labelTex(lines, a.color), depthWrite: false, transparent: true, toneMapped: !composer}); disposables.push(sm);
     const label = new THREE.Sprite(sm); label.scale.set(0.7, lines.length > 1 ? 0.21 : 0.14, 1); label.position.y = 2.1; g.add(label);
     if (composer) label.layers.set(1); // drawn after the effects (ambient occlusion can't handle sprites)
     scene.add(g);
-    return {g, name: a.name, color: a.color, lookKey: JSON.stringify(a.look || {}), target: {x: 0, z: 0, yaw: 0}, placed: false};
+    return {g, name: a.name, color: a.color, lookKey: JSON.stringify(a.look || {}) + a.style, target: {x: 0, z: 0, yaw: 0}, placed: false};
   }
   function setAvatars(list) {
     const seen = new Set();
@@ -626,7 +626,7 @@ export function createRoom(THREE, opts) {
     for (const a of list) {
       seen.add(a.id);
       let av = avatars.get(a.id);
-      if (av && (av.name !== a.name || av.color !== a.color || av.lookKey !== JSON.stringify(a.look || {}))) { scene.remove(av.g); avatars.delete(a.id); av = null; }
+      if (av && (av.name !== a.name || av.color !== a.color || av.lookKey !== JSON.stringify(a.look || {}) + a.style)) { scene.remove(av.g); avatars.delete(a.id); av = null; }
       if (!av) { av = makeAvatar(a); avatars.set(a.id, av); }
       if (a.pose.mode === "room") av.target = {x: +a.pose.x || 0, z: +a.pose.z || 0, yaw: +a.pose.yaw || 0};
       else { const i = atBoard.indexOf(a); av.target = {x: -0.9 + i * 0.6, z: -1.55, yaw: 0}; } // working on the board: standing in front of it
