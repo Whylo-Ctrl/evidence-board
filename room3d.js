@@ -600,23 +600,89 @@ export function createRoom(THREE, opts) {
   // ---------- other agents in the case ----------
   const avatars = new Map();
   const labelTex = (name, hex) => B.canvasTex(256, 64, (c, cw, ch) => { c.fillStyle = "rgba(20,13,8,.78)"; c.beginPath(); c.roundRect(4, 8, cw - 8, ch - 16, 22); c.fill(); c.fillStyle = hex; c.beginPath(); c.arc(30, ch / 2, 9, 0, Math.PI * 2); c.fill(); c.fillStyle = "#efe3c6"; c.font = '26px "Special Elite", monospace'; c.textBaseline = "middle"; c.fillText(String(name).slice(0, 14), 50, ch / 2 + 1); });
+  // outfits: Fed, CIA, Military, two styles each. look = {kit, style, skin, hair, hairHex, hat, shades, tie}
+  const KIT = {
+    fed:  {suit: {jacket: 0x1c2638, pants: 0x1c2638, shirt: 0xe9e6de, tie: true}, windbreaker: {jacket: 0x161d2c, pants: 0x7d6f55, shirt: 0x161d2c, zip: true, nylon: true, back: "FBI"}},
+    cia:  {suit: {jacket: 0x2a2a2d, pants: 0x2a2a2d, shirt: 0xeceae4, tie: true}, trench: {jacket: 0x9c875f, pants: 0x2a2a2d, shirt: 0xeceae4, tie: true, trench: true}},
+    mil:  {fatigues: {jacket: "camo", pants: "camo", shirt: 0x474b33, boots: true, belt: 0x2a2a22}, dress: {jacket: 0x3b4330, pants: 0x9a8a70, shirt: 0xb9aa8a, tie: true, tieColor: 0x3a2a1e, brass: true}},
+  };
+  let camoTex = null;
+  const camo = () => camoTex ||= B.canvasTex(256, 256, (c, w, h) => {
+    c.fillStyle = "#5b5f3e"; c.fillRect(0, 0, w, h);
+    for (const col of ["#3e4a2c", "#6e6146", "#262a1c", "#7c7a52"]) for (let i = 0; i < 26; i++) {
+      c.fillStyle = col; c.beginPath(); const x = Math.random() * w, y = Math.random() * h, r = 8 + Math.random() * 18;
+      for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2, rr = r * (0.6 + Math.random() * 0.6); c.lineTo(x + Math.cos(a) * rr * 1.4, y + Math.sin(a) * rr); }
+      c.fill();
+    }
+  });
   function makeAvatar(a) {
-    const g = new THREE.Group(), coat = mat({color: a.color, roughness: 0.75}), dark = mat({color: 0x23201c, roughness: 0.6}), skin = mat({color: 0xc9a07c, roughness: 0.7});
-    const part = (geo, m, x, y, z) => { disposables.push(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = !mobile; g.add(o); return o; };
-    part(new THREE.CapsuleGeometry(0.19, 0.62, 4, 14), coat, 0, 1.0, 0);                 // trench coat
-    part(new THREE.CylinderGeometry(0.07, 0.065, 0.62, 10), dark, -0.09, 0.31, 0);       // legs
-    part(new THREE.CylinderGeometry(0.07, 0.065, 0.62, 10), dark, 0.09, 0.31, 0);
-    part(new THREE.SphereGeometry(0.12, 18, 14), skin, 0, 1.56, 0);                      // head
-    part(new THREE.CylinderGeometry(0.22, 0.22, 0.015, 24), dark, 0, 1.655, 0);          // fedora brim
-    part(new THREE.CylinderGeometry(0.115, 0.13, 0.11, 20), dark, 0, 1.715, 0);          // fedora crown
-    part(new THREE.CylinderGeometry(0.132, 0.132, 0.025, 20), coat, 0, 1.675, 0);        // hat band in their colour
-    part(new THREE.SphereGeometry(0.016, 8, 6), dark, -0.04, 1.58, -0.11);               // eyes (facing where they look)
-    part(new THREE.SphereGeometry(0.016, 8, 6), dark, 0.04, 1.58, -0.11);
+    const L = a.look || {}, kit = (KIT[L.kit] || KIT.fed), K = kit[L.style] || Object.values(kit)[0];
+    const g = new THREE.Group();
+    const cloth = (v, r = 0.8) => v === "camo" ? mat({map: camo(), roughness: 0.9}) : mat({color: v, roughness: K.nylon && r > 0.5 ? 0.45 : r});
+    const jacket = cloth(K.jacket), pants = cloth(K.pants, 0.75), shirt = mat({color: K.shirt, roughness: 0.7});
+    const dark = mat({color: 0x15130f, roughness: 0.35}), skin = mat({color: L.skin || "#d9a882", roughness: 0.65}), hairM = mat({color: L.hairHex || "#3a281b", roughness: 0.85});
+    const tieM = mat({color: K.tieColor || a.color, roughness: 0.5});
+    const part = (geo, m, x, y, z, o = {}) => { disposables.push(geo); const p = new THREE.Mesh(geo, m); p.position.set(x, y, z); if (o.rx) p.rotation.x = o.rx; if (o.rz) p.rotation.z = o.rz; if (o.ry) p.rotation.y = o.ry; if (o.s) p.scale.set(...o.s); p.castShadow = !mobile; g.add(p); return p; };
+    const box = (w, h, d, m, x, y, z, o) => part(new THREE.BoxGeometry(w, h, d), m, x, y, z, o);
+    // feet and legs (front of the body faces -z)
+    for (const sx of [-1, 1]) {
+      if (K.boots) { box(0.11, 0.09, 0.25, dark, sx * 0.09, 0.045, -0.03); part(new THREE.CylinderGeometry(0.068, 0.07, 0.2, 12), dark, sx * 0.09, 0.17, 0); }
+      else box(0.1, 0.07, 0.25, dark, sx * 0.09, 0.035, -0.035);
+      part(new THREE.CylinderGeometry(0.078, 0.066, 0.84, 12), pants, sx * 0.09, 0.49, 0);
+    }
+    box(0.36, 0.17, 0.22, pants, 0, 0.93, 0);
+    // body
+    part(new THREE.CylinderGeometry(0.205, 0.175, 0.54, 20), jacket, 0, 1.22, 0, {s: [1, 1, 0.62]});
+    if (K.trench) { part(new THREE.CylinderGeometry(0.2, 0.27, 0.78, 20, 1, true), mat({color: K.jacket, roughness: 0.8, side: THREE.DoubleSide}), 0, 0.88, 0, {s: [1, 1, 0.68]}); box(0.39, 0.05, 0.27, cloth(K.jacket, 0.6), 0, 1.04, 0); }
+    if (K.belt) box(0.37, 0.045, 0.24, mat({color: K.belt, roughness: 0.6}), 0, 0.99, 0);
+    const front = -0.128;
+    if (K.zip) box(0.008, 0.5, 0.006, mat({color: 0x8a8a8a, metalness: 0.6, roughness: 0.4}), 0, 1.22, front + 0.012);
+    else {
+      part(new THREE.ConeGeometry(0.075, 0.24, 3), shirt, 0, 1.37, front + 0.006, {rx: Math.PI, s: [1, 1, 0.12]});
+      const lap = mat({color: K.jacket === "camo" ? 0x3e4a2c : K.jacket, roughness: 0.6});
+      for (const sx of [-1, 1]) box(0.03, 0.25, 0.012, lap, sx * 0.05, 1.37, front - 0.002, {rz: sx * 0.32});
+      if (K.tie) { box(0.034, 0.21, 0.012, tieM, 0, 1.3, front - 0.004, {rx: 0.08}); box(0.03, 0.03, 0.02, tieM, 0, 1.43, front - 0.002); }
+    }
+    if (K.brass) { const brass = mat({color: 0xc9a24a, metalness: 0.8, roughness: 0.3}); for (const y of [1.3, 1.21, 1.12]) part(new THREE.SphereGeometry(0.011, 8, 6), brass, 0.04, y, front - 0.008);
+      const rib = [0x9c1f24, 0x1f3f8a, 0xd6b23a]; rib.forEach((c, i) => box(0.026, 0.016, 0.008, mat({color: c, roughness: 0.5}), -0.11 + i * 0.027, 1.36, front + 0.004)); }
+    if (K.back) { const t = B.canvasTex(256, 128, (c, w, h) => { c.fillStyle = "#e8c22c"; c.font = "bold 92px Arial, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(K.back, w / 2, h / 2 + 4); });
+      const bm = mat({map: t, transparent: true, roughness: 0.6}); const bp = part(new THREE.PlaneGeometry(0.26, 0.13), bm, 0, 1.3, 0.125); bp.castShadow = false; }
+    // arms
+    for (const sx of [-1, 1]) {
+      part(new THREE.SphereGeometry(0.083, 14, 10), jacket, sx * 0.19, 1.44, 0);
+      part(new THREE.CylinderGeometry(0.062, 0.052, 0.62, 12), jacket, sx * 0.235, 1.13, 0, {rz: sx * 0.07});
+      part(new THREE.SphereGeometry(0.046, 12, 10), skin, sx * 0.258, 0.79, 0);
+    }
+    // neck and head
+    part(new THREE.CylinderGeometry(0.064, 0.064, 0.05, 14), K.zip ? jacket : shirt, 0, 1.5, 0);
+    part(new THREE.CylinderGeometry(0.05, 0.052, 0.1, 12), skin, 0, 1.54, 0);
+    part(new THREE.SphereGeometry(0.115, 20, 16), skin, 0, 1.66, 0, {s: [1, 1.1, 1]});
+    part(new THREE.SphereGeometry(0.02, 8, 6), skin, 0, 1.655, -0.118); // nose
+    for (const sx of [-1, 1]) { part(new THREE.SphereGeometry(0.014, 8, 6), dark, sx * 0.04, 1.68, -0.104); part(new THREE.SphereGeometry(0.022, 8, 6), skin, sx * 0.115, 1.66, 0, {s: [0.5, 1, 1]}); }
+    const capHair = (r, len) => part(new THREE.SphereGeometry(r, 20, 12, 0, Math.PI * 2, 0, Math.PI * len), hairM, 0, 1.665, 0.004, {rx: 0.32, s: [1, 1.08, 1]});
+    if (L.hair === "short" || !L.hair) capHair(0.122, 0.5);
+    else if (L.hair === "buzz") capHair(0.118, 0.42);
+    else if (L.hair === "long") { capHair(0.124, 0.52); box(0.23, 0.24, 0.07, hairM, 0, 1.56, 0.075); }
+    else if (L.hair === "slick") { capHair(0.121, 0.46); box(0.2, 0.04, 0.03, hairM, 0, 1.755, -0.075, {rx: -0.5}); }
+    if (L.shades) { const gl = mat({color: 0x0b0b0b, roughness: 0.1, metalness: 0.5}); for (const sx of [-1, 1]) box(0.055, 0.03, 0.01, gl, sx * 0.042, 1.68, -0.116); box(0.03, 0.006, 0.008, gl, 0, 1.687, -0.118); box(0.22, 0.008, 0.008, gl, 0, 1.687, -0.112).visible = false; }
+    // hats (the band is in their pin colour)
+    const hatM = L.kit === "mil" && L.style === "fatigues" ? cloth("camo") : L.kit === "mil" ? mat({color: 0x3b4330, roughness: 0.7}) : dark;
+    const band = mat({color: a.color, roughness: 0.6});
+    if (L.hat === "fedora") {
+      part(new THREE.CylinderGeometry(0.21, 0.21, 0.014, 24), dark, 0, 1.758, 0);
+      part(new THREE.CylinderGeometry(0.11, 0.128, 0.11, 20), dark, 0, 1.818, 0);
+      part(new THREE.CylinderGeometry(0.13, 0.13, 0.024, 20), band, 0, 1.778, 0);
+    } else if (L.hat === "cap") {
+      part(new THREE.CylinderGeometry(0.115, 0.127, 0.085, 20), hatM, 0, 1.78, 0.005);
+      box(0.17, 0.012, 0.09, hatM, 0, 1.745, -0.15, {rx: -0.12});
+    } else if (L.hat === "beret") {
+      part(new THREE.SphereGeometry(0.135, 20, 10), L.kit === "mil" ? mat({color: 0x23281a, roughness: 0.9}) : band, 0.025, 1.77, 0.005, {s: [1, 0.33, 1], rz: -0.18});
+    }
     const sm = new THREE.SpriteMaterial({map: labelTex(a.name, a.color), depthWrite: false, transparent: true, toneMapped: !composer}); disposables.push(sm);
-    const label = new THREE.Sprite(sm); label.scale.set(0.62, 0.155, 1); label.position.y = 2.0; g.add(label);
+    const label = new THREE.Sprite(sm); label.scale.set(0.62, 0.155, 1); label.position.y = 2.06; g.add(label);
     if (composer) label.layers.set(1); // drawn after the effects (ambient occlusion can't handle sprites)
     scene.add(g);
-    return {g, name: a.name, color: a.color, target: {x: 0, z: 0, yaw: 0}, placed: false};
+    return {g, name: a.name, color: a.color, lookKey: JSON.stringify(a.look || {}), target: {x: 0, z: 0, yaw: 0}, placed: false};
   }
   function setAvatars(list) {
     const seen = new Set();
@@ -624,7 +690,7 @@ export function createRoom(THREE, opts) {
     for (const a of list) {
       seen.add(a.id);
       let av = avatars.get(a.id);
-      if (av && (av.name !== a.name || av.color !== a.color)) { scene.remove(av.g); avatars.delete(a.id); av = null; }
+      if (av && (av.name !== a.name || av.color !== a.color || av.lookKey !== JSON.stringify(a.look || {}))) { scene.remove(av.g); avatars.delete(a.id); av = null; }
       if (!av) { av = makeAvatar(a); avatars.set(a.id, av); }
       if (a.pose.mode === "room") av.target = {x: +a.pose.x || 0, z: +a.pose.z || 0, yaw: +a.pose.yaw || 0};
       else { const i = atBoard.indexOf(a); av.target = {x: -0.9 + i * 0.6, z: -1.55, yaw: 0}; } // working on the board: standing in front of it
