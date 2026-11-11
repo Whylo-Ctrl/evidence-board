@@ -582,7 +582,7 @@ button{cursor:pointer;touch-action:manipulation}
 <noscript><p style="color:#fff;padding:20px">The evidence board needs JavaScript turned on.</p></noscript>
 
 <script type="module">
-import * as A from "./agent3d.js?v=20261111c";
+import * as A from "./agent3d.js?v=20261111d";
 /* ==========================================================
    PASTE YOUR FIREBASE SETTINGS HERE  (see README.md)
    The board only needs databaseURL. Clear it to use practice mode.
@@ -2057,7 +2057,7 @@ async function openExplore(opts = {}) {
   $("#viewBtn").textContent = "Board"; $("#viewBtn").title = "Walk up to the board";
   if (!boardCanvas) { boardCanvas = document.createElement("canvas"); const big = !TOUCH; boardCanvas.width = big ? 2048 : 1400; boardCanvas.height = Math.round(boardCanvas.width * (BOARD.h + TEX_MARGIN * 2) / (BOARD.w + TEX_MARGIN * 2)); }
   if (!R3mods) {
-    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111c")]);
+    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111d")]);
     const addons = {};
     await Promise.all((TOUCH ? ADDONS_PHONE : ADDONS_ALL).map(p => import("three/addons/" + p).then(m => Object.assign(addons, m)).catch(() => {})));
     R3mods = [THREE, mod, addons];
@@ -2174,7 +2174,7 @@ async function makePreview(host) {
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.42, 32), new THREE.MeshBasicMaterial({color: 0x000000, transparent: true, opacity: 0.22}));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.002; scene.add(shadow);
   const cam = new THREE.PerspectiveCamera(28, 1, 0.05, 20);
-  const VIEWS_BY = {real: {full: [0, 1.0, -4.3, 0.93], face: [0, 1.66, -1.45, 1.62]}, athletic: {full: [0, 1.0, -4.3, 0.93], face: [0, 1.71, -1.35, 1.68]}, blocky: {full: [0, 0.9, -4.4, 0.82], face: [0, 1.42, -1.7, 1.38]}};
+  const VIEWS_BY = {real: {full: [0, 1.0, -4.3, 0.93], face: [0, 1.66, -1.45, 1.62]}, athletic: {full: [0, 1.0, -4.3, 0.93], face: [0, 1.71, -1.35, 1.68]}, blocky: {full: [0, 0.95, -4.3, 0.86], face: [0, 1.56, -1.45, 1.53]}};
   let VIEWS = VIEWS_BY[agentStyle()];
   let style = agentStyle(), lastArgs = null, view = "full", cur = [...VIEWS.full], yaw = 0, auto = true, resumeAt = 0, agent = null, trash = [], raf = 0, last = performance.now();
   const holder = new THREE.Group(); scene.add(holder);

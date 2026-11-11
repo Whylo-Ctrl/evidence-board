@@ -1,4 +1,4 @@
-import {buildAgent, labelLines} from "./agent3d.js?v=20261111c";
+import {buildAgent, labelLines} from "./agent3d.js?v=20261111d";
 // A walk-around 3D room for the evidence board, drawn with three.js.
 // The board on the back wall shows a live picture of the real board (painted by index.html).
 // Click / tap the board and the camera walks up to it, then index.html swaps to the normal board view for editing.
