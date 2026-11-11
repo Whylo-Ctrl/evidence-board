@@ -525,6 +525,7 @@ export function createRoom(THREE, opts) {
   const pointers = new Map();
   let drag = null, pinch0 = null;
   const keys = new Set();
+  const look = {invX: false, invY: true}; // default: drag right looks right, drag down looks up
   const onDown = e => {
     if (!running || anim) return;
     canvas.setPointerCapture?.(e.pointerId);
@@ -540,7 +541,7 @@ export function createRoom(THREE, opts) {
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
       if (Math.hypot(dx, dy) > 6) drag.moved = true;
       const k = (camera.fov / 60) * 0.0042;
-      pose.yaw = drag.yaw - dx * k; pose.pitch = THREE.MathUtils.clamp(drag.pitch + dy * k, -1.2, 1.2); // drag right to look right; up/down unchanged
+      pose.yaw = drag.yaw + (look.invX ? dx : -dx) * k; pose.pitch = THREE.MathUtils.clamp(drag.pitch + (look.invY ? dy : -dy) * k, -1.2, 1.2); // each agent picks inverted or not
       applyPose();
     } else if (e.pointerType === "mouse") canvas.style.cursor = hitBoard(e) || hitTray(e) ? "pointer" : "grab";
   };
@@ -684,6 +685,7 @@ export function createRoom(THREE, opts) {
     toRoom() { moveTo(ROOM_POSE, 900); },
     fromBoard() { resize(); Object.assign(pose, focusPose()); applyPose(); moveTo(ROOM_POSE, 1100); },
     focusBoard,
+    setLookInvert(x, y) { look.invX = !!x; look.invY = !!y; },
     setAvatars,
     rollDice,
     getPose() { return {mode: "room", x: +pose.x.toFixed(2), z: +pose.z.toFixed(2), yaw: +pose.yaw.toFixed(2)}; },

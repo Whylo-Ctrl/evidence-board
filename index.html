@@ -1820,6 +1820,13 @@ function openSettings() {
       h("span", {class: "flabel", text: "Lighting"}),
       segmented([["lamp", "Desk lamp"], ["bright", "Lights on"]], sc.light, v => S.store.updateMeta(S.code, {light: v}).catch(saveFailed), !handler),
       handler ? null : h("p", {class: "hint", text: "Only the Handler can change the room and board."})));
+    if (CAN3D) sheet.append(h("div", {class: "section"},
+      h("span", {class: "flabel", text: "Mouse look (3D room)"}),
+      h("div", {class: "row", style: "margin-bottom:8px"}, h("span", {style: "min-width:84px;font-size:14px", text: "Left / right"}),
+        segmented([["0", "Normal"], ["1", "Inverted"]], lookInv().x ? "1" : "0", v => { localStorage.setItem("dgboard:invx", v); applyLook(); })),
+      h("div", {class: "row"}, h("span", {style: "min-width:84px;font-size:14px", text: "Up / down"}),
+        segmented([["0", "Normal"], ["1", "Inverted"]], lookInv().y ? "1" : "0", v => { localStorage.setItem("dgboard:invy", v); applyLook(); })),
+      h("p", {class: "hint", text: "Normal: drag right to look right, drag up to look up. Inverted flips that direction. Just for you."})));
     sheet.append(h("div", {class: "section"},
       h("span", {class: "flabel", text: "Room sounds"}),
       segmented([["on", "On"], ["off", "Off"]], roomSoundsOn() ? "on" : "off", v => { localStorage.setItem("dgboard:roomsound", v === "on" ? "1" : "0"); roomAudio().setEnabled(v === "on"); roomAudio().unlock(); }),
@@ -2062,7 +2069,7 @@ async function openExplore(opts = {}) {
   $("#viewBtn").textContent = "Board"; $("#viewBtn").title = "Walk up to the board";
   if (!boardCanvas) { boardCanvas = document.createElement("canvas"); const big = !TOUCH; boardCanvas.width = big ? 2048 : 1400; boardCanvas.height = Math.round(boardCanvas.width * (BOARD.h + TEX_MARGIN * 2) / (BOARD.w + TEX_MARGIN * 2)); }
   if (!R3mods) {
-    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111f")]);
+    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111h")]);
     const addons = {};
     await Promise.all((TOUCH ? ADDONS_PHONE : ADDONS_ALL).map(p => import("three/addons/" + p).then(m => Object.assign(addons, m)).catch(() => {})));
     R3mods = [THREE, mod, addons];
@@ -2071,6 +2078,7 @@ async function openExplore(opts = {}) {
   if (!R3) {
     const [THREE, mod, addons] = R3mods;
     R3 = mod.createRoom(THREE, {canvas: cv, boardCanvas, mobile: TOUCH, addons, audio: roomAudio(), reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, onFocused: closeExplore, onTray: () => openDice()});
+    applyLook();
   }
   R3.setScene(sceneOf(S.meta));
   pushAvatars();
@@ -2147,6 +2155,9 @@ function showRoll(r) {
 // Pick each piece separately (uniform, vest, gear, headgear, face, patches, ID) so no two agents look the same.
 // the room's sound effects (footsteps, dice), made live with Web Audio; browsers only allow sound after a tap or key
 let AUDIO = null;
+// mouse / finger look in the 3D room: inverted or not, per direction (saved on this device)
+const lookInv = () => ({x: localStorage.getItem("dgboard:invx") === "1", y: localStorage.getItem("dgboard:invy") !== "0"});
+const applyLook = () => { const l = lookInv(); R3?.setLookInvert?.(l.x, l.y); };
 const roomSoundsOn = () => localStorage.getItem("dgboard:roomsound") !== "0";
 function roomAudio() { if (!AUDIO) { AUDIO = createAudio(); AUDIO.setEnabled(roomSoundsOn()); } return AUDIO; }
 for (const ev of ["pointerdown", "keydown", "touchend"]) addEventListener(ev, () => AUDIO?.unlock(), {passive: true});
