@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <meta name="theme-color" content="#140d08">
 <title>Evidence Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -731,6 +732,8 @@ function makeLocalStore() {
     async clearBoard(c) { Object.keys(read(c)?.items || {}).forEach(id => localStorage.removeItem(KI(c, id))); mutate(c, st => { st.items = {}; st.links = {}; st.marks = {}; }); },
     async removePlayer(c, pid) { mutate(c, st => { delete st.players?.[pid]; }); },
     presence() { return () => {}; },
+    async setPose() {},
+    async removePose() {},
   };
 }
 
@@ -769,6 +772,7 @@ async function makeFirebaseStore() {
       watch("marks", hd.markAdded, hd.markAdded, hd.markRemoved);
       offs.push(F.onValue(R(c, "players"), s => hd.players(s.val() || {})));
       offs.push(F.onValue(R(c, "meta"), s => hd.meta(s.val())));
+      if (hd.poses) offs.push(F.onValue(R(c, "poses"), s => hd.poses(s.val() || {})));
       return () => offs.forEach(off => off());
     },
     async getImage(c, id) { return (await F.get(R(c, "images/" + id))).val(); },
@@ -787,14 +791,16 @@ async function makeFirebaseStore() {
     updateMeta: (c, patch) => F.update(R(c, "meta"), patch),
     clearBoard: c => F.update(R(c), {items: null, links: null, images: null, marks: null}),
     removePlayer: (c, pid) => F.remove(R(c, "players/" + pid)),
+    setPose: (c, pid, d) => F.set(R(c, "poses/" + pid), d),
+    removePose: (c, pid) => F.remove(R(c, "poses/" + pid)),
     presence(c, pid) {
       const onRef = R(c, "players/" + pid + "/online");
       const off = F.onValue(F.ref(db, ".info/connected"), s => {
-        if (s.val() === true) F.onDisconnect(onRef).set(false).then(() => F.update(R(c, "players/" + pid), {online: true})).catch(() => {});
+        if (s.val() === true) { F.onDisconnect(onRef).set(false).then(() => F.update(R(c, "players/" + pid), {online: true})).catch(() => {}); F.onDisconnect(R(c, "poses/" + pid)).remove().catch(() => {}); }
       });
       return async kicked => {
         off();
-        try { await F.onDisconnect(onRef).cancel(); if (!kicked) await F.set(onRef, false); } catch {}
+        try { await F.onDisconnect(onRef).cancel(); await F.onDisconnect(R(c, "poses/" + pid)).cancel(); await F.remove(R(c, "poses/" + pid)); if (!kicked) await F.set(onRef, false); } catch {}
       };
     },
   };
@@ -1872,7 +1878,9 @@ async function joinRoom() {
   } finally { lobbyBusy(false); }
 }
 /* ---------------- the 3D room ---------------- */
-const THREE_URL = "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+// three.js comes from the import map in <head>; phones skip the heavy effects (ambient occlusion, bloom, grain)
+const ADDONS_ALL = ["environments/RoomEnvironment.js", "geometries/RoundedBoxGeometry.js", "postprocessing/EffectComposer.js", "postprocessing/RenderPass.js", "postprocessing/GTAOPass.js", "postprocessing/UnrealBloomPass.js", "postprocessing/OutputPass.js", "postprocessing/ShaderPass.js"];
+const ADDONS_PHONE = ["environments/RoomEnvironment.js", "geometries/RoundedBoxGeometry.js"];
 const CAN3D = (() => { try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch { return false; } })();
 const BOARD_IMG = {ply: "assets/board-osb.webp", cork: "assets/board-cork-silver.webp", corkwood: "assets/board-cork-wood.webp", white: "assets/board-whiteboard.webp"};
 const TEX_MARGIN = 200; // world units of margin around the board in the painted picture (for items hanging off the edges)
@@ -2006,13 +2014,19 @@ async function openExplore(opts = {}) {
   $("#exploreHint").hidden = false;
   $("#viewBtn").textContent = "Board"; $("#viewBtn").title = "Walk up to the board";
   if (!boardCanvas) { boardCanvas = document.createElement("canvas"); const big = !TOUCH; boardCanvas.width = big ? 2048 : 1400; boardCanvas.height = Math.round(boardCanvas.width * (BOARD.h + TEX_MARGIN * 2) / (BOARD.w + TEX_MARGIN * 2)); }
-  if (!R3mods) R3mods = await Promise.all([import(THREE_URL), import("./room3d.js")]);
+  if (!R3mods) {
+    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js")]);
+    const addons = {};
+    await Promise.all((TOUCH ? ADDONS_PHONE : ADDONS_ALL).map(p => import("three/addons/" + p).then(m => Object.assign(addons, m)).catch(() => {})));
+    R3mods = [THREE, mod, addons];
+  }
   if (!exploring) return;
   if (!R3) {
-    const [THREE, mod] = R3mods;
-    R3 = mod.createRoom(THREE, {canvas: cv, boardCanvas, mobile: TOUCH, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, onFocused: closeExplore});
+    const [THREE, mod, addons] = R3mods;
+    R3 = mod.createRoom(THREE, {canvas: cv, boardCanvas, mobile: TOUCH, addons, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, onFocused: closeExplore});
   }
   R3.setScene(sceneOf(S.meta));
+  pushAvatars();
   await document.fonts?.ready;
   paintBoard();
   if (!worldObserver) { worldObserver = new MutationObserver(queuePaint); worldObserver.observe(world, {subtree: true, childList: true, attributes: true, characterData: true}); }
@@ -2020,6 +2034,27 @@ async function openExplore(opts = {}) {
   if (opts.walkIn) R3.walkIn(); else if (opts.fromBoard) R3.fromBoard(); else R3.toRoom();
 }
 // the camera reached the board: hand over to the normal board view
+// other agents in the same case appear in the 3D room where they're standing (or at the board if they're working on it)
+let poseTimer = null, lastPoseKey = "", lastPoseAt = 0;
+function pushAvatars() {
+  if (!R3) return;
+  const now = Date.now();
+  R3.setAvatars(Object.entries(S.poses || {})
+    .filter(([id, p]) => id !== S.me?.id && p && S.players[id]?.codename && S.players[id]?.online !== false && now - (p.at || 0) < 90000)
+    .map(([id, p]) => ({id, name: S.players[id].codename, color: colorHex(S.players[id].color), pose: p})));
+}
+function startPoseSync() {
+  clearInterval(poseTimer);
+  lastPoseKey = ""; lastPoseAt = 0;
+  poseTimer = setInterval(() => {
+    if (!S.code || !S.me || !S.store.online) return;
+    const p = exploring && R3 ? R3.getPose() : {mode: "board"}, key = JSON.stringify(p), now = Date.now();
+    if (key === lastPoseKey && now - lastPoseAt < 20000) return;
+    lastPoseKey = key; lastPoseAt = now;
+    S.store.setPose(S.code, S.me.id, {...p, at: now}).catch(() => {});
+  }, 300);
+}
+function stopPoseSync() { clearInterval(poseTimer); poseTimer = null; if (S.code && S.me) S.store.removePose?.(S.code, S.me.id).catch(() => {}); }
 function closeExplore() {
   if (!exploring) return;
   fitView("board");
@@ -2064,11 +2099,13 @@ function enterRoom(code, me) {
     markAdded: renderMark, markRemoved: removeMarkEl,
     players: p => {
       S.players = p || {};
-      renderAgents(); refreshPins();
+      renderAgents(); refreshPins(); pushAvatars();
       if (S.me && !(S.players[S.me.id] && S.players[S.me.id].codename)) leaveRoom("The Handler removed you from this case.", true);
     },
     meta: m => { if (m) { S.meta = m; applyScene(); renderAgents(); } },
+    poses: p => { S.poses = p || {}; pushAvatars(); },
   });
+  startPoseSync();
   S.unpresence = S.store.presence(code, me.id);
   setTimeout(() => { if (!S.viewTouched && !exploring) fitView(innerWidth >= 700 ? "board" : undefined, true); }, 2750); // after the walk-in, re-frame once items have loaded
   if (S.wake) keepAwake(true);
@@ -2077,6 +2114,7 @@ function enterRoom(code, me) {
 function leaveRoom(msg, kicked = false) {
   keepAwake(false);
   exploring = false; $("#app").classList.remove("exploring"); $("#room3d").hidden = true; $("#exploreHint").hidden = true;
+  stopPoseSync();
   R3?.dispose(); R3 = null;
   $("#tip").hidden = true;
   S.unsub?.(); S.unsub = null;

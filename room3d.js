@@ -24,9 +24,9 @@ const STYLES = {
 };
 
 export function createRoom(THREE, opts) {
-  const {canvas, boardCanvas, mobile, onFocused, reducedMotion} = opts;
+  const {canvas, boardCanvas, mobile, onFocused, reducedMotion, addons = {}} = opts;
   const renderer = new THREE.WebGLRenderer({canvas, antialias: !mobile, powerPreference: mobile ? "low-power" : "high-performance"});
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : addons.EffectComposer ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -35,6 +35,27 @@ export function createRoom(THREE, opts) {
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, 1, 0.05, 40);
+  // soft reflections for metal, glass and polished wood
+  if (addons.RoomEnvironment) { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new addons.RoomEnvironment(), 0.04).texture; pm.dispose(); }
+  // computers: ambient occlusion (contact shadows), bloom around lights, film grain and vignette
+  let composer = null, grainPass = null;
+  if (!mobile && addons.EffectComposer && addons.RenderPass) {
+    composer = new addons.EffectComposer(renderer);
+    composer.addPass(new addons.RenderPass(scene, camera));
+    if (addons.GTAOPass) { const ao = new addons.GTAOPass(scene, camera, 1, 1); ao.blendIntensity = 1; ao.updateGtaoMaterial?.({radius: 0.4, distanceExponent: 1.4, thickness: 1.2, scale: 1.1}); composer.addPass(ao); }
+    if (addons.UnrealBloomPass) composer.addPass(new addons.UnrealBloomPass(new THREE.Vector2(256, 256), 0.18, 0.4, 0.97));
+    if (addons.OutputPass) composer.addPass(new addons.OutputPass());
+    if (addons.ShaderPass) {
+      grainPass = new addons.ShaderPass({
+        uniforms: {tDiffuse: {value: null}, time: {value: 0}, amount: {value: 0.04}, vig: {value: 0.38}},
+        vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+        fragmentShader: "uniform sampler2D tDiffuse; uniform float time, amount, vig; varying vec2 vUv;\n" +
+          "float rnd(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + time) * 43758.5453); }\n" +
+          "void main(){ vec4 c = texture2D(tDiffuse, vUv); c.rgb += (rnd(vUv * 1000.0) - 0.5) * amount; float d = distance(vUv, vec2(0.5)); c.rgb *= 1.0 - vig * smoothstep(0.35, 0.85, d); gl_FragColor = c; }",
+      });
+      composer.addPass(grainPass);
+    }
+  }
   camera.rotation.order = "YXZ";
   const loader = new THREE.TextureLoader();
   const texCache = new Map(), disposables = [];
@@ -46,9 +67,9 @@ export function createRoom(THREE, opts) {
     t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = Math.min(8, maxAniso);
     texCache.set(key, t); return t;
   };
-  const mat = (o) => { const m = new THREE.MeshStandardMaterial(o); disposables.push(m); return m; };
+  const mat = (o) => { const m = new THREE.MeshStandardMaterial({envMapIntensity: 0.35, ...o}); disposables.push(m); return m; };
   const box = (w, h, d, material, x, y, z, parent = scene) => {
-    const g = new THREE.BoxGeometry(w, h, d); disposables.push(g);
+    const r = Math.min(w, h, d), g = addons.RoundedBoxGeometry && r > 0.035 ? new addons.RoundedBoxGeometry(w, h, d, 2, Math.min(0.012, r * 0.2)) : new THREE.BoxGeometry(w, h, d); disposables.push(g);
     const m = new THREE.Mesh(g, material); m.position.set(x, y, z); m.castShadow = m.receiveShadow = !mobile; parent.add(m); return m;
   };
   const plane = (w, h, material) => { const g = new THREE.PlaneGeometry(w, h); disposables.push(g); const m = new THREE.Mesh(g, material); m.receiveShadow = !mobile; return m; };
@@ -60,7 +81,7 @@ export function createRoom(THREE, opts) {
     if (key === styleKey) return; styleKey = key;
     shell.clear();
     const st = STYLES[key] || STYLES.office;
-    const surf = ([url, tint, tile], w, h, rough = 0.92) => mat({map: tex(url, w / tile, h / tile), color: tint, roughness: rough});
+    const surf = ([url, tint, tile], w, h, rough = 0.92) => { const t = tex(url, w / tile, h / tile); return mat({map: t, bumpMap: t, bumpScale: 1.6, color: tint, roughness: rough}); };
     const wallM = surf(st.wall, ROOM.w, ROOM.h), sideM = surf(st.wall, ROOM.d, ROOM.h), floorM = surf(st.floor, ROOM.w, ROOM.d, 0.8), ceilM = surf(st.ceil, ROOM.w, ROOM.d);
     const back = plane(ROOM.w, ROOM.h, wallM); back.position.set(0, ROOM.h / 2, -ROOM.d / 2); shell.add(back);
     const front = plane(ROOM.w, ROOM.h, wallM); front.position.set(0, ROOM.h / 2, ROOM.d / 2); front.rotation.y = Math.PI; shell.add(front);
@@ -102,14 +123,21 @@ export function createRoom(THREE, opts) {
 
   // ---------- furniture kit ----------
   const furn = new THREE.Group(); scene.add(furn);
-  const flickers = [];
+  const flickers = [], facers = [];
+  let shadowBulb = null;
+  // dust drifting in the light
+  const DUST = mobile ? 90 : 200, dustBase = new Float32Array(DUST * 3), dustPos = new Float32Array(DUST * 3);
+  for (let i = 0; i < DUST; i++) { dustBase[i * 3] = (Math.random() - 0.5) * 4.4; dustBase[i * 3 + 1] = 0.4 + Math.random() * 2.3; dustBase[i * 3 + 2] = -2.85 + Math.random() * 3.3; }
+  const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3)); disposables.push(dustGeo);
+  const dustMat = new THREE.PointsMaterial({color: 0xffe6c0, size: 0.005, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending}); disposables.push(dustMat);
+  const dust = new THREE.Points(dustGeo, dustMat); dust.frustumCulled = false; scene.add(dust);
   const W2 = ROOM.w / 2, D2 = ROOM.d / 2;
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const M = {
-    wood: () => mat({map: tex("assets/desk-wood.webp", 1, 1), color: 0x7a5a42, roughness: 0.55}),
-    darkWood: () => mat({map: tex("assets/desk-wood.webp", 1, 1), color: 0x4a3222, roughness: 0.55}),
-    rough: () => mat({map: tex("assets/t-floor-cabin.webp", 1, 1), color: 0xb09a84, roughness: 0.9}),
+    wood: () => { const t = tex("assets/desk-wood.webp", 1, 1); return mat({map: t, bumpMap: t, bumpScale: 0.5, color: 0x7a5a42, roughness: 0.5}); },
+    darkWood: () => { const t = tex("assets/desk-wood.webp", 1, 1); return mat({map: t, bumpMap: t, bumpScale: 0.5, color: 0x4a3222, roughness: 0.5}); },
+    rough: () => { const t = tex("assets/t-floor-cabin.webp", 1, 1); return mat({map: t, bumpMap: t, bumpScale: 1.2, color: 0xb09a84, roughness: 0.9}); },
     metal: (c = 0x4c544a) => mat({color: c, metalness: 0.45, roughness: 0.55}),
     paint: (c, r = 0.7) => mat({color: c, roughness: r}),
     glow: (c) => { const m = new THREE.MeshBasicMaterial({color: c}); disposables.push(m); return m; },
@@ -120,7 +148,7 @@ export function createRoom(THREE, opts) {
     cyl(rt, rb, h, m, x, y, z, seg = 18) { const g = new THREE.CylinderGeometry(rt, rb, h, seg); disposables.push(g); const c = new THREE.Mesh(g, m); c.position.set(x, y, z); c.castShadow = c.receiveShadow = !mobile; furn.add(c); return c; },
     canvasTex(w, h, draw) { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; disposables.push(t); return t; },
     // a flat cut-out photo standing up (props), or lying down on a surface
-    stand(url, w, h, x, yBottom, z, ry = 0) { const p = plane(w, h, mat({map: tex(url), transparent: true, alphaTest: 0.45, roughness: 0.6, side: THREE.DoubleSide})); p.position.set(x, yBottom + h / 2, z); p.rotation.y = ry; p.castShadow = !mobile; furn.add(p); return p; },
+    stand(url, w, h, x, yBottom, z, ry = 0) { const p = plane(w, h, mat({map: tex(url), transparent: true, alphaTest: 0.45, roughness: 0.6, side: THREE.DoubleSide})); p.position.set(x, yBottom + h / 2, z); p.rotation.y = ry; p.castShadow = !mobile; furn.add(p); facers.push(p); return p; },
     lay(map, w, h, x, y, z, rz = 0, transparent = true) { const p = plane(w, h, mat({map, transparent, alphaTest: transparent ? 0.3 : 0, roughness: 0.85, side: THREE.DoubleSide})); p.position.set(x, y, z); p.rotation.set(-Math.PI / 2, 0, rz); furn.add(p); return p; },
     onWall(map, wall, z, y, w, h, opts = {}) {
       const m = opts.basic ? new THREE.MeshBasicMaterial({map}) : mat({map, roughness: 0.6}); if (opts.basic) disposables.push(m);
@@ -199,7 +227,9 @@ export function createRoom(THREE, opts) {
       const s = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 12), M.glow(0xfff1d0)); s.position.set(x, y, z); furn.add(s);
       const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, ROOM.h - y), M.glow(0x111111)); cord.position.set(x, (ROOM.h + y) / 2, z); furn.add(cord);
       if (cage) { const cm = M.metal(0x222222); for (let i = 0; i < 4; i++) { const r = B.cyl(0.004, 0.004, 0.16, cm, x + Math.cos(i * Math.PI / 2) * 0.07, y, z + Math.sin(i * Math.PI / 2) * 0.07, 6); void r; } B.cyl(0.08, 0.06, 0.02, cm, x, y + 0.08, z); }
-      const l = new THREE.PointLight(color, power, 0, 1.7); l.position.set(x, y - 0.06, z); furn.add(l); return l;
+      const l = new THREE.PointLight(color, power, 0, 1.7); l.position.set(x, y - 0.06, z); furn.add(l);
+      if (!mobile && !shadowBulb) { shadowBulb = l; l.castShadow = true; l.shadow.mapSize.set(512, 512); l.shadow.bias = -0.003; l.shadow.radius = 4; l.shadow.camera.near = 0.1; }
+      return l;
     },
     tube(x, z, power = 9) { B.box(1.2, 0.04, 0.08, M.glow(0xeef6ff), x, ROOM.h - 0.08, z); B.box(1.24, 0.03, 0.12, M.metal(0x555555), x, ROOM.h - 0.04, z); const l = new THREE.PointLight(0xdfeeff, power, 0, 1.6); l.position.set(x, ROOM.h - 0.3, z); furn.add(l); flickers.push({l, base: power, kind: "tube"}); },
     floorLamp(x, z, power = 9) { const m = M.metal(0x2a2622); B.cyl(0.14, 0.16, 0.03, m, x, 0.015, z); B.cyl(0.012, 0.012, 1.5, m, x, 0.76, z, 8); B.cyl(0.13, 0.22, 0.26, mat({color: 0xe8d2a8, emissive: 0x8a6030, emissiveIntensity: 0.6, roughness: 0.8, side: THREE.DoubleSide}), x, 1.58, z); const l = new THREE.PointLight(0xffc27a, power, 0, 1.7); l.position.set(x, 1.5, z); furn.add(l); },
@@ -306,7 +336,7 @@ export function createRoom(THREE, opts) {
     },
   };
   function furnish(key) {
-    furn.clear(); flickers.length = 0; ambientK = 1; seed = 7;
+    furn.clear(); flickers.length = 0; facers.length = 0; shadowBulb = null; ambientK = 1; seed = 7;
     (LAYOUTS[key] || LAYOUTS.office)();
     setLight(lightMode);
   }
@@ -318,6 +348,7 @@ export function createRoom(THREE, opts) {
   function resize() {
     const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
     renderer.setSize(w, h, false);
+    if (composer) { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); }
     camera.aspect = w / h;
     fovBase = camera.aspect < 0.8 ? 74 : 60; // taller field of view on portrait phones
     if (!anim) camera.fov = fovBase;
@@ -399,10 +430,62 @@ export function createRoom(THREE, opts) {
       pose.x = THREE.MathUtils.clamp(pose.x, -2.5, 2.5); pose.z = THREE.MathUtils.clamp(pose.z, -1.75, 2.5);
       applyPose();
     }
-    renderer.render(scene, camera);
+    else applyPose(Math.sin(now * 0.0011) * 0.004); // a little breathing while you stand still
+    stepAvatars(dt);
+    for (const p of facers) p.rotation.y = Math.atan2(camera.position.x - p.position.x, camera.position.z - p.position.z);
+    const tt = now * 0.0001;
+    for (let i = 0; i < DUST; i++) { const k = i * 3; dustPos[k] = dustBase[k] + Math.sin(tt * 3 + i) * 0.15; dustPos[k + 1] = dustBase[k + 1] + Math.sin(tt * 2 + i * 1.7) * 0.12; dustPos[k + 2] = dustBase[k + 2] + Math.cos(tt * 2.5 + i * 0.7) * 0.15; }
+    dustGeo.attributes.position.needsUpdate = true;
+    if (grainPass) grainPass.uniforms.time.value = (now * 0.001) % 100;
+    if (composer) {
+      composer.render();
+      if (avatars.size) { renderer.setRenderTarget(null); renderer.autoClear = false; renderer.clearDepth(); camera.layers.set(1); renderer.render(scene, camera); camera.layers.set(0); renderer.autoClear = true; }
+    } else renderer.render(scene, camera);
   }
 
   // ---------- public API ----------
+  // ---------- other agents in the case ----------
+  const avatars = new Map();
+  const labelTex = (name, hex) => B.canvasTex(256, 64, (c, cw, ch) => { c.fillStyle = "rgba(20,13,8,.78)"; c.beginPath(); c.roundRect(4, 8, cw - 8, ch - 16, 22); c.fill(); c.fillStyle = hex; c.beginPath(); c.arc(30, ch / 2, 9, 0, Math.PI * 2); c.fill(); c.fillStyle = "#efe3c6"; c.font = '26px "Special Elite", monospace'; c.textBaseline = "middle"; c.fillText(String(name).slice(0, 14), 50, ch / 2 + 1); });
+  function makeAvatar(a) {
+    const g = new THREE.Group(), coat = mat({color: a.color, roughness: 0.75}), dark = mat({color: 0x23201c, roughness: 0.6}), skin = mat({color: 0xc9a07c, roughness: 0.7});
+    const part = (geo, m, x, y, z) => { disposables.push(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = !mobile; g.add(o); return o; };
+    part(new THREE.CapsuleGeometry(0.19, 0.62, 4, 14), coat, 0, 1.0, 0);                 // trench coat
+    part(new THREE.CylinderGeometry(0.07, 0.065, 0.62, 10), dark, -0.09, 0.31, 0);       // legs
+    part(new THREE.CylinderGeometry(0.07, 0.065, 0.62, 10), dark, 0.09, 0.31, 0);
+    part(new THREE.SphereGeometry(0.12, 18, 14), skin, 0, 1.56, 0);                      // head
+    part(new THREE.CylinderGeometry(0.22, 0.22, 0.015, 24), dark, 0, 1.655, 0);          // fedora brim
+    part(new THREE.CylinderGeometry(0.115, 0.13, 0.11, 20), dark, 0, 1.715, 0);          // fedora crown
+    part(new THREE.CylinderGeometry(0.132, 0.132, 0.025, 20), coat, 0, 1.675, 0);        // hat band in their colour
+    part(new THREE.SphereGeometry(0.016, 8, 6), dark, -0.04, 1.58, -0.11);               // eyes (facing where they look)
+    part(new THREE.SphereGeometry(0.016, 8, 6), dark, 0.04, 1.58, -0.11);
+    const sm = new THREE.SpriteMaterial({map: labelTex(a.name, a.color), depthWrite: false, transparent: true, toneMapped: !composer}); disposables.push(sm);
+    const label = new THREE.Sprite(sm); label.scale.set(0.62, 0.155, 1); label.position.y = 2.0; g.add(label);
+    if (composer) label.layers.set(1); // drawn after the effects (ambient occlusion can't handle sprites)
+    scene.add(g);
+    return {g, name: a.name, color: a.color, target: {x: 0, z: 0, yaw: 0}, placed: false};
+  }
+  function setAvatars(list) {
+    const seen = new Set();
+    const atBoard = list.filter(a => a.pose.mode !== "room");
+    for (const a of list) {
+      seen.add(a.id);
+      let av = avatars.get(a.id);
+      if (av && (av.name !== a.name || av.color !== a.color)) { scene.remove(av.g); avatars.delete(a.id); av = null; }
+      if (!av) { av = makeAvatar(a); avatars.set(a.id, av); }
+      if (a.pose.mode === "room") av.target = {x: +a.pose.x || 0, z: +a.pose.z || 0, yaw: +a.pose.yaw || 0};
+      else { const i = atBoard.indexOf(a); av.target = {x: -0.9 + i * 0.6, z: -1.55, yaw: 0}; } // working on the board: standing in front of it
+      if (!av.placed) { av.g.position.set(av.target.x, 0, av.target.z); av.g.rotation.y = av.target.yaw; av.placed = true; }
+    }
+    for (const [id, av] of avatars) if (!seen.has(id)) { scene.remove(av.g); avatars.delete(id); }
+  }
+  function stepAvatars(dt) {
+    const k = Math.min(1, dt * 7);
+    for (const av of avatars.values()) {
+      av.g.position.x += (av.target.x - av.g.position.x) * k; av.g.position.z += (av.target.z - av.g.position.z) * k;
+      const d = ((av.target.yaw - av.g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI; av.g.rotation.y += d * k;
+    }
+  }
   function focusBoard() {
     if (anim) return;
     moveTo(focusPose(), 1100, {done: () => onFocused?.()});
@@ -414,6 +497,8 @@ export function createRoom(THREE, opts) {
     toRoom() { moveTo(ROOM_POSE, 900); },
     fromBoard() { resize(); Object.assign(pose, focusPose()); applyPose(); moveTo(ROOM_POSE, 1100); },
     focusBoard,
+    setAvatars,
+    getPose() { return {mode: "room", x: +pose.x.toFixed(2), z: +pose.z.toFixed(2), yaw: +pose.yaw.toFixed(2)}; },
     lookFrom(x, y, z, yaw, pitch) { anim = null; Object.assign(pose, {x, y, z, yaw, pitch}); applyPose(); },
     start() { if (running) return; running = true; resize(); applyPose(); last = performance.now(); renderer.setAnimationLoop(frame); },
     stop() { running = false; keys.clear(); renderer.setAnimationLoop(null); },
@@ -426,6 +511,7 @@ export function createRoom(THREE, opts) {
       boardTex.dispose();
       for (const d of disposables) d.dispose?.();
       scene.traverse(o => { o.geometry?.dispose?.(); });
+      composer?.dispose?.();
       renderer.dispose();
     },
   };
