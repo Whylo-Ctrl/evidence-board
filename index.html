@@ -582,7 +582,7 @@ button{cursor:pointer;touch-action:manipulation}
 <noscript><p style="color:#fff;padding:20px">The evidence board needs JavaScript turned on.</p></noscript>
 
 <script type="module">
-import * as A from "./agent3d.js";
+import * as A from "./agent3d.js?v=20261111b";
 /* ==========================================================
    PASTE YOUR FIREBASE SETTINGS HERE  (see README.md)
    The board only needs databaseURL. Clear it to use practice mode.
@@ -2057,7 +2057,7 @@ async function openExplore(opts = {}) {
   $("#viewBtn").textContent = "Board"; $("#viewBtn").title = "Walk up to the board";
   if (!boardCanvas) { boardCanvas = document.createElement("canvas"); const big = !TOUCH; boardCanvas.width = big ? 2048 : 1400; boardCanvas.height = Math.round(boardCanvas.width * (BOARD.h + TEX_MARGIN * 2) / (BOARD.w + TEX_MARGIN * 2)); }
   if (!R3mods) {
-    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js")]);
+    const [THREE, mod] = await Promise.all([import("three"), import("./room3d.js?v=20261111b")]);
     const addons = {};
     await Promise.all((TOUCH ? ADDONS_PHONE : ADDONS_ALL).map(p => import("three/addons/" + p).then(m => Object.assign(addons, m)).catch(() => {})));
     R3mods = [THREE, mod, addons];
