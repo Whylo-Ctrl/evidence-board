@@ -9,18 +9,19 @@ const ROOM_POSE = {x: 0, y: 1.62, z: 1.35, yaw: 0, pitch: -0.03};
 const DOOR_POSE = {x: 0.35, y: 1.5, z: 2.7, yaw: 0.16, pitch: -0.02};
 
 // per-room materials: textures cut from the room photos, tinted to taste
+// per-room surfaces: real tileable materials (CC0, Poly Haven) as [material, tint, metres per tile]
 const STYLES = {
-  office:     {wall: ["assets/wall-plaster.webp", 0x9aa4ad, 1.2], floor: ["assets/desk-wood.webp", 0x8a7060, 1.4], ceil: ["assets/wall-plaster.webp", 0x55595e, 1.5]},
-  den:        {wall: ["assets/t-wall-cabin.webp", 0x8a6040, 1.6], floor: ["assets/desk-wood.webp", 0x9a7a60, 1.4], ceil: ["assets/t-wall-cabin.webp", 0x5a4030, 1.8]},
-  archive:    {wall: ["assets/t-wall-cabin.webp", 0x5a4535, 1.6], floor: ["assets/desk-wood.webp", 0x705545, 1.4], ceil: ["assets/t-wall-cabin.webp", 0x3a2c22, 1.8]},
-  precinct:   {wall: ["assets/t-wall-brick.webp", 0x8a6248, 1.3], floor: ["assets/t-floor-concrete.webp", 0x6a625a, 2], ceil: ["assets/t-ceil-beams.webp", 0x4a4038, 2], bulbs: 3},
-  tabletop:   {wall: ["assets/wall-plaster.webp", 0x6a5a4a, 1.2], floor: ["assets/desk-wood.webp", 0x8a6a50, 1.4], ceil: ["assets/wall-plaster.webp", 0x40362e, 1.5]},
-  cabin:      {wall: ["assets/t-wall-cabin.webp", 0xffffff, 1.6], floor: ["assets/t-floor-cabin.webp", 0xd8c8b8, 1.6], ceil: ["assets/t-wall-cabin.webp", 0xa09080, 1.8]},
-  cozy:       {wall: ["assets/t-wall-cozy.webp", 0xffffff, 1.4], floor: ["assets/desk-wood.webp", 0xc8a888, 1.4], ceil: ["assets/t-wall-cozy.webp", 0xc0b0a0, 1.6]},
-  workshop:   {wall: ["assets/t-wall-workshop.webp", 0xd8d8d8, 1.4], floor: ["assets/t-floor-concrete.webp", 0x6a6660, 2], ceil: ["assets/t-ceil-beams.webp", 0x55504a, 2]},
-  industrial: {wall: ["assets/t-wall-industrial.webp", 0xffffff, 1.6], floor: ["assets/t-floor-concrete.webp", 0x9a9690, 2], ceil: ["assets/t-ceil-beams.webp", 0x8a8a8a, 2]},
-  brick:      {wall: ["assets/t-wall-brick.webp", 0xffffff, 1.3], floor: ["assets/t-floor-concrete.webp", 0xc8c4be, 2], ceil: ["assets/t-ceil-beams.webp", 0xe0e0e0, 2]},
-  garage:     {wall: ["assets/t-wall-garage.webp", 0xffffff, 1.5], floor: ["assets/t-floor-garage.webp", 0xd0c8c0, 1.6], ceil: ["assets/t-ceil-beams.webp", 0x8a8070, 2]},
+  office:     {wall: ["grey_plaster_02", 0x8a929a, 2.0], floor: ["dark_wooden_planks", 0xffffff, 2.0], ceil: ["grey_plaster", 0x6a6e72, 2.5]},
+  den:        {wall: ["dark_paneled_wood", 0xffffff, 2.0], floor: ["herringbone_parquet", 0xffffff, 1.6], ceil: ["grey_plaster", 0x8a8070, 2.5]},
+  archive:    {wall: ["concrete_wall_004", 0xb0aaa0, 2.5], floor: ["linoleum_brown", 0xffffff, 2.0], ceil: ["grey_plaster", 0x707070, 2.5]},
+  precinct:   {wall: ["brick_wall_13", 0xffffff, 1.6], floor: ["linoleum_brown", 0xffffff, 2.0], ceil: ["grey_plaster", 0x6a6058, 2.5]},
+  tabletop:   {wall: ["brown_planks_07", 0xb0a090, 2.0], floor: ["dark_wooden_planks", 0xffffff, 2.0], ceil: ["brown_planks_07", 0x806a58, 2.0]},
+  cabin:      {wall: ["distressed_painted_planks", 0xffffff, 2.0], floor: ["dark_wooden_planks", 0xffffff, 2.0], ceil: ["brown_planks_07", 0xa08a78, 2.0]},
+  cozy:       {wall: ["beige_wall_001", 0xffffff, 2.5], floor: ["herringbone_parquet", 0xffffff, 1.6], ceil: ["beige_wall_001", 0xd8d0c8, 2.5]},
+  workshop:   {wall: ["concrete_block_wall", 0xb8b4ae, 2.4], floor: ["garage_floor", 0xffffff, 2.5], ceil: ["concrete_wall_004", 0x8a8680, 2.5]},
+  industrial: {wall: ["blue_plaster_weathered", 0xffffff, 2.5], floor: ["concrete_floor_worn_001", 0xffffff, 2.5], ceil: ["corrugated_iron", 0x9a9a9a, 1.5]},
+  brick:      {wall: ["castle_brick_02_white", 0xffffff, 2.0], floor: ["concrete_floor_worn_001", 0xd8d8d8, 2.5], ceil: ["grey_plaster", 0xf0f0f0, 2.5]},
+  garage:     {wall: ["concrete_wall_004", 0xd0ccc4, 2.5], floor: ["garage_floor", 0xffffff, 2.5], ceil: ["corrugated_iron", 0x8a8070, 1.5]},
 };
 
 export function createRoom(THREE, opts) {
@@ -60,11 +61,11 @@ export function createRoom(THREE, opts) {
   const loader = new THREE.TextureLoader();
   const texCache = new Map(), disposables = [];
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
-  const tex = (url, rx = 1, ry = 1) => {
-    const key = url + rx + "x" + ry;
+  const tex = (url, rx = 1, ry = 1, opt = {}) => {
+    const key = url + rx + "x" + ry + (opt.data ? "d" : "") + (opt.repeat ? "r" : "");
     if (texCache.has(key)) return texCache.get(key);
     const t = loader.load(url);
-    t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = Math.min(8, maxAniso);
+    t.colorSpace = opt.data ? THREE.NoColorSpace : THREE.SRGBColorSpace; t.wrapS = t.wrapT = opt.repeat ? THREE.RepeatWrapping : THREE.MirroredRepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = Math.min(8, maxAniso);
     texCache.set(key, t); return t;
   };
   const mat = (o) => { const m = new THREE.MeshStandardMaterial({envMapIntensity: 0.35, ...o}); disposables.push(m); return m; };
@@ -81,8 +82,14 @@ export function createRoom(THREE, opts) {
     if (key === styleKey) return; styleKey = key;
     shell.clear();
     const st = STYLES[key] || STYLES.office;
-    const surf = ([url, tint, tile], w, h, rough = 0.92) => { const t = tex(url, w / tile, h / tile); return mat({map: t, bumpMap: t, bumpScale: 1.6, color: tint, roughness: rough}); };
-    const wallM = surf(st.wall, ROOM.w, ROOM.h), sideM = surf(st.wall, ROOM.d, ROOM.h), floorM = surf(st.floor, ROOM.w, ROOM.d, 0.8), ceilM = surf(st.ceil, ROOM.w, ROOM.d);
+    // colour + (computers) normal and roughness maps for real surface depth
+    const surf = ([id, tint, tile], w, h) => {
+      const rx = w / tile, ry = h / tile, base = `assets/pbr/${id}`;
+      const o = {map: tex(`${base}_diff.jpg`, rx, ry, {repeat: true}), color: tint, roughness: 1};
+      if (!mobile) { o.normalMap = tex(`${base}_nor.jpg`, rx, ry, {repeat: true, data: true}); o.roughnessMap = tex(`${base}_rough.jpg`, rx, ry, {repeat: true, data: true}); }
+      return mat(o);
+    };
+    const wallM = surf(st.wall, ROOM.w, ROOM.h), sideM = surf(st.wall, ROOM.d, ROOM.h), floorM = surf(st.floor, ROOM.w, ROOM.d), ceilM = surf(st.ceil, ROOM.w, ROOM.d);
     const back = plane(ROOM.w, ROOM.h, wallM); back.position.set(0, ROOM.h / 2, -ROOM.d / 2); shell.add(back);
     const front = plane(ROOM.w, ROOM.h, wallM); front.position.set(0, ROOM.h / 2, ROOM.d / 2); front.rotation.y = Math.PI; shell.add(front);
     const left = plane(ROOM.d, ROOM.h, sideM); left.position.set(-ROOM.w / 2, ROOM.h / 2, 0); left.rotation.y = Math.PI / 2; shell.add(left);
@@ -273,6 +280,81 @@ export function createRoom(THREE, opts) {
     stain(x, z, s = 0.9) { const t = B.canvasTex(128, 128, (c, cw, ch) => { const g = c.createRadialGradient(64, 64, 4, 64, 64, 62); g.addColorStop(0, "rgba(10,8,6,.7)"); g.addColorStop(1, "rgba(10,8,6,0)"); c.fillStyle = g; c.fillRect(0, 0, cw, ch); }); B.lay(t, s, s * 0.7, x, 0.005, z, rnd() * 3); },
   };
 
+
+  // ---------- real 3D furniture (CC0 models from Poly Haven), computers only ----------
+  // Each piece loads its model, sized to fit; if a model can't load, the simple shape is built instead.
+  const USE_MODELS = !mobile && !!addons.GLTFLoader;
+  const gltfLoader = USE_MODELS ? new addons.GLTFLoader() : null;
+  const modelCache = new Map();
+  const loadModel = id => { if (!modelCache.has(id)) modelCache.set(id, new Promise((ok, bad) => gltfLoader.load(`assets/models/${id}.glb`, g => ok(g.scene), undefined, bad))); return modelCache.get(id); };
+  let furnishGen = 0, curRoom = "office";
+  // which way each model faces by default (radians added so its front faces +z, toward the middle of the room)
+  const FRONT = {};
+  B.model = (id, o, fallback) => {
+    if (!USE_MODELS) { fallback?.(); return; }
+    const gen = furnishGen;
+    loadModel(id).then(src => {
+      if (gen !== furnishGen) return; // the room changed while it loaded
+      const m = src.clone(true);
+      if (o.pre) m.rotation.set(...o.pre); // turn the model before measuring it (e.g. lay a tyre flat)
+      m.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; if (c.material && "envMapIntensity" in c.material) c.material.envMapIntensity = 0.5; } });
+      const bb = new THREE.Box3().setFromObject(m), size = bb.getSize(new THREE.Vector3()), ctr = bb.getCenter(new THREE.Vector3());
+      const inner = new THREE.Group(), holder = new THREE.Group();
+      m.position.x -= ctr.x; m.position.y -= bb.min.y; m.position.z -= ctr.z; inner.add(m); holder.add(inner);
+      let fx = size.x, fz = size.z;
+      inner.rotation.y = FRONT[id] || 0;
+      if (o.box) { // exact footprint and height (tables)
+        const [w, h, d] = o.box;
+        if ((w > d) !== (fx > fz)) { inner.rotation.y += Math.PI / 2; [fx, fz] = [fz, fx]; }
+        holder.scale.set(w / fx, h / size.y, d / fz);
+      } else {
+        const k = o.h ? o.h / size.y : o.w ? o.w / Math.max(fx, fz) : 1;
+        holder.scale.setScalar(k);
+        if (o.top != null) o.y = o.top - size.y * k;
+      }
+      holder.position.set(o.x, o.y || 0, o.z); holder.rotation.y = o.ry || 0;
+      if (o.rx) holder.rotation.x = o.rx;
+      furn.add(holder);
+    }).catch(() => { if (gen === furnishGen) fallback?.(); });
+  };
+  if (USE_MODELS) {
+    const orig = {...B}, none = () => new THREE.Group();
+    const DESKS = {office: "metal_office_desk", den: "WoodenTable_03", cozy: "WoodenTable_03", cabin: "WoodenTable_03", tabletop: "WoodenTable_03", archive: "metal_office_desk", precinct: "metal_office_desk"};
+    B.desk = (x, z, w, d, m, top = 0.76, legsM = m) => { const id = DESKS[curRoom]; if (!id) return orig.desk(x, z, w, d, m, top, legsM); B.model(id, {x, z, box: [w, top, d]}, () => orig.desk(x, z, w, d, m, top, legsM)); return top; };
+    B.chair = (x, z, ry, color) => { if (curRoom === "industrial") return orig.chair(x, z, ry, color); B.model("painted_wooden_chair_01", {x, z, ry: ry + Math.PI, h: 0.92}, () => orig.chair(x, z, ry, color)); return none(); };
+    B.stool = (x, z, m) => B.model(curRoom === "cabin" || curRoom === "tabletop" ? "wooden_stool_01" : "metal_stool_01", {x, z, h: 0.66}, () => orig.stool(x, z, m));
+    B.armchair = (x, z, ry, color) => { B.model("ArmChair_01", {x, z, ry: ry + Math.PI, h: 0.95}, () => orig.armchair(x, z, ry, color)); return none(); };
+    B.shelf = (x, z, ry, books, m) => { B.model("wooden_bookshelf_worn", {x, z, ry, h: 1.95}, () => orig.shelf(x, z, ry, books, m)); return none(); };
+    B.stand = (url, w, h, x, yBottom, z, ry = 0) => { if (url.includes("prop-lamp")) { B.model("desk_lamp_arm_01", {x: x - 0.2, y: yBottom, z: z - 0.24, ry: 0.5, h: 0.55}, () => orig.stand(url, w, h, x, yBottom, z, ry)); return none(); } return orig.stand(url, w, h, x, yBottom, z, ry); };
+    B.lantern = (x, y, z) => { B.model("Lantern_01", {x, y, z, h: 0.32}, () => orig.lantern(x, y, z)); const l = new THREE.PointLight(0xffa850, 4, 0, 1.8); l.position.set(x, y + 0.16, z + 0.08); furn.add(l); flickers.push({l, base: 4, kind: "fire"}); };
+    B.stove = (x, z) => { B.model("barrel_stove", {x, z, h: 1.05}, () => orig.stove(x, z)); const l = new THREE.PointLight(0xff8a30, 6, 0, 1.8); l.position.set(x, 0.45, z + 0.55); furn.add(l); flickers.push({l, base: 6, kind: "fire"}); };
+    B.crate = (x, y, z, s = 0.5, ry = 0) => { B.model(rnd() < 0.5 ? "wooden_crate_01" : "wooden_crate_02", {x, y, z, ry, h: s}, () => orig.crate(x, y, z, s, ry)); return none(); };
+    B.barrel = (x, z, color) => B.model(rnd() < 0.5 ? "Barrel_01" : "barrel_03", {x, z, ry: rnd() * 6, h: 0.9}, () => orig.barrel(x, z, color));
+    B.metalShelf = (x, z, ry) => { B.model("steel_frame_shelves_01", {x, z, ry, h: 1.9}, () => orig.metalShelf(x, z, ry)); return none(); };
+    B.toolchest = (x, z, ry = 0) => { B.model("metal_tool_chest", {x, z, ry, h: 1.05}, () => orig.toolchest(x, z, ry)); return none(); };
+    B.vise = (x, y, z) => B.model("bench_vice_01", {x, y, z, w: 0.26}, () => orig.vise(x, y, z));
+    B.tires = (x, z, n = 4) => { for (let i = 0; i < n; i++) B.model("old_tyre", {x: x + (rnd() - 0.5) * 0.04, y: i * 0.21, z, ry: rnd() * 6, w: 0.64, pre: [Math.PI / 2, 0, 0]}, i ? null : () => orig.tires(x, z, n)); };
+    B.plant = (x, z) => B.model("potted_plant_02", {x, z, ry: rnd() * 6, h: 1.1}, () => orig.plant(x, z));
+    B.magnifier = (x, y, z) => B.model("magnifying_glass_01", {x, y, z, ry: 0.6, w: 0.22}, () => orig.magnifier(x, y, z));
+    B.boxes = (x, z, n = 3, label = "") => { if (label) return orig.boxes(x, z, n, label); for (let i = 0; i < n; i++) B.model("cardboard_box_01", {x: x + (rnd() - 0.5) * 0.05, y: i * 0.32, z, ry: (rnd() - 0.5) * 0.4, w: 0.44 - i * 0.03}, i ? null : () => orig.boxes(x, z, n, label)); };
+    B.tube = (x, z, power = 9) => { B.model("mounted_fluorescent_lights", {x, z, top: ROOM.h, w: 1.25}, () => orig.tube(x, z, power)); const l = new THREE.PointLight(0xdfeeff, power, 0, 1.6); l.position.set(x, ROOM.h - 0.3, z); furn.add(l); flickers.push({l, base: power, kind: "tube"}); };
+    B.bulb = (x, z, y = 2.5, power = 16, color = 0xffc887, cage = false) => {
+      if (!cage && curRoom !== "garage" && curRoom !== "workshop") return orig.bulb(x, z, y, power, color, cage);
+      B.model(cage ? "caged_hanging_light" : "hanging_industrial_lamp", {x, z, top: ROOM.h, h: ROOM.h - y + 0.12}, () => orig.bulb(x, z, y, power, color, cage));
+      const l = new THREE.PointLight(color, power, 0, 1.7); l.position.set(x, y - 0.08, z); furn.add(l);
+      if (!shadowBulb) { shadowBulb = l; l.castShadow = true; l.shadow.mapSize.set(512, 512); l.shadow.bias = -0.003; l.shadow.radius = 4; l.shadow.camera.near = 0.15; }
+      return l;
+    };
+  }
+  // small extras that only exist as models
+  const EXTRAS = {
+    office: () => B.model("wall_clock", {x: -1.9, y: 1.95, z: -2.97, w: 0.32}),
+    precinct: () => { B.model("wall_clock", {x: 1.9, y: 1.95, z: -2.97, w: 0.32}); B.model("office_notepads", {x: 0.45, y: 0.76, z: -2.5, ry: -0.3, w: 0.22}); },
+    workshop: () => B.model("tool_cart", {x: 2.25, z: -1.25, ry: -1.2, h: 0.9}),
+    archive: () => B.model("office_notepads", {x: 0.75, y: 0.7, z: -2.55, ry: 0.4, w: 0.22}),
+    den: () => B.model("wall_clock", {x: -2.97, y: 2.0, z: -2.0, ry: Math.PI / 2, w: 0.32}),
+  };
+
   // ---------- one layout per room ----------
   const DZ = -2.62; // just in front of the board wall
   const LAYOUTS = {
@@ -337,7 +419,9 @@ export function createRoom(THREE, opts) {
   };
   function furnish(key) {
     furn.clear(); flickers.length = 0; facers.length = 0; shadowBulb = null; ambientK = 1; seed = 7;
+    furnishGen++; curRoom = LAYOUTS[key] ? key : "office";
     (LAYOUTS[key] || LAYOUTS.office)();
+    if (USE_MODELS) EXTRAS[curRoom]?.();
     setLight(lightMode);
   }
 

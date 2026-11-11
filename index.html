@@ -1879,7 +1879,7 @@ async function joinRoom() {
 }
 /* ---------------- the 3D room ---------------- */
 // three.js comes from the import map in <head>; phones skip the heavy effects (ambient occlusion, bloom, grain)
-const ADDONS_ALL = ["environments/RoomEnvironment.js", "geometries/RoundedBoxGeometry.js", "postprocessing/EffectComposer.js", "postprocessing/RenderPass.js", "postprocessing/GTAOPass.js", "postprocessing/UnrealBloomPass.js", "postprocessing/OutputPass.js", "postprocessing/ShaderPass.js"];
+const ADDONS_ALL = ["environments/RoomEnvironment.js", "geometries/RoundedBoxGeometry.js", "postprocessing/EffectComposer.js", "postprocessing/RenderPass.js", "postprocessing/GTAOPass.js", "postprocessing/UnrealBloomPass.js", "postprocessing/OutputPass.js", "postprocessing/ShaderPass.js", "loaders/GLTFLoader.js"];
 const ADDONS_PHONE = ["environments/RoomEnvironment.js", "geometries/RoundedBoxGeometry.js"];
 const CAN3D = (() => { try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch { return false; } })();
 const BOARD_IMG = {ply: "assets/board-osb.webp", cork: "assets/board-cork-silver.webp", corkwood: "assets/board-cork-wood.webp", white: "assets/board-whiteboard.webp"};
