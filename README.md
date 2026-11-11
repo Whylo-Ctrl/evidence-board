@@ -36,6 +36,8 @@ The site is hosted with GitHub Pages from the `main` branch of this repo.
 
 **Seats.** Each case has 4 seats. If someone switches devices, they rejoin with the same codename to get their seat back. The Handler can remove an agent from **Case settings** to free up a seat.
 
+**Walking in.** When you open or join a case, the screen fades up from black and you walk into the room toward the board. Tap anywhere to skip it. It's turned off if your device is set to reduce motion.
+
 **Saving.** The board saves automatically. Next session, enter the same code and everything is where you left it.
 
 ### On the board
